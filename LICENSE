@@ -24,6 +24,6 @@ SOFTWARE.
 
 Note: this MIT license covers the source code and the original content authored
 by the Luna-Quest team. Third-party art, fonts, voice recordings, engine code
-and research material remain under their own licenses. See CREDITS.md. In
-particular, the crew voice pack must not be redistributed publicly until its
-performance and distribution rights are confirmed.
+and research material remain under their own licenses. See CREDITS.md. The
+crew voice pack's performance and distribution rights are still unconfirmed;
+clear them before shipping a public build that contains the recordings.

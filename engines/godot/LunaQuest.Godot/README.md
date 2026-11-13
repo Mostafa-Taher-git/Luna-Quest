@@ -120,6 +120,7 @@ immediately.
 - The game uses Godot’s built-in `FontFile`/`Font` loading from `.woff` assets. If the fonts
   are missing, the theme falls back to Godot’s default font.
 - The voice pack is inherited from the team’s V1 prototype; its redistribution rights are
-  unconfirmed. Keep builds private until cleared.
+  unconfirmed. The source repository is public, but keep shipped builds private until
+  cleared.
 
 See the repository root `README.md`, `CREDITS.md` and `LICENSE` for the full project notes.

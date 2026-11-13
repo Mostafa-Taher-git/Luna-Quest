@@ -22,7 +22,7 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Content (buildings, crew, incidents, crops, learning) | Complete, six JSON files |
 | Godot 4.7.2 .NET project | Complete; built, launched and screenshotted on Linux |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 warnings / 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
-| GitHub remote | Local repository ready; push needs GitHub credentials |
+| GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
 > pipeline and IMGUI. There is no URP, no third-party package and no package download at
@@ -342,8 +342,9 @@ one adapter can be loaded by the other after copying the file to the other engin
   first editor open may regenerate missing `Library/`, `QualitySettings` or `GraphicsSettings`
   files; that is normal. Use Unity 6.3 LTS and the built-in render pipeline.
 - **Voice rights are unconfirmed.** The 55 MP3 crew lines are inherited from the team's
-  Luna-Quest V1 prototype. Treat the repository as **private** until the performance and
-  distribution rights are confirmed. See `CREDITS.md`.
+  Luna-Quest V1 prototype. The repository is public at the team's request, but the
+  performance and distribution rights are still unconfirmed: clear them before shipping a
+  public build. See `CREDITS.md`.
 - **Two crew names are pending team approval** by design: the Agriculture and Food Engineer
   and the Communications and Software Engineer. They display as “Name pending approval” and
   are not invented.
@@ -353,8 +354,6 @@ one adapter can be loaded by the other after copying the file to the other engin
   approximations, not compartment-level CFD.
 - **No combat, no permanent death, single player, Moon only.** These are design rules, not
   missing features.
-- The GitHub remote is not configured yet; the local repository and commit history are ready
-  for the `Luna-Quest` repository once credentials are supplied.
 
 ---
 
@@ -374,5 +373,5 @@ Full attribution and license texts: [`CREDITS.md`](CREDITS.md) and
 
 Source code is released under the **MIT License** (see [`LICENSE`](LICENSE)). Third-party
 art, fonts, voice and research documents remain under their own licenses; the MIT license
-does not override them. The voice pack must not be redistributed publicly until its rights
-are confirmed.
+does not override them. The voice pack's performance and distribution rights are still
+unconfirmed; do not ship a public build containing it until the team clears those rights.

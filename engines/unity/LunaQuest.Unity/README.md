@@ -152,7 +152,8 @@ file between engines to continue the same colony.
 - The astronaut in Unity is static by design. Godot uses the animated GLB frozen at the same
   pose. Re-run the baker if the source model changes.
 - The voice pack is inherited from the team’s V1 prototype; its redistribution rights are
-  unconfirmed. Keep builds private until the team clears them.
+  unconfirmed. The source repository is public, but keep shipped builds private until the
+  team clears them.
 - Two crew names are intentionally pending team approval and display as “Name pending
   approval”.
 

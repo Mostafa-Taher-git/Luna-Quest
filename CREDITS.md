@@ -71,10 +71,11 @@ font licenses.
 - **Status:** inherited from the team’s Luna-Quest V1 prototype.
 - **Rights:** the performance and redistribution rights have **not been confirmed**.
 
-The voice pack is included so the team can evaluate the game with its intended audio. Do not
-publish the repository publicly, ship a build, or redistribute the MP3 files until the team
-confirms the rights. The game is fully playable with the sound off: every line also appears
-as a short subtitle.
+The voice pack is included so the team can evaluate the game with its intended audio. The
+repository is public at the team's request, but the performance and distribution rights are
+still unconfirmed: clear them before shipping a public build or redistributing the MP3 files
+elsewhere. The game is fully playable with the sound off: every line also appears as a short
+subtitle.
 
 ---
 
