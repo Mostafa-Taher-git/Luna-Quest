@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071526"/><stop offset="1" stop-color="#142f48"/></linearGradient>
+ <linearGradient id="front" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d7e8f0"/><stop offset="1" stop-color="#8aa8b9"/></linearGradient>
+ <linearGradient id="top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#effaff"/><stop offset="1" stop-color="#8bb6ca"/></linearGradient>
+ <linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7fe1a3"/><stop offset="1" stop-color="#1b875e"/></linearGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".4"/></filter>
+ <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#5eead4"/></marker>
+</defs>
+<rect width="1440" height="900" fill="url(#bg)"/>
+<g opacity=".32" fill="#fff"><circle cx="90" cy="80" r="2"/><circle cx="210" cy="180" r="2"/><circle cx="410" cy="95" r="1.6"/><circle cx="770" cy="110" r="2"/><circle cx="1220" cy="90" r="2"/><circle cx="1350" cy="260" r="1.5"/><circle cx="1100" cy="700" r="2"/></g>
+<text x="70" y="68" fill="#dff7ff" font-family="Arial" font-size="34" font-weight="700">LUNA ACADEMY / FOOD SYSTEM</text>
+<text x="70" y="108" fill="#88b8ce" font-family="Arial" font-size="18">Modular lunar greenhouse · concept architecture (not an engineering drawing)</text>
+<!-- Ground plane -->
+<path d="M125 610 L730 280 L1325 610 L720 850 Z" fill="#283e50" stroke="#50758b" stroke-width="2" opacity=".9"/>
+<path d="M125 610 L720 850 L720 875 L125 635 Z" fill="#182d40"/><path d="M720 850 L1325 610 L1325 635 L720 875 Z" fill="#0e2135"/>
+<!-- Grow pod top/side -->
+<g filter="url(#shadow)">
+<path d="M240 490 L520 335 L805 475 L525 632 Z" fill="url(#top)" stroke="#f0fbff" stroke-width="3"/>
+<path d="M240 490 L525 632 L525 735 L240 592 Z" fill="url(#front)" stroke="#66899b" stroke-width="3"/>
+<path d="M525 632 L805 475 L805 577 L525 735 Z" fill="#6f93a6" stroke="#66899b" stroke-width="3"/>
+<path d="M305 485 L520 367 L741 478 L525 597 Z" fill="#10384a" stroke="#3b7588" stroke-width="3"/>
+<path d="M305 485 L525 597 L525 668 L305 557 Z" fill="#245c65" stroke="#4e8e8c" stroke-width="2"/>
+<path d="M525 597 L741 478 L741 550 L525 668 Z" fill="#183f55" stroke="#4e8e8c" stroke-width="2"/>
+<!-- grow rows -->
+<g fill="url(#green)" stroke="#b4f5c6" stroke-width="2">
+<path d="M345 477 l38 -21 42 21 -39 22z"/><path d="M401 508 l38 -21 42 21 -39 22z"/><path d="M457 538 l38 -21 42 21 -39 22z"/>
+<path d="M475 405 l38 -21 42 21 -39 22z"/><path d="M531 435 l38 -21 42 21 -39 22z"/><path d="M587 465 l38 -21 42 21 -39 22z"/>
+</g>
+<g stroke="#bbffd2" stroke-width="4" fill="none"><path d="M360 460 q-8 -22 5 -32 q13 8 9 28 M417 490 q-9 -22 5 -32 q13 8 9 28 M473 521 q-9 -22 5 -32 q13 8 9 28 M490 388 q-8 -22 5 -32 q13 8 9 28 M546 418 q-8 -22 5 -32 q13 8 9 28 M602 449 q-8 -22 5 -32 q13 8 9 28"/></g>
+</g>
+<!-- Utility pod -->
+<g filter="url(#shadow)">
+<path d="M835 480 L1000 388 L1160 468 L994 562 Z" fill="url(#top)" stroke="#effaff" stroke-width="3"/>
+<path d="M835 480 L994 562 L994 684 L835 600 Z" fill="#aac3d0" stroke="#6e91a4" stroke-width="3"/>
+<path d="M994 562 L1160 468 L1160 590 L994 684 Z" fill="#6f8fa1" stroke="#55798e" stroke-width="3"/>
+<path d="M885 495 L998 432 L1110 490 L994 552 Z" fill="#153d56" stroke="#6ed1e0" stroke-width="2"/>
+<g fill="#1c7184" stroke="#9deaf2" stroke-width="3"><ellipse cx="940" cy="510" rx="26" ry="15"/><path d="M914 510 v48 q26 16 52 0 v-48" fill="#165a71"/><ellipse cx="940" cy="558" rx="26" ry="14"/><ellipse cx="1047" cy="497" rx="26" ry="15"/><path d="M1021 497 v48 q26 16 52 0 v-48" fill="#165a71"/><ellipse cx="1047" cy="545" rx="26" ry="14"/></g>
+</g>
+<!-- Power pod -->
+<g filter="url(#shadow)">
+<path d="M870 690 L1000 618 L1140 690 L1008 766 Z" fill="url(#top)" stroke="#effaff" stroke-width="3"/>
+<path d="M870 690 L1008 766 L1008 827 L870 750 Z" fill="#91adbd" stroke="#5e8092" stroke-width="3"/>
+<path d="M1008 766 L1140 690 L1140 750 L1008 827 Z" fill="#58788d" stroke="#426579" stroke-width="3"/>
+<path d="M896 690 l90 -50 91 47 -91 51z" fill="#12385f" stroke="#79b6ed" stroke-width="3"/>
+<path d="M920 676 l89 46 M950 660 l90 46 M978 645 l90 46 M941 670 l-19 33 M973 687 l-19 33 M1008 700 l-18 33" stroke="#65b9f5" stroke-width="2"/>
+</g>
+<!-- Pantry + kitchen -->
+<g filter="url(#shadow)">
+<path d="M360 690 L470 628 L585 686 L475 749 Z" fill="url(#top)" stroke="#effaff" stroke-width="3"/>
+<path d="M360 690 L475 749 L475 806 L360 747 Z" fill="#91adbd" stroke="#5e8092" stroke-width="3"/>
+<path d="M475 749 L585 686 L585 744 L475 806 Z" fill="#58788d" stroke="#426579" stroke-width="3"/>
+<g fill="#f0b65d"><rect x="388" y="694" width="25" height="24" rx="3"/><rect x="423" y="712" width="25" height="24" rx="3"/><rect x="458" y="729" width="25" height="24" rx="3"/></g>
+</g>
+<!-- solar panels -->
+<g stroke="#5fb9f6" stroke-width="3" fill="#12385f"><path d="M105 500 l110 -62 120 60 -110 62z"/><path d="M105 500 l110 -62 v68 l-110 62z" fill="#0e2d4e"/><path d="M215 438 l120 60 v68 l-120 -60z" fill="#0b2744"/><path d="M160 469 l120 61 M190 452 l120 61 M215 438 v68 M270 466 v68" fill="none"/></g>
+<!-- connections -->
+<g fill="none" stroke="#5eead4" stroke-width="5" stroke-dasharray="10 9" marker-end="url(#arrow)"><path d="M805 555 C830 555 820 525 835 525"/><path d="M990 680 C975 665 980 640 995 625"/><path d="M525 725 C590 750 700 760 870 720"/><path d="M994 585 C900 625 760 645 585 705"/></g>
+<!-- Labels -->
+<g font-family="Arial" font-weight="700" fill="#eaf8ff">
+<text x="385" y="300" font-size="26">GROW POD</text><text x="385" y="328" font-size="16" fill="#a8d5e4">Racks · seeds · LEDs · sensors</text>
+<text x="900" y="345" font-size="24">UTILITY POD</text><text x="900" y="372" font-size="16" fill="#a8d5e4">Water · nutrients · climate</text>
+<text x="1035" y="840" font-size="23">POWER POD</text><text x="1035" y="864" font-size="15" fill="#a8d5e4">Grid · battery · backup</text>
+<text x="325" y="835" font-size="22">HARVEST &amp; PANTRY</text>
+</g>
+<g font-family="Arial" font-size="17" fill="#9ce7df"><text x="70" y="780">SOLAR INPUT</text><text x="670" y="235">CLOSED-LOOP UTILITY CONNECTIONS</text></g>
+<path d="M250 460 L200 370 L75 370" fill="none" stroke="#8ddbd1" stroke-width="2"/><text x="75" y="345" fill="#b8f3e8" font-family="Arial" font-size="16">External power source</text>
+<text x="70" y="875" fill="#719bb2" font-family="Arial" font-size="14">Concept diagram · not to scale · utility routing and engineering values must be validated separately</text>
+</svg>

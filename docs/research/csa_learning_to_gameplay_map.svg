@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="840" viewBox="0 0 1500 840" role="img" aria-labelledby="t d">
+<title id="t">Canadian Space Agency resources mapped to Luna Academy gameplay</title><desc id="d">A systems architecture diagram mapping CSA resource themes to Luna Academy world simulation, NPCs and player learning outcomes.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071728"/><stop offset="1" stop-color="#1b3148"/></linearGradient><linearGradient id="panel" x2="0" y2="1"><stop stop-color="#254761"/><stop offset="1" stop-color="#142b42"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-opacity=".35"/></filter></defs>
+<rect width="1500" height="840" fill="url(#bg)"/>
+<text x="750" y="58" fill="#f1f8ff" font-family="Arial" font-size="32" font-weight="bold" text-anchor="middle">FROM CSA LEARNING RESOURCES TO LUNA ACADEMY</text>
+<text x="750" y="91" fill="#a9cee4" font-family="Arial" font-size="17" text-anchor="middle">Curated educational themes → playable systems → transferable skills</text>
+<g font-family="Arial" filter="url(#s)">
+ <rect x="55" y="150" width="390" height="560" rx="24" fill="url(#panel)" stroke="#65c6df" stroke-width="2"/>
+ <text x="250" y="195" text-anchor="middle" fill="#dff7ff" font-size="25" font-weight="bold">CSA RESOURCE THEMES</text>
+ <g font-size="19" fill="#ecf5fb">
+ <rect x="90" y="230" width="320" height="65" rx="12" fill="#214e64"/><text x="250" y="270" text-anchor="middle">Moon science &amp; geology</text>
+ <rect x="90" y="315" width="320" height="65" rx="12" fill="#315c4e"/><text x="250" y="355" text-anchor="middle">Food &amp; plant growth</text>
+ <rect x="90" y="400" width="320" height="65" rx="12" fill="#6d5631"/><text x="250" y="440" text-anchor="middle">Engineering &amp; robotics</text>
+ <rect x="90" y="485" width="320" height="65" rx="12" fill="#4d4e79"/><text x="250" y="525" text-anchor="middle">Health &amp; crew life</text>
+ <rect x="90" y="570" width="320" height="65" rx="12" fill="#5d4667"/><text x="250" y="610" text-anchor="middle">Survival &amp; teamwork</text>
+ </g>
+ <rect x="555" y="150" width="390" height="560" rx="24" fill="url(#panel)" stroke="#76d3ae" stroke-width="2"/>
+ <text x="750" y="195" text-anchor="middle" fill="#e5fff5" font-size="25" font-weight="bold">GAMEPLAY SYSTEMS</text>
+ <g font-size="19" fill="#ecf5fb">
+ <rect x="590" y="230" width="320" height="65" rx="12" fill="#214e64"/><text x="750" y="270" text-anchor="middle">Exploration &amp; sample analysis</text>
+ <rect x="590" y="315" width="320" height="65" rx="12" fill="#315c4e"/><text x="750" y="355" text-anchor="middle">Greenhouse &amp; food system</text>
+ <rect x="590" y="400" width="320" height="65" rx="12" fill="#6d5631"/><text x="750" y="440" text-anchor="middle">Construction &amp; rover control</text>
+ <rect x="590" y="485" width="320" height="65" rx="12" fill="#4d4e79"/><text x="750" y="525" text-anchor="middle">Crew schedules &amp; wellness</text>
+ <rect x="590" y="570" width="320" height="65" rx="12" fill="#5d4667"/><text x="750" y="610" text-anchor="middle">Incidents &amp; shared decisions</text>
+ </g>
+ <rect x="1055" y="150" width="390" height="560" rx="24" fill="url(#panel)" stroke="#e4bd7b" stroke-width="2"/>
+ <text x="1250" y="195" text-anchor="middle" fill="#fff3df" font-size="25" font-weight="bold">CHILD LEARNING</text>
+ <g font-size="19" fill="#ecf5fb">
+ <rect x="1090" y="230" width="320" height="65" rx="12" fill="#214e64"/><text x="1250" y="270" text-anchor="middle">Observation &amp; geology</text>
+ <rect x="1090" y="315" width="320" height="65" rx="12" fill="#315c4e"/><text x="1250" y="355" text-anchor="middle">Biology &amp; nutrition</text>
+ <rect x="1090" y="400" width="320" height="65" rx="12" fill="#6d5631"/><text x="1250" y="440" text-anchor="middle">Maths &amp; design thinking</text>
+ <rect x="1090" y="485" width="320" height="65" rx="12" fill="#4d4e79"/><text x="1250" y="525" text-anchor="middle">Self-care &amp; empathy</text>
+ <rect x="1090" y="570" width="320" height="65" rx="12" fill="#5d4667"/><text x="1250" y="610" text-anchor="middle">Judgement &amp; teamwork</text>
+ </g>
+</g>
+<g stroke="#c3e9f4" stroke-width="4" fill="none" opacity=".8"><path d="M445 262 L555 262"/><path d="M445 347 L555 347"/><path d="M445 432 L555 432"/><path d="M445 517 L555 517"/><path d="M445 602 L555 602"/><path d="M945 262 L1055 262"/><path d="M945 347 L1055 347"/><path d="M945 432 L1055 432"/><path d="M945 517 L1055 517"/><path d="M945 602 L1055 602"/></g>
+<g fill="#91ddea"><path d="M545 253 l10 9 -10 9z"/><path d="M545 338 l10 9 -10 9z"/><path d="M545 423 l10 9 -10 9z"/><path d="M545 508 l10 9 -10 9z"/><path d="M545 593 l10 9 -10 9z"/><path d="M1045 253 l10 9 -10 9z"/><path d="M1045 338 l10 9 -10 9z"/><path d="M1045 423 l10 9 -10 9z"/><path d="M1045 508 l10 9 -10 9z"/><path d="M1045 593 l10 9 -10 9z"/></g>
+<text x="750" y="785" font-family="Arial" font-size="18" fill="#a9cee4" text-anchor="middle">One continuous Moon sandbox • No age gate • Optional situations • Adaptive hints and depth</text>
+</svg>

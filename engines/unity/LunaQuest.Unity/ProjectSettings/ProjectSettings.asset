@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 26
+  productGUID: 6a3f2c8e6f7d4c53a1e9b0c2d4f6a8b1
+  companyName: Luna-Quest
+  productName: Luna-Quest
+  defaultCursor: {fileID: 0}
+  cursorHotspot: {x: 0, y: 0}
+  m_SplashScreenBackgroundColor: {r: 0.02, g: 0.024, b: 0.04, a: 1}
+  m_ShowUnitySplashScreen: 1
+  m_ShowUnitySplashLogo: 1
+  m_SplashScreenLogoStyle: 1
+  m_SplashScreenDrawMode: 0
+  defaultScreenWidth: 1600
+  defaultScreenHeight: 900
+  defaultScreenWidthWeb: 1600
+  defaultScreenHeightWeb: 900
+  m_StereoRenderingPath: 0
+  m_ActiveColorSpace: 1
+  m_MTRendering: 1
+  runInBackground: 1
+  captureSingleScreen: 0
+  resizableWindow: 1
+  usePlayerLog: 1
+  visibleInBackground: 1
+  allowFullscreenSwitch: 1
+  fullscreenMode: 3
+  useFlipModelSwapchain: 1
+  bundleVersion: 0.1.0
+  applicationIdentifier:
+    Standalone: com.lunaquest.game
+  overrideDefaultApplicationIdentifier: 1
+  scriptingBackend: {}
+  il2cppCompilerConfiguration: {}
+  il2cppCodeGeneration: {}
+  managedStrippingLevel: {}
+  incrementalIl2cppBuild: {}
+  suppressCommonWarnings: 1
+  allowUnsafeCode: 0
+  useDeterministicCompilation: 1
+  scriptingRuntimeVersion: 1
+  gcIncremental: 1
+  apiCompatibilityLevel: 6
+  activeInputHandler: 0
+  scriptingDefineSymbols: {}
+  additionalCompilerArguments: {}
+  platformArchitecture: {}
+  apiCompatibilityLevelPerPlatform: {}
+  cloudProjectId: 
+  projectName: Luna-Quest
+  organizationId: 
+  cloudEnabled: 0
+  legacyClampBlendShapeWeights: 0
+  insecureHttpOption: 0
+  m_TemplateCustomTags: {}
+  templatePackageId: com.unity.template.3d@0.0.0
+  templateDefaultScene: Assets/Scenes/Bootstrap.unity
+  colorSpace: 1

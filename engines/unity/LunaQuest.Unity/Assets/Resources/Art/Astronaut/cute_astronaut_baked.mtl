@@ -1,0 +1,14 @@
+# Luna-Quest astronaut materials (Sketchfab Cute Astronaut, CC-BY-4.0, haefu)
+newmtl Suit
+Kd 0.78 0.80 0.83
+Ka 0.10 0.10 0.11
+Ks 0.08 0.08 0.09
+Ns 24
+illum 2
+
+newmtl Visor
+Kd 0.012 0.018 0.030
+Ka 0.005 0.006 0.008
+Ks 0.75 0.85 1.0
+Ns 350
+illum 2

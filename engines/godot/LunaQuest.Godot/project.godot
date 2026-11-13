@@ -1,0 +1,37 @@
+; Luna-Quest: The Living Moon Colony — Godot 4.7.2 .NET project
+; The same shared C# core also runs in the Unity project in this repository.
+; Open this folder with Godot 4.7.2 .NET (mono), then press F5.
+
+config_version=5
+
+[application]
+
+config/name="Luna-Quest"
+config/description="A walkable lunar colony on the Shackleton rim. 30 Earth days, nine crew, one shared simulation core."
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[dotnet]
+
+project/assembly_name="LunaQuest.Godot"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+textures/default_filters/anisotropic_filtering_level=4
+environment/defaults/default_clear_color=Color(0.02, 0.024, 0.035, 1)
+
+[physics]
+
+common/physics_ticks_per_second=60
+3d/default_gravity=1.62

@@ -1,0 +1,56 @@
+# ---- Godot 4 ---------------------------------------------------------------
+.godot/
+.mono/
+export.cfg
+export_presets.cfg
+*.translation
+*.translation.import
+
+# ---- .NET / C# -------------------------------------------------------------
+bin/
+obj/
+*.user
+*.userprefs
+*.suo
+*.pdb
+*.mdb
+
+# ---- Unity ----------------------------------------------------------------
+# The Unity editor regenerates these on first open.
+engines/unity/**/[Ll]ibrary/
+engines/unity/**/[Tt]emp/
+engines/unity/**/[Oo]bj/
+engines/unity/**/[Bb]uild/
+engines/unity/**/[Bb]uilds/
+engines/unity/**/[Ll]ogs/
+engines/unity/**/[Uu]ser[Ss]ettings/
+engines/unity/**/[Mm]emoryCaptures/
+engines/unity/**/*.csproj
+engines/unity/**/*.sln
+engines/unity/**/*.pidb
+engines/unity/**/*.booproj
+engines/unity/**/*.svd
+engines/unity/**/*.opendb
+engines/unity/**/*.VC.db
+engines/unity/**/sysinfo.txt
+engines/unity/**/crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+
+# ---- editors / OS ----------------------------------------------------------
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- local logs ------------------------------------------------------------
+*.log
+
+# ---- Python ---------------------------------------------------------------
+__pycache__/
+*.pyc

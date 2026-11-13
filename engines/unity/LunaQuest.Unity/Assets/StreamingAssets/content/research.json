@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "comment": "Provenance ledger for the simulation. A = direct measurement or primary mission data; B = analogue, ground experiment or operational practice; C = simplified game rule. Each record states what it supports and where the game stops being real.",
+  "research": [
+    {
+      "id": "res_moon_facts",
+      "topic": "Moon facts: gravity, synodic month, day length",
+      "url": "https://science.nasa.gov/moon/facts/",
+      "evidenceClass": "A",
+      "useEn": "Surface gravity 1.62 m/s²; synodic month 29.53059 Earth days; 30-day mission mapped onto lunar days.",
+      "useAr": "جاذبية السطح 1.62 م/ث²؛ الشهر القمري 29.53059 يومًا أرضيًا؛ المهمة 30 يومًا موزعة على أيام قمرية.",
+      "boundaryEn": "The game compresses time; the real month passes at real speed."
+    },
+    {
+      "id": "res_shackleton_light",
+      "topic": "Illumination map of the Moon's south pole and Shackleton rim",
+      "url": "https://science.nasa.gov/resource/illumination-map-of-the-moons-south-pole/",
+      "evidenceClass": "A",
+      "useEn": "Rim sites receive long, grazing illumination; permanently shadowed regions nearby stay dark and cold.",
+      "useAr": "مواقع الحافة تتلقى إضاءة طويلة مائلة؛ المناطق المظلمة دائمًا قريبة وتبقى باردة ومظلمة.",
+      "boundaryEn": "The selected site in the game is fictional but bounded by real polar illumination geometry."
+    },
+    {
+      "id": "res_svs_illumination",
+      "topic": "NASA SVS south-pole illumination sequences 2023–2030",
+      "url": "https://svs.gsfc.nasa.gov/4930/",
+      "evidenceClass": "A",
+      "useEn": "Two-hour lighting steps south of 88°S; basis for the slow seasonal solar curve in the clock.",
+      "useAr": "خطوات إضاءة كل ساعتين جنوب 88°؛ أساس منحنى الطاقة الشمسية الموسمي البطيء في الساعة.",
+      "boundaryEn": "The game samples this into a smooth 30-day curve, not a terrain shadow model."
+    },
+    {
+      "id": "res_lunar_dose",
+      "topic": "Chang'e-4 LND lunar surface absorbed dose",
+      "url": "https://visualization.osdr.nasa.gov/radlab/gui/knowledgebase/moon",
+      "evidenceClass": "A",
+      "useEn": "13.2 ± 1 µGy/h in silicon at the surface; the baseline dose rate in the colony model.",
+      "useAr": "13.2 ± 1 ميكروغراي/ساعة في السيليكون على السطح؛ معدل الجرعة الأساسي في نموذج المستعمرة.",
+      "boundaryEn": "This is absorbed dose in silicon, not a human dose equivalent; the game labels its dose model as simplified."
+    },
+    {
+      "id": "res_radlab_api",
+      "topic": "NASA RadLab radiation data API",
+      "url": "https://visualization.osdr.nasa.gov/radlab/api/",
+      "evidenceClass": "A",
+      "useEn": "Machine-readable dose-rate and flux records by body, trajectory, spacecraft and instrument.",
+      "useAr": "سجلات معدل الجرعة والتدفق قابلة للقراءة آليًا حسب الجسم والمسار والمركبة والجهاز.",
+      "boundaryEn": "Live values are not streamed into the game; the model uses published reference levels."
+    },
+    {
+      "id": "res_donki_sep",
+      "topic": "NASA DONKI solar energetic particle events",
+      "url": "https://ccmc.gsfc.nasa.gov/tools/DONKI/",
+      "evidenceClass": "A",
+      "useEn": "SEP alerts and event timelines; basis for the day-12 solar particle event and shelter protocol.",
+      "useAr": "تنبيهات الجسيمات الشمسية والجداول الزمنية؛ أساس حدث اليوم 12 وبروتوكول الاحتماء.",
+      "boundaryEn": "The day-12 event is authored for the mission, not a real 2026 event."
+    },
+    {
+      "id": "res_moon_water",
+      "topic": "Moon water and ices",
+      "url": "https://science.nasa.gov/moon/moon-water-and-ices/",
+      "evidenceClass": "A",
+      "useEn": "Water ice is documented in polar permanently shadowed regions, unevenly distributed; sample verification comes before resource claims.",
+      "useAr": "جليد الماء موثق في مناطق قطبية مظلمة دائمًا وموزع بشكل غير متساوٍ؛ التحقق من العينة يسبق ادعاء المورد.",
+      "boundaryEn": "Ice is not proven at the game's exact site; Alaa's storyline is written as a prospecting hypothesis."
+    },
+    {
+      "id": "res_regolith_hazards",
+      "topic": "Lunar regolith hazards to equipment and crews",
+      "url": "https://science.nasa.gov/biological-physical/what-hazards-are-caused-by-lunar-regolith/",
+      "evidenceClass": "A",
+      "useEn": "Abrasive dust clings to suits, seals, optics and radiators; dust accumulation drives array and sensor maintenance.",
+      "useAr": "الغبار الكاشط يلتصق بالبدلات والأختام والبصريات والمشعات؛ تراكمه يقود صيانة الألواح والحساسات.",
+      "boundaryEn": "Accumulation rates and cleaning effectiveness are game-tuned, not measured."
+    },
+    {
+      "id": "res_iss_water",
+      "topic": "ISS water recovery and crew hygiene",
+      "url": "https://www.asc-csa.gc.ca/eng/astronauts/living-in-space/personal-hygiene-in-space.asp",
+      "evidenceClass": "B",
+      "useEn": "Up to 93% water recovery on ISS; the colony recycler uses 93% as an ISS-class reference.",
+      "useAr": "استعادة ماء حتى 93% في محطة الفضاء الدولية؛ يستخدم نموذج المستعمرة 93% كمرجع.",
+      "boundaryEn": "93% is an ISS figure, not a guaranteed lunar-base performance value."
+    },
+    {
+      "id": "res_csa_farming",
+      "topic": "CSA Interplanetary Farming crop planning values",
+      "url": "https://www.asc-csa.gc.ca/eng/youth-educators/activities/fitness-and-nutrition/interplanetary-farming.asp",
+      "evidenceClass": "B",
+      "useEn": "Lettuce 21–28 days, soybean 45–65, tomato 50–90, carrot 70–80, chickpea 80–100, sweet potato 90–170, wheat 213–244.",
+      "useAr": "خس 21–28 يومًا، صويا 45–65، طماطم 50–90، جزر 70–80، حمص 80–100، بطاطا حلوة 90–170، قمح 213–244.",
+      "boundaryEn": "Planning values from an educational resource, not lunar-field yields."
+    },
+    {
+      "id": "res_veggie_xroots",
+      "topic": "NASA Veggie, XROOTS and closed-chamber plant growth",
+      "url": "https://osdr.nasa.gov/bio/repo/",
+      "evidenceClass": "B",
+      "useEn": "Enclosed plant chambers with controlled light and nutrient delivery; the greenhouse is sealed and lit by colony power.",
+      "useAr": "غرف نبات مغلقة بإضاءة وتغذية مضبوطة؛ الدفيئة مغلقة وتضاء بطاقة المستعمرة.",
+      "boundaryEn": "Orbital and ground experiments; they do not prove the same yields on the Moon."
+    },
+    {
+      "id": "res_apollo13",
+      "topic": "Apollo 13 CO2 scrubber improvisation",
+      "url": "https://www.nasa.gov/mission/apollo-13/",
+      "evidenceClass": "A",
+      "useEn": "Noor's method: read the sensor, check flow, then change the filter, never the other way round.",
+      "useAr": "طريقة نور: اقرأ الحساس، افحص التدفق، ثم غيّر المرشح، وليس العكس.",
+      "boundaryEn": "Apollo 13 happened in a spacecraft during flight, not at a lunar base."
+    },
+    {
+      "id": "res_apollo17",
+      "topic": "Apollo 17 field geology and sample documentation",
+      "url": "https://www.nasa.gov/mission/apollo-17/",
+      "evidenceClass": "A",
+      "useEn": "Site coordinates, repeat measurement and chain of custody before interpreting a sample.",
+      "useAr": "إحداثيات الموقع وتكرار القياس وسلسلة الحيازة قبل تفسير العينة.",
+      "boundaryEn": "Inspiration for method, not evidence of ice extraction in a shadowed crater."
+    },
+    {
+      "id": "res_3d_printed_habitat",
+      "topic": "NASA 3D-Printed Habitat Challenge and ISRU construction",
+      "url": "https://www.nasa.gov/directorates/stmd/prizes-challenges/3d-printed-habitat-challenge/",
+      "evidenceClass": "B",
+      "useEn": "Regolith processing, shielding and printed structural test pieces; Mostafa's workshop loop.",
+      "useAr": "معالجة الثرى والتدريع وقطع اختبار إنشائية مطبوعة؛ حلقة عمل مصطفى.",
+      "boundaryEn": "Printed habitats are a research concept, not an operating lunar facility."
+    },
+    {
+      "id": "res_radiation_protection",
+      "topic": "How NASA protects astronauts from space radiation at the Moon",
+      "url": "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon/",
+      "evidenceClass": "A",
+      "useEn": "Regolith shielding, shelter protocols and dose tracking; the storm shelter and dose log.",
+      "useAr": "التدريع بالثرى وبروتوكولات الاحتماء وتتبع الجرعة؛ ملجأ العاصفة وسجل الجرعة.",
+      "boundaryEn": "Shelter effectiveness is simplified to a 75% dose reduction in the game."
+    },
+    {
+      "id": "res_lunar_temperature",
+      "topic": "Permanently shadowed region temperatures",
+      "url": "https://science.nasa.gov/resource/shadows-near-the-moons-south-pole/",
+      "evidenceClass": "A",
+      "useEn": "Some polar PSRs reach about −203 °C; the ice site and thermal model use deep-cold boundaries.",
+      "useAr": "بعض المناطق القطبية المظلمة تصل إلى نحو −203 °س؛ موقع الجليد والنموذج الحراري يستخدمان حدود البرد العميق.",
+      "boundaryEn": "The game's habitat sits on an illuminated rim, not inside a PSR."
+    },
+    {
+      "id": "res_food_energy",
+      "topic": "ISS crew food energy range",
+      "url": "https://www.asc-csa.gc.ca/eng/astronauts/living-in-space/eating-in-space.asp",
+      "evidenceClass": "B",
+      "useEn": "1,900–3,200 kcal per person per day; the model uses 2,800 as a mid-range planning value.",
+      "useAr": "1900–3200 سعرة للفرد يوميًا؛ يستخدم النموذج 2800 كقيمة تخطيط متوسطة.",
+      "boundaryEn": "An ISS reference range, not a universal lunar diet."
+    }
+  ]
+}

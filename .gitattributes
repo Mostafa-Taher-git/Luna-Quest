@@ -1,0 +1,22 @@
+* text=auto
+
+*.cs text
+*.json text
+*.md text
+*.sh text
+*.py text
+*.asmdef text
+*.unity text
+*.asset text
+*.meta text
+
+*.glb binary
+*.obj text
+*.mtl text
+*.png binary
+*.jpg binary
+*.mp3 binary
+*.ttf binary
+*.woff binary
+*.pdf binary
+*.docx binary

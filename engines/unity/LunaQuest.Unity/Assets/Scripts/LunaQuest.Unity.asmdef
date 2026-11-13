@@ -1,0 +1,14 @@
+{
+    "name": "LunaQuest.Unity",
+    "rootNamespace": "LunaQuest.Unity",
+    "references": ["LunaQuest.Core"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

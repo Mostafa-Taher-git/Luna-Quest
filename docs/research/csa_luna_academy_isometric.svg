@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+<title id="title">Luna Academy isometric lunar habitat concept</title>
+<desc id="desc">A 3D isometric educational illustration of a lunar outpost with habitat modules, greenhouse, solar power, rover, antenna, crater and scientific exploration zone.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071321"/><stop offset=".6" stop-color="#122941"/><stop offset="1" stop-color="#18233b"/></linearGradient>
+  <linearGradient id="earth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd4ff"/><stop offset=".55" stop-color="#2676b9"/><stop offset="1" stop-color="#17436d"/></linearGradient>
+  <linearGradient id="white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f8fb"/><stop offset="1" stop-color="#a8bbc9"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9de8ec" stop-opacity=".85"/><stop offset="1" stop-color="#2a667f" stop-opacity=".55"/></linearGradient>
+  <linearGradient id="solar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8ed8"/><stop offset="1" stop-color="#142f61"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#02070d" flood-opacity=".55"/></filter>
+  <pattern id="stars" width="170" height="130" patternUnits="userSpaceOnUse"><circle cx="20" cy="25" r="1.5" fill="#fff" opacity=".8"/><circle cx="90" cy="60" r="1" fill="#b9ddff" opacity=".65"/><circle cx="145" cy="15" r="1.2" fill="#fff" opacity=".7"/><circle cx="55" cy="110" r=".9" fill="#fff" opacity=".5"/></pattern>
+</defs>
+<rect width="1600" height="920" fill="url(#bg)"/>
+<rect width="1600" height="920" fill="url(#stars)"/>
+<!-- Earth -->
+<circle cx="1235" cy="174" r="102" fill="#06111e" opacity=".55"/>
+<circle cx="1220" cy="158" r="94" fill="url(#earth)" stroke="#b3e6ff" stroke-width="4" filter="url(#shadow)"/>
+<path d="M1174 93 Q1198 81 1224 95 L1241 116 L1223 134 L1207 130 L1192 151 L1175 145 L1162 121 Z" fill="#73b98b" opacity=".9"/>
+<path d="M1247 163 L1271 153 L1290 171 L1279 196 L1258 205 L1240 187 Z" fill="#74b58c" opacity=".9"/>
+<path d="M1154 188 Q1184 206 1205 195 L1217 222 L1191 244 L1169 225 Z" fill="#4b9979" opacity=".8"/>
+<path d="M1128 112 Q1195 43 1279 85" fill="none" stroke="#d8f4ff" stroke-width="7" opacity=".22"/>
+<text x="1220" y="286" fill="#c8e9ff" font-family="Arial,sans-serif" font-size="18" text-anchor="middle" letter-spacing="3">EARTH VIEW</text>
+<!-- distant lunar terrain -->
+<path d="M0 475 L110 430 235 455 355 390 470 438 590 385 710 436 835 390 970 430 1088 380 1220 425 1368 376 1600 431 1600 920 0 920 Z" fill="#293b4b" opacity=".88"/>
+<path d="M0 570 L150 500 300 545 450 480 620 560 800 500 945 546 1110 478 1280 538 1440 478 1600 545 1600 920 0 920 Z" fill="#586878" opacity=".48"/>
+<!-- ground platform isometric -->
+<g filter="url(#shadow)">
+ <polygon points="210,615 810,345 1432,626 812,900" fill="#7e8992" stroke="#bac3c8" stroke-width="3"/>
+ <polygon points="210,615 812,900 812,920 210,637" fill="#3b4a56"/>
+ <polygon points="812,900 1432,626 1432,648 812,920" fill="#293b4b"/>
+ <path d="M285 615 L810 390 1350 635 M345 679 L870 454 1290 650 M425 725 L950 500 1230 680" fill="none" stroke="#c9d2d7" stroke-width="2" opacity=".24"/>
+</g>
+<!-- habitat central module -->
+<g filter="url(#shadow)">
+ <polygon points="620,548 800,465 980,548 800,632" fill="#dce5eb" stroke="#f8fbfd" stroke-width="3"/>
+ <polygon points="620,548 620,634 800,718 800,632" fill="#8fa5b3" stroke="#dfe9ee" stroke-width="2"/>
+ <polygon points="800,632 800,718 980,635 980,548" fill="#607889" stroke="#b4c4ce" stroke-width="2"/>
+ <polygon points="665,530 800,468 935,530 800,594" fill="url(#white)" stroke="#f7fbff" stroke-width="3"/>
+ <path d="M690 545 L690 613 M745 572 L745 657 M855 570 L855 657 M910 545 L910 612" stroke="#728d9e" stroke-width="5" opacity=".75"/>
+ <rect x="774" y="625" width="52" height="80" rx="7" fill="#24445a" stroke="#d6e4eb" stroke-width="3"/>
+ <rect x="786" y="639" width="28" height="42" fill="#70d5e5" opacity=".7"/>
+</g>
+<text x="800" y="750" font-family="Arial,sans-serif" fill="#eef7fb" font-size="24" font-weight="bold" text-anchor="middle">CENTRAL HABITAT</text>
+<!-- greenhouse -->
+<g filter="url(#shadow)">
+ <polygon points="980,545 1090,495 1200,548 1090,600" fill="#638e96" stroke="#c2eff0" stroke-width="3"/>
+ <path d="M980 545 Q1090 410 1200 548 L1200 600 Q1090 475 980 600 Z" fill="url(#glass)" stroke="#d0ffff" stroke-width="3"/>
+ <path d="M1030 520 Q1090 440 1150 520 M1010 550 Q1090 470 1170 550 M1090 452 L1090 580" fill="none" stroke="#c9ffff" stroke-width="3" opacity=".7"/>
+ <path d="M1020 560 L1020 602 M1060 570 L1060 620 M1110 570 L1110 620 M1155 560 L1155 602" stroke="#68bd83" stroke-width="6"/>
+ <g fill="#9ce39d"><circle cx="1020" cy="556" r="12"/><circle cx="1060" cy="567" r="13"/><circle cx="1110" cy="566" r="13"/><circle cx="1155" cy="555" r="12"/></g>
+</g>
+<text x="1090" y="650" font-family="Arial,sans-serif" fill="#dff8f1" font-size="21" font-weight="bold" text-anchor="middle">GREENHOUSE</text>
+<!-- power panels -->
+<g filter="url(#shadow)">
+ <polygon points="320,540 445,484 575,544 450,600" fill="url(#solar)" stroke="#9fd0ff" stroke-width="3"/>
+ <polygon points="320,540 320,588 450,650 450,600" fill="#18345e" stroke="#78aee0" stroke-width="2"/>
+ <polygon points="450,600 450,650 575,590 575,544" fill="#10264b" stroke="#78aee0" stroke-width="2"/>
+ <path d="M362 521 L492 580 M406 501 L537 560 M344 551 L469 606 M387 570 L512 625 M406 501 L387 570 M450 480 L431 590 M495 523 L476 613 M540 545 L521 635" stroke="#8ec7ff" stroke-width="2" opacity=".8"/>
+ <path d="M390 601 L380 665 M510 590 L520 650" stroke="#ced8de" stroke-width="6"/>
+ <polygon points="351,665 380,651 548,729 519,743" fill="#8c9ca6" stroke="#cbd6dc" stroke-width="2"/>
+</g>
+<text x="450" y="775" font-family="Arial,sans-serif" fill="#dbeaff" font-size="21" font-weight="bold" text-anchor="middle">SOLAR ARRAY</text>
+<!-- science lab -->
+<g filter="url(#shadow)">
+ <polygon points="835,390 930,348 1028,393 932,438" fill="#d6e2e9" stroke="#f9fcff" stroke-width="3"/>
+ <polygon points="835,390 835,468 932,514 932,438" fill="#7b95a5" stroke="#d5e4eb" stroke-width="2"/>
+ <polygon points="932,438 932,514 1028,468 1028,393" fill="#526c7e" stroke="#bdccd4" stroke-width="2"/>
+ <polygon points="865,385 930,355 996,385 931,416" fill="#f8fcff"/>
+ <rect x="881" y="428" width="30" height="38" fill="#173c53"/><rect x="886" y="433" width="20" height="26" fill="#7cdeeb" opacity=".8"/>
+</g>
+<text x="932" y="535" font-family="Arial,sans-serif" fill="#edf8ff" font-size="18" text-anchor="middle">SCIENCE LAB</text>
+<!-- comms mast -->
+<g stroke="#d9e3e8" stroke-width="5" fill="none" filter="url(#shadow)">
+ <path d="M1180 480 L1180 345 M1144 480 L1180 345 L1216 480 M1155 440 L1205 440 M1164 405 L1196 405 M1170 375 L1190 375"/>
+ <path d="M1180 345 Q1228 315 1260 350 Q1225 355 1180 345" stroke="#9edaf3" stroke-width="7" fill="#385f76"/>
+ <circle cx="1180" cy="344" r="8" fill="#ffcf69" stroke="none"/>
+</g>
+<text x="1190" y="510" font-family="Arial,sans-serif" fill="#e0eff8" font-size="18" text-anchor="middle">COMMUNICATIONS</text>
+<!-- rover -->
+<g transform="translate(490 690)" filter="url(#shadow)">
+ <polygon points="0,0 92,-42 170,-5 78,38" fill="#d8e3e9" stroke="#ffffff" stroke-width="3"/>
+ <polygon points="0,0 0,37 78,76 78,38" fill="#7d929e" stroke="#dce6eb" stroke-width="2"/>
+ <polygon points="78,38 78,76 170,32 170,-5" fill="#536d7c" stroke="#c7d5dc" stroke-width="2"/>
+ <polygon points="47,-28 90,-47 135,-26 92,-6" fill="#304d69" stroke="#97c8e5" stroke-width="3"/>
+ <path d="M90 -45 L90 -85 L132 -105" stroke="#d7e4ed" stroke-width="5" fill="none"/>
+ <circle cx="20" cy="38" r="23" fill="#1b2731" stroke="#aab8c2" stroke-width="5"/><circle cx="76" cy="66" r="23" fill="#1b2731" stroke="#aab8c2" stroke-width="5"/><circle cx="154" cy="29" r="23" fill="#1b2731" stroke="#aab8c2" stroke-width="5"/>
+ <circle cx="20" cy="38" r="8" fill="#89a3b5"/><circle cx="76" cy="66" r="8" fill="#89a3b5"/><circle cx="154" cy="29" r="8" fill="#89a3b5"/>
+</g>
+<text x="570" y="825" font-family="Arial,sans-serif" fill="#eef6fb" font-size="20" text-anchor="middle" font-weight="bold">LUNAR ROVER</text>
+<!-- small crater -->
+<ellipse cx="1330" cy="722" rx="118" ry="62" fill="#334353" stroke="#a7b5bf" stroke-width="5"/>
+<ellipse cx="1330" cy="720" rx="82" ry="39" fill="#172637" stroke="#748795" stroke-width="4"/>
+<path d="M1252 716 Q1330 675 1409 716" stroke="#b8c4cb" stroke-width="5" fill="none" opacity=".4"/>
+<text x="1330" y="810" font-family="Arial,sans-serif" fill="#e4eef5" font-size="18" text-anchor="middle">CRATER EXPLORATION</text>
+<!-- top left title card -->
+<g transform="translate(50 52)">
+ <rect width="450" height="148" rx="22" fill="#0a1a2b" fill-opacity=".85" stroke="#68cde4" stroke-width="2"/>
+ <text x="28" y="55" font-family="Arial,sans-serif" font-size="36" font-weight="bold" fill="#eef8ff">LUNA ACADEMY</text>
+ <text x="30" y="91" font-family="Arial,sans-serif" font-size="20" fill="#93daed" letter-spacing="2">A LIVING MOON COLONY</text>
+ <text x="30" y="121" font-family="Arial,sans-serif" font-size="16" fill="#b6c7d4">CSA resource research • isometric concept map</text>
+</g>
+<!-- legend -->
+<g transform="translate(1050 835)" font-family="Arial,sans-serif" font-size="16" fill="#d8e9f4">
+ <circle cx="0" cy="0" r="7" fill="#80d9e6"/><text x="16" y="6">Habitat systems</text>
+ <circle cx="155" cy="0" r="7" fill="#9ce39d"/><text x="171" y="6">Food production</text>
+ <circle cx="330" cy="0" r="7" fill="#5e9ce3"/><text x="346" y="6">Power &amp; mobility</text>
+</g>
+</svg>
