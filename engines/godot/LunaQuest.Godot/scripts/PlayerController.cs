@@ -26,6 +26,7 @@ namespace LunaQuest.Godot
         private float _pitch = -0.12f;
         private float _bob;
         private Interactable? _focus;
+        private AstronautAnimator? _animator;
 
         public override void _Ready()
         {
@@ -95,6 +96,7 @@ namespace LunaQuest.Godot
             {
                 Velocity = Vector3.Zero;
                 MoveAndSlide();
+                UpdateAnimation();
                 return;
             }
 
@@ -122,6 +124,23 @@ namespace LunaQuest.Godot
 
             UpdateFocus();
             UpdateBob(dt);
+            UpdateAnimation();
+        }
+
+        private void UpdateAnimation()
+        {
+            if (_animator == null)
+            {
+                foreach (var child in Visual.GetChildren())
+                {
+                    _animator = child.GetNodeOrNull<AstronautAnimator>("Animator");
+                    if (_animator != null) break;
+                }
+            }
+            if (_animator == null) return;
+
+            float speed = new Vector2(Velocity.X, Velocity.Z).Length();
+            _animator.SetLocomotion(speed > 0.35f && IsOnFloor(), speed);
         }
 
         private void UpdateBob(float dt)

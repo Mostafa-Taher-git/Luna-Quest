@@ -1,8 +1,8 @@
 # Luna-Quest — Godot adapter
 
 This is the Godot 4.7.2 .NET side of Luna-Quest. It is a complete project: the world is built
-procedurally at runtime, the astronaut is the repaired Sketchfab GLB frozen at `0.4 s`, and
-the HUD is built in C# with Godot `Control` nodes.
+procedurally at runtime, the astronaut is the repaired Sketchfab GLB driven by looping idle
+and walk cycles, and the HUD is built in C# with Godot `Control` nodes.
 
 ---
 
@@ -112,9 +112,13 @@ immediately.
 
 - The world is procedural. There are no imported scenes or prefabs beyond `Main.tscn`; this
   keeps the project robust when files are copied through services that drop editor metadata.
-- The astronaut GLB is repaired and posed at `0.4 s`. The source pose is the standing idle,
-  with the visor facing `+Z`. The player visual is turned 180° so the trailing camera sees
-  the back and the backpack.
+- The astronaut GLB is repaired and driven by `AstronautAnimator`. The source file ships one
+  long Sketchfab action; the animator loops two sections of it as `LunaQuestIdle`
+  (`0.75–1.75 s`) and `LunaQuestWalk` (`2.50–5.00 s`). The walk section is one complete,
+  seamlessly repeating cycle, and its playback speed scales with ground speed. The player and
+  every crew member use the same rig.
+- The standing pose has the visor facing `+Z`. The player visual is turned 180° so the trailing
+  camera sees the back and the backpack.
 - The HUD is bilingual. The `L` key switches English and Arabic; Arabic uses the Noto Naskh
   Arabic font and right-to-left layout.
 - The game uses Godot’s built-in `FontFile`/`Font` loading from `.woff` assets. If the fonts

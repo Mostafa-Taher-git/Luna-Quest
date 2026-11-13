@@ -81,7 +81,9 @@ namespace LunaQuest.Godot
         {
             bool autoStart = false;
             bool portrait = false;
-            foreach (var arg in OS.GetCmdlineArgs())
+            var args = new List<string>(OS.GetCmdlineArgs());
+            args.AddRange(OS.GetCmdlineUserArgs());
+            foreach (var arg in args)
             {
                 if (arg == "--autostart") autoStart = true;
                 else if (arg == "--portrait") portrait = true;

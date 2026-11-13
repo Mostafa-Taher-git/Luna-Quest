@@ -923,21 +923,16 @@ namespace LunaQuest.Godot
             modelRoot.AddChild(inst);
             AddChild(holder);
 
-            // The Sketchfab rig ships one long action: frame 0 is a seated bind pose and
-            // the late frames drift away from the origin. Hold 0.4 s, which is a clean
-            // standing idle with the feet at y=0 and the visor facing +Z. The player and
-            // crew turn the holder, so the model's forward axis is +Z.
+            // The Sketchfab rig ships one long action: frame 0 is a seated bind pose,
+            // the early frames hold a standing idle, the middle contains a complete
+            // walk cycle and the late frames drift away from the origin. The animator
+            // turns the idle and walk sections into looping clips, so the holder can
+            // move through the world while the suit animates in place.
             var anim = FindChild<AnimationPlayer>(holder);
+            var animator = new AstronautAnimator { Name = "Animator" };
+            holder.AddChild(animator);
             if (anim != null)
-            {
-                var names = anim.GetAnimationList();
-                if (names.Length > 0)
-                {
-                    anim.Play(names[0]);
-                    anim.Seek(0.4, true);
-                    anim.Pause();
-                }
-            }
+                animator.Setup(anim);
 
             DressAstronaut(holder, modelRoot);
 

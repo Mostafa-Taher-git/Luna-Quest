@@ -15,6 +15,7 @@ namespace LunaQuest.Godot
         public WorldBuilder World = null!;
 
         private Node3D _visual = null!;
+        private AstronautAnimator? _animator;
         private Label3D _name = null!;
         private Label3D _activity = null!;
         private readonly List<Vector3> _path = new List<Vector3>();
@@ -29,6 +30,7 @@ namespace LunaQuest.Godot
             _slot = World.Npcs.Count;
             _visual = World.CreateAstronaut(1.72f);
             AddChild(_visual);
+            _animator = _visual.GetNodeOrNull<AstronautAnimator>("Animator");
 
             var home = World.InsideWorld.TryGetValue(Profile.LocationId, out var p) ? p : Vector3.Zero;
             GlobalPosition = home + new Vector3((_slot % 4 - 1.5f) * 0.9f, 0, (_slot / 4 - 0.5f) * 1.2f);
@@ -89,6 +91,7 @@ namespace LunaQuest.Godot
                 ApplySchedule(false);
             }
             FollowPath((float)delta);
+            _animator?.SetLocomotion(_pathIndex < _path.Count, 1.55f);
             UpdateLabels();
             MaybeSpeak(delta);
         }
