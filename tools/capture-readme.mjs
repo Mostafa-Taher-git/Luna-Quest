@@ -191,24 +191,35 @@ function installRig() {
       return { name: entry.nameEn, buildingId, interactionId };
     },
 
-    /** A crew member, where they are standing, and a spot a few metres away facing them. */
-    crewSpot({ role, distance = 3.2 }) {
+    /**
+     * A crew member, where they are standing, and a spot a few metres away facing them.
+     * The spot is on the far side of the member from their own building, so the module — and its
+     * sign — is what the camera sees behind them instead of empty regolith.
+     */
+    crewSpot({ role, distance = 3.2, offsetDeg = 0 }) {
       const member = LQ.crew.members.find((m) => m.profile.id === role);
       if (!member) return null;
       const at = member.root.position.clone();
-      // Stand between the member and the middle of the colony, so the camera looks outward.
-      const towards = vec().set(0, 0, 10).sub(at);
-      towards.y = 0;
-      if (towards.lengthSq() < 1) towards.set(0, 0, 1);
-      towards.normalize();
-      const px = at.x + towards.x * distance;
-      const pz = at.z + towards.z * distance;
-      const yaw = Math.atan2(at.x - px, at.z - pz) + Math.PI;
-      return { at: { x: at.x, y: at.y, z: at.z }, stand: { x: px, y: at.y, z: pz }, yaw, id: member.profile.id, name: member.profile.nameEn };
+      const home = LQ.buildings.get(member.profile.locationId);
+      const centre = home && Array.isArray(home.position) ? home.position : [0, 10];
+      const outward = vec().set(at.x - centre[0], 0, at.z - centre[1]);
+      if (outward.lengthSq() < 0.5) outward.set(0, 0, 1);
+      outward.normalize();
+      const px = at.x + outward.x * distance;
+      const pz = at.z + outward.z * distance;
+      const yaw = Math.atan2(outward.x, outward.z) + (offsetDeg * Math.PI) / 180;
+      return {
+        at: { x: +at.x.toFixed(1), y: +at.y.toFixed(1), z: +at.z.toFixed(1) },
+        building: member.profile.locationId,
+        stand: { x: +px.toFixed(1), y: at.y, z: +pz.toFixed(1) },
+        yaw: +yaw.toFixed(3),
+        id: member.profile.id,
+        name: member.profile.nameEn,
+      };
     },
 
-    stand_near_crew({ role, distance = 3.2, pitch = -0.02, mode = 'third' }) {
-      const spot = api.crewSpot({ role, distance });
+    stand_near_crew({ role, distance = 3.2, offsetDeg = 0, pitch = -0.02, mode = 'third' }) {
+      const spot = api.crewSpot({ role, distance, offsetDeg });
       if (!spot) return null;
       api.pose({ x: spot.stand.x, y: spot.stand.y, z: spot.stand.z, yaw: spot.yaw, pitch, mode });
       api.focus();
@@ -256,6 +267,14 @@ function installRig() {
       return true;
     },
 
+    /** What the interaction prompt says, if anything is in reach. */
+    prompt() {
+      const box = document.getElementById('prompt');
+      const text = document.getElementById('prompt-text');
+      if (!box) return null;
+      return { visible: !box.classList.contains('hidden'), text: (text?.textContent ?? '').trim() };
+    },
+
     where() {
       const p = LQ.player.position;
       return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(2), yaw: +LQ.player.yaw.toFixed(2) };
@@ -274,87 +293,94 @@ function installRig() {
  * is data, not code inside the page.
  */
 const SHOTS = [
-  // ---- hero: the colony, wide, HUD live -----------------------------------
+  // ---- hero: the colony ---------------------------------------------------
   {
-    name: 'hero-A-plaza-spawn',
-    note: 'Spawn on the plaza, third person, full HUD',
-    run: [['pose', { x: -6, y: 0, z: 20, yaw: 0.6, pitch: -0.04, mode: 'third' }]],
-  },
-  {
-    name: 'hero-B-plaza-mirror',
-    note: 'The other side of the plaza walk, looking down the base',
-    run: [['pose', { x: 6, y: 0, z: 20, yaw: -0.6, pitch: -0.04, mode: 'third' }]],
-  },
-  {
-    name: 'hero-C-colony-wide',
-    note: 'Further back: the whole line of modules',
-    run: [['pose', { x: -14, y: 0, z: 34, yaw: 0.42, pitch: -0.02, mode: 'third' }]],
-  },
-  {
-    name: 'hero-D-aerial',
-    note: 'Aerial of the base from the rim side',
+    name: 'hero-1-aerial',
+    note: 'Aerial of the whole base, every module in frame',
     run: [['free', { eye: [-30, 26, 42], look: [0, 2, 6], fov: 48 }]],
   },
   {
-    name: 'hero-E-life-support',
-    note: 'Three-quarter on Life Support with the facade sign readable',
-    run: [['stand_near_crew', { role: 'npc_nour', distance: 6.5, pitch: -0.02, mode: 'third' }]],
+    name: 'hero-2-aerial-low',
+    note: 'Lower aerial, closer to the roofline',
+    run: [['free', { eye: [-18, 14, 32], look: [0, 2, 4], fov: 52 }]],
+  },
+  {
+    name: 'hero-3-aerial-east',
+    note: 'From the power farm side, looking back across the plaza',
+    run: [['free', { eye: [40, 22, 34], look: [-4, 2, 8], fov: 50 }]],
+  },
+  {
+    name: 'hero-4-spawn',
+    note: 'The first frame of the game, spawn on the plaza',
+    run: [['pose', { x: -6, y: 0, z: 20, yaw: 0.6, pitch: -0.04, mode: 'third' }]],
+  },
+  {
+    name: 'hero-5-plaza-south',
+    note: 'Further down the plaza walk, colony ahead',
+    run: [['pose', { x: -8, y: 0, z: 27, yaw: 0.28, pitch: -0.03, mode: 'third' }]],
+  },
+  {
+    name: 'hero-6-mirror',
+    note: 'The opposite walk, airlock and habitat in frame',
+    run: [['pose', { x: 6, y: 0, z: 20, yaw: -0.6, pitch: -0.04, mode: 'third' }]],
   },
 
-  // ---- console: the Water Filter, over a lit interior ---------------------
+  // ---- console: the Water Filter -----------------------------------------
   {
-    name: 'console-A-water-filter',
-    note: 'Water Filter panel, first person, inside Life Support',
+    name: 'console-1-water-filter',
+    note: 'Water Filter panel, first person at the station',
     run: [
-      ['stand_at_console', { buildingId: 'life_support', interactionId: 'clean_filter', distance: 1.6, pitch: -0.12, mode: 'first' }],
+      ['stand_at_console', { buildingId: 'life_support', interactionId: 'clean_filter', distance: 1.9, pitch: -0.1, mode: 'first' }],
       ['open_console', { buildingId: 'life_support', interactionId: 'clean_filter' }],
     ],
   },
   {
-    name: 'console-B-power',
-    note: 'Load budget panel at the Power Farm',
+    name: 'console-2-station-third',
+    note: 'The station itself, third person, with the interaction prompt',
     run: [
-      ['stand_at_console', { buildingId: 'power_farm', interactionId: 'balance_load', distance: 1.6, pitch: -0.12, mode: 'first' }],
-      ['open_console', { buildingId: 'power_farm', interactionId: 'balance_load' }],
+      ['stand_at_console', { buildingId: 'life_support', interactionId: 'clean_filter', distance: 2.2, pitch: -0.1, mode: 'third' }],
     ],
   },
   {
-    name: 'console-C-greenhouse',
+    name: 'console-3-greenhouse',
     note: 'Harvest panel in the greenhouse',
     run: [
-      ['stand_at_console', { buildingId: 'greenhouse', interactionId: 'harvest', distance: 1.6, pitch: -0.12, mode: 'first' }],
+      ['stand_at_console', { buildingId: 'greenhouse', interactionId: 'harvest', distance: 1.9, pitch: -0.1, mode: 'first' }],
       ['open_console', { buildingId: 'greenhouse', interactionId: 'harvest' }],
     ],
   },
 
-  // ---- crew: Noor outside Life Support -----------------------------------
+  // ---- crew: Noor outside Life Support ------------------------------------
   {
-    name: 'crew-A-dialogue',
+    name: 'crew-1-noor-sign',
+    note: 'Noor outside the Life Support hatch, module behind her',
+    run: [['stand_near_crew', { role: 'npc_nour', distance: 3.2, offsetDeg: 12, pitch: 0.0, mode: 'third' }]],
+  },
+  {
+    name: 'crew-2-noor-close',
+    note: 'Closer on Noor, hatch in frame',
+    run: [['stand_near_crew', { role: 'npc_nour', distance: 2.3, offsetDeg: -8, pitch: 0.03, mode: 'third' }]],
+  },
+  {
+    name: 'crew-3-noor-panel',
     note: 'Noor dialogue, six voiced topics',
-    run: [['talk', { role: 'npc_nour' }]],
-  },
-  {
-    name: 'crew-B-noor-third',
-    note: 'Noor outside the Life Support hatch, third person',
-    run: [['stand_near_crew', { role: 'npc_nour', distance: 3.4, pitch: -0.02, mode: 'third' }]],
-  },
-  {
-    name: 'crew-C-noor-close',
-    note: 'Closer on Noor, hatch and sign in frame',
-    run: [['stand_near_crew', { role: 'npc_nour', distance: 2.2, pitch: 0.02, mode: 'third' }]],
-  },
-  {
-    name: 'crew-D-arabic',
-    note: 'Third person near Noor with the interface in Arabic',
     run: [
-      ['arabic', { on: true }],
-      ['stand_near_crew', { role: 'npc_nour', distance: 3.4, pitch: -0.02, mode: 'third' }],
+      ['stand_near_crew', { role: 'npc_nour', distance: 2.3, offsetDeg: -8, pitch: 0.03, mode: 'third' }],
+      ['talk', { role: 'npc_nour' }],
     ],
   },
   {
-    name: 'crew-E-abdelaziz-power',
+    name: 'crew-4-noor-arabic',
+    note: 'Noor outside Life Support with the interface in Arabic',
+    run: [
+      ['arabic', { on: true }],
+      ['stand_near_crew', { role: 'npc_nour', distance: 3.2, offsetDeg: 12, pitch: 0.0, mode: 'third' }],
+    ],
+  },
+  {
+    name: 'crew-5-abdelaziz',
     note: 'Abdulaziz outside the Power Farm',
-    run: [['stand_near_crew', { role: 'npc_abdelaziz', distance: 3.4, pitch: -0.02, mode: 'third' }]],
+    run: [['stand_near_crew', { role: 'npc_abdelaziz', distance: 3.2, offsetDeg: 10, pitch: 0.0, mode: 'third' }]],
   },
 ];
 
@@ -430,6 +456,8 @@ async function main() {
         if (result !== null && result !== undefined) facts.push({ [method]: result });
       }
       await page.waitForTimeout(350);
+      const prompt = await page.evaluate(() => window.__rig.prompt());
+      if (prompt) facts.push({ prompt });
       const file = join(OUT_DIR, `${shot.name}.png`);
       await page.screenshot({ path: file, type: 'png' });
       const { size } = await fs.stat(file);
