@@ -21,7 +21,7 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
 | Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
-| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 174 scene checks passing, exported for Web, Windows and Linux** |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Web, Windows and Linux** |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
 | **Browser edition (Three.js)** | **Complete; built with Vite, played and screenshotted in headless Chromium, 36 web checks passing** |
@@ -92,7 +92,7 @@ godot --path engines/godot-gdscript/LunaQuest.GDScript
 
 # no GPU required to check it:
 godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 544 checks
-godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 174 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 190 checks
 ```
 
 Full notes, controls and the file map:

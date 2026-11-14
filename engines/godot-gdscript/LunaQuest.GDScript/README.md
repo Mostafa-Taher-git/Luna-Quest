@@ -84,7 +84,7 @@ There is no GPU in CI, so the build is checked two ways that do not need one:
 ```bash
 godot --headless --path . --import                     # parses every script, imports every asset
 godot --headless --path . -- --selftest                # 544 checks: the whole thirty days
-godot --headless --path . -- --audit                   # 174 checks: doorways, consoles, spawn, crew
+godot --headless --path . -- --audit                   # 190 checks: doorways, consoles, spawn, crew, HUD
 godot --headless --path . --quit-after 400             # boots the real scene and runs it
 ```
 

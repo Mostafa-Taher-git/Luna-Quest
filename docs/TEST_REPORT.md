@@ -130,7 +130,7 @@ godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --quit-after 4
 | Whole content exercised | all 16 buildings, 45 consoles, 18 actions, 44 dialogue topics, 11 objectives unlocked, 7 crew |
 | Voice pack | 79 spoken character and dialogue lines resolve to files; the 15 incident headlines are narration and degrade to subtitles |
 | Save contract | schema 2 round-trips through JSON into a fresh simulation: clock, battery, journal, crew trust and player name all restored |
-| Scene audit (`-- --audit`) | **174 checks passed**: 16 doorways walkable, 45 consoles reachable from standing height, spawn clear and floored, no crew inside a wall, 12/12 headings closed by the traverse markers |
+| Scene audit (`-- --audit`) | **190 checks passed**: 16 doorways walkable, 45 consoles reachable from standing height, spawn clear and floored with 8 m of clear view ahead, no crew inside a wall, 12/12 headings closed by the traverse markers, the HUD's nine gauges and bilingual stamp, the journal, the event card and the mission report all built |
 | Headless boot (`--quit-after 400`) | the real scene builds 16 modules, 7 crew and 45 consoles and runs 400 frames with no script errors |
 | Web export | `index.html`, `index.wasm`, `index.pck` produced (exit 0) |
 | Linux export | `luna-quest-gdscript.x86_64` produced (exit 0) |
