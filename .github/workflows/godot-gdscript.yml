@@ -74,6 +74,9 @@ jobs:
           set -uo pipefail
           ./godot --headless --path "$PROJECT_DIR" -- --selftest > selftest.log 2>&1 || true
           grep -E "SELFTEST|resource floors|flew " selftest.log | head -40
+          while IFS= read -r line; do
+            echo "::notice::selftest: $line"
+          done < <(grep -E "SELFTEST OK|resource floors|flew " selftest.log | head -5)
           if grep -q "SELFTEST OK" selftest.log; then
             exit 0
           fi
