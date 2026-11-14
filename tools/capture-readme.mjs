@@ -315,9 +315,9 @@ const SHOTS = [
     run: [['pose', { x: -6, y: 0, z: 20, yaw: 0.6, pitch: -0.04, mode: 'third' }]],
   },
   {
-    name: 'hero-5-plaza-south',
-    note: 'Further down the plaza walk, colony ahead',
-    run: [['pose', { x: -8, y: 0, z: 27, yaw: 0.28, pitch: -0.03, mode: 'third' }]],
+    name: 'hero-5-aerial-west',
+    note: 'From the west, the base laid out with the landing pad in front',
+    run: [['free', { eye: [-48, 18, 20], look: [2, 2, 10], fov: 50 }]],
   },
   {
     name: 'hero-6-mirror',
@@ -335,10 +335,11 @@ const SHOTS = [
     ],
   },
   {
-    name: 'console-2-station-third',
-    note: 'The station itself, third person, with the interaction prompt',
+    name: 'console-2-colony-board',
+    note: 'The colony board in Mission Control',
     run: [
-      ['stand_at_console', { buildingId: 'life_support', interactionId: 'clean_filter', distance: 2.2, pitch: -0.1, mode: 'third' }],
+      ['stand_at_console', { buildingId: 'mission_control', interactionId: 'colony_board', distance: 1.9, pitch: -0.1, mode: 'first' }],
+      ['open_console', { buildingId: 'mission_control', interactionId: 'colony_board' }],
     ],
   },
   {
@@ -378,9 +379,9 @@ const SHOTS = [
     ],
   },
   {
-    name: 'crew-5-abdelaziz',
-    note: 'Abdulaziz outside the Power Farm',
-    run: [['stand_near_crew', { role: 'npc_abdelaziz', distance: 3.2, offsetDeg: 10, pitch: 0.0, mode: 'third' }]],
+    name: 'crew-5-nexo',
+    note: 'NEXO, the colony robot, outside the greenhouse',
+    run: [['stand_near_crew', { role: 'npc_nexo', distance: 3.0, offsetDeg: 10, pitch: 0.0, mode: 'third' }]],
   },
 ];
 
@@ -404,7 +405,11 @@ async function main() {
   const page = await context.newPage();
 
   const errors = [];
+  const missing = [];
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+  page.on('response', (response) => {
+    if (response.status() >= 400) missing.push(`${response.status()} ${response.url()}`);
+  });
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
@@ -474,7 +479,7 @@ async function main() {
 
   await fs.writeFile(
     join(OUT_DIR, 'report.json'),
-    JSON.stringify({ when: new Date().toISOString(), viewport: [WIDTH, HEIGHT], errors, report }, null, 2),
+    JSON.stringify({ when: new Date().toISOString(), viewport: [WIDTH, HEIGHT], errors, missing, report }, null, 2),
   );
   log(`errors: ${errors.length}`);
   for (const error of errors.slice(0, 8)) log(`  ${error}`);
