@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "comment": "Crop cycles and nutrition follow the CSA Interplanetary Farming planning values as summarised in api info/Luna_Academy_Food_Production_Research.md. kcal/m² and water figures are simulation values derived from those planning ranges, not measured lunar yields. The greenhouse is sealed: no direct sunlight, no unshielded radiation, light from colony power, CO2 from the cabin, water from storage.",
+  "crops": [
+    { "id": "crop_lettuce", "nameEn": "Green-leaf lettuce", "nameAr": "خس أخضر الأوراق", "cycleDays": 24, "kcalPerM2": 450, "waterLPerM2Day": 3.0, "note": "CSA 21–28 days. Vitamins K, A and C. Fast early harvest; salad and morale. Current grow-pod crop." },
+    { "id": "crop_soybean", "nameEn": "Soybean", "nameAr": "فول الصويا", "cycleDays": 55, "kcalPerM2": 800, "waterLPerM2Day": 3.4, "note": "CSA 45–65 days. Protein, fats, calcium, iron, folate. Needs boiling in shell." },
+    { "id": "crop_tomato", "nameEn": "Tomato", "nameAr": "طماطم", "cycleDays": 70, "kcalPerM2": 900, "waterLPerM2Day": 4.0, "note": "CSA 50–90 days. Vitamins A, C and K, fibre. Fresh food and variety; needs pollination support." },
+    { "id": "crop_carrot", "nameEn": "Carrot", "nameAr": "جزر", "cycleDays": 75, "kcalPerM2": 600, "waterLPerM2Day": 3.2, "note": "CSA 70–80 days. Vitamin A, potassium, fibre. Storage-friendly; roots need growing volume." },
+    { "id": "crop_chickpea", "nameEn": "Chickpea", "nameAr": "حمص", "cycleDays": 90, "kcalPerM2": 750, "waterLPerM2Day": 3.0, "note": "CSA 80 days fresh, 100 days dried. Protein, fibre, iron, folate." },
+    { "id": "crop_sweet_potato", "nameEn": "Sweet potato", "nameAr": "بطاطا حلوة", "cycleDays": 120, "kcalPerM2": 1200, "waterLPerM2Day": 3.8, "note": "CSA 90–170 days. High edible value but a long cycle for a 30-day mission." },
+    { "id": "crop_basil", "nameEn": "Basil", "nameAr": "ريحان", "cycleDays": 75, "kcalPerM2": 150, "waterLPerM2Day": 2.4, "note": "CSA about 75 days. Herb for flavour and menu variety." },
+    { "id": "crop_dill", "nameEn": "Dill", "nameAr": "شبت", "cycleDays": 90, "kcalPerM2": 150, "waterLPerM2Day": 2.3, "note": "CSA about 90 days. Herb and food-variety crop." },
+    { "id": "crop_wheat", "nameEn": "Wheat", "nameAr": "قمح", "cycleDays": 225, "kcalPerM2": 1000, "waterLPerM2Day": 3.6, "note": "CSA 213–244 days. Staple, but needs grinding equipment and outlasts a 30-day mission." }
+  ]
+}

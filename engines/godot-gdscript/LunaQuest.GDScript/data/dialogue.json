@@ -1,0 +1,402 @@
+{
+  "version": 1,
+  "comment": "Crew topics for the dialogue panel. Every topic has a matching voiceKey; tools/generate_voice_pack.py reads this file so the spoken line and the on-screen line cannot drift apart. Names pending approval stay pending.",
+  "topics": [
+    {
+      "npcId": "npc_safaa",
+      "id": "sleep",
+      "voiceKey": "talk.safaa.sleep",
+      "labelEn": "Sleep and fatigue",
+      "labelAr": "النوم والإجهاد",
+      "lineEn": "Fatigue is a system. Sleep debt changes reaction time before anyone admits it, and I would rather lose an hour of schedule than a crew member.",
+      "lineAr": "الإجهاد نظام. دين النوم يغيّر زمن رد الفعل قبل أن يعترف أحد به، وأفضّل خسارة ساعة من الجدول على خسارة فرد من الطاقم."
+    },
+    {
+      "npcId": "npc_safaa",
+      "id": "dose",
+      "voiceKey": "talk.safaa.dose",
+      "labelEn": "Dose and shielding",
+      "labelAr": "الجرعة والتدريع",
+      "lineEn": "The dose log is cumulative. Shielding and time are the real controls; a number that looks small today still adds up over thirty days.",
+      "lineAr": "سجل الجرعة تراكمي. التدريع والوقت هما التحكّم الحقيقي؛ رقم يبدو صغيرًا اليوم يتراكم على مدى ثلاثين يومًا."
+    },
+    {
+      "npcId": "npc_safaa",
+      "id": "hydration",
+      "voiceKey": "talk.safaa.hydration",
+      "labelEn": "Water and hydration",
+      "labelAr": "الماء والترطيب",
+      "lineEn": "Hydration affects headaches, concentration and heart rate. Read the water number before you reach for a pill.",
+      "lineAr": "الترطيب يؤثر على الصداع والتركيز ومعدل القلب. اقرأ رقم الماء قبل أن تمد يدك إلى دواء."
+    },
+    {
+      "npcId": "npc_safaa",
+      "id": "morale",
+      "voiceKey": "talk.safaa.morale",
+      "labelEn": "Morale and isolation",
+      "labelAr": "الروح المعنوية والعزلة",
+      "lineEn": "Low morale looks like sloppy work first. Meals, sleep and a short conversation are operational tools, not luxuries.",
+      "lineAr": "الروح المعنوية المنخفضة تظهر أولًا كعمل غير متقن. الوجبات والنوم ومحادثة قصيرة أدوات تشغيلية، وليست رفاهية."
+    },
+    {
+      "npcId": "npc_safaa",
+      "id": "checkup",
+      "voiceKey": "talk.safaa.checkup",
+      "labelEn": "What a check-up covers",
+      "labelAr": "ماذا يشمل الفحص",
+      "lineEn": "I measure resting heart rate, hydration, sleep and dose. I do not diagnose from a console; if something is wrong, we stop and examine it properly.",
+      "lineAr": "أقيس معدل القلب أثناء الراحة والترطيب والنوم والجرعة. لا أشخّص من كونسول؛ إن كان هناك خلل نتوقف ونفحصه كما يجب."
+    },
+    {
+      "npcId": "npc_safaa",
+      "id": "limits",
+      "voiceKey": "talk.safaa.limits",
+      "labelEn": "Limits of my advice",
+      "labelAr": "حدود نصيحتي",
+      "lineEn": "I can explain spaceflight health, but this is not medical advice for you or a real crew. A real symptom belongs with a real clinician.",
+      "lineAr": "أستطيع شرح صحة الطيران الفضائي، لكن هذه ليست نصيحة طبية لك أو لطاقم حقيقي. العَرَض الحقيقي مكانه عند طبيب حقيقي."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "airflow",
+      "voiceKey": "talk.noor.airflow",
+      "labelEn": "Airflow first",
+      "labelAr": "التدفق أولًا",
+      "lineEn": "Airflow first. A scrubber that is fine cannot fix a fan that is not moving the cabin air.",
+      "lineAr": "التدفق أولًا. مرشّح سليم لا يمكنه إصلاح مروحة لا تحرّك هواء المقصورة."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "water_loop",
+      "voiceKey": "talk.noor.water_loop",
+      "labelEn": "The water loop",
+      "labelAr": "دورة الماء",
+      "lineEn": "Water in, water out. The recycler recovers most of it, but filter health decides whether the number you see is real.",
+      "lineAr": "ماء يدخل، ماء يخرج. المعيد يستعيد معظمه، لكن صحة الفلتر تحدّد إن كان الرقم الذي تراه حقيقيًا."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "filter",
+      "voiceKey": "talk.noor.filter",
+      "labelEn": "Filter service",
+      "labelAr": "خدمة الفلتر",
+      "lineEn": "Back-flush the filter, then watch quality. Do not replace a cartridge because one reading is loud.",
+      "lineAr": "اغسل الفلتر عكسيًا، ثم راقب الجودة. لا تبدّل الخرطوشة لأن قراءة واحدة صاخبة."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "co2",
+      "voiceKey": "talk.noor.co2",
+      "labelEn": "CO2 and the scrubber",
+      "labelAr": "ثاني أكسيد الكربون والمرشّح",
+      "lineEn": "Rising carbon dioxide is a flow question before it is a cartridge question. Check the sensor, then the fan, then the bed.",
+      "lineAr": "ارتفاع ثاني أكسيد الكربون سؤال تدفق قبل أن يكون سؤال خرطوشة. افحص الحساس، ثم المروحة، ثم وسادة المرشّح."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "leak",
+      "voiceKey": "talk.noor.leak",
+      "labelEn": "Small leaks",
+      "labelAr": "التسريبات الصغيرة",
+      "lineEn": "A small leak is a long shift. Find it with pressure and sound before you seal anything.",
+      "lineAr": "تسريب صغير يعني مناوبة طويلة. اعثر عليه بالضغط والصوت قبل أن تختم أي شيء."
+    },
+    {
+      "npcId": "npc_nour",
+      "id": "priority",
+      "voiceKey": "talk.noor.priority",
+      "labelEn": "What never sheds",
+      "labelAr": "ما لا يُفصل أبدًا",
+      "lineEn": "Life support never sheds. The greenhouse and the lab go first; the air and water stay on.",
+      "lineAr": "دعم الحياة لا يُفصل أبدًا. البيت الزجاجي والمختبر أولًا؛ الهواء والماء يبقيان."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "ice",
+      "voiceKey": "talk.alaa.ice",
+      "labelEn": "Ice signatures",
+      "labelAr": "بصمات الجليد",
+      "lineEn": "A bright signature can be ice, a shadow or a mineral. The angle and a second reading decide.",
+      "lineAr": "البصمة اللامعة قد تكون جليدًا أو ظلًا أو معدنًا. الزاوية وقراءة ثانية هما ما يحسم."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "sample",
+      "voiceKey": "talk.alaa.sample",
+      "labelEn": "Taking a sample",
+      "labelAr": "أخذ العينة",
+      "lineEn": "Bag it, photograph the site, write the coordinates. An unlabeled sample is a story, not data.",
+      "lineAr": "احفظها، صوّر الموقع، واكتب الإحداثيات. عينة بلا ملصق قصة، وليست بيانات."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "regolith",
+      "voiceKey": "talk.alaa.regolith",
+      "labelEn": "Reading regolith",
+      "labelAr": "قراءة الثرى",
+      "lineEn": "The regolith records impacts and weathering. Read the layers slowly and do not flatten the site.",
+      "lineAr": "الثرى يسجّل الاصطدامات والتجوية. اقرأ الطبقات ببطء ولا تسوِّ الموقع."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "site",
+      "voiceKey": "talk.alaa.site",
+      "labelEn": "Choosing a site",
+      "labelAr": "اختيار الموقع",
+      "lineEn": "I want access, a stable slope, a safe walk and a reason. A resource that is too hard to reach is not a reserve.",
+      "lineAr": "أريد وصولًا ومنحدرًا مستقرًا وطريقًا آمنًا وسببًا. مورد يصعب الوصول إليه ليس احتياطيًا."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "repeat",
+      "voiceKey": "talk.alaa.repeat",
+      "labelEn": "Repeat measurements",
+      "labelAr": "تكرار القياس",
+      "lineEn": "One reading is a rumour. Repeat it on the same sample, then compare it with a second instrument.",
+      "lineAr": "قراءة واحدة إشاعة. كررها على العينة نفسها، ثم قارنها بأداة ثانية."
+    },
+    {
+      "npcId": "npc_alaa",
+      "id": "resource",
+      "voiceKey": "talk.alaa.resource",
+      "labelEn": "Calling it a resource",
+      "labelAr": "متى نسميه موردًا",
+      "lineEn": "We call it a resource only when the volume, the access and the processing cost all make sense.",
+      "lineAr": "نسميه موردًا فقط عندما يكون الحجم والوصول وتكلفة المعالجة كلها منطقية."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "light",
+      "voiceKey": "talk.nexo.light",
+      "labelEn": "Grow lights",
+      "labelAr": "أضواء النمو",
+      "lineEn": "The pod is sealed, so the light comes from the colony bus. Two kilowatts is a real budget, not a free Sun.",
+      "lineAr": "الوحدة مغلقة، لذا يأتي الضوء من شبكة المستعمرة. كيلوواطان ميزانية حقيقية، وليست شمسًا مجانية."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "crop_water",
+      "voiceKey": "talk.nexo.crop_water",
+      "labelEn": "Crop water",
+      "labelAr": "ماء المحصول",
+      "lineEn": "The plants drink from the same tank as the crew. Their condensate comes back, but not all of it.",
+      "lineAr": "النباتات تشرب من الخزان نفسه الذي يشرب منه الطاقم. يتكثف بعض الماء ويعود، لكن ليس كله."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "stress",
+      "voiceKey": "talk.nexo.stress",
+      "labelEn": "Stressed leaves",
+      "labelAr": "الأوراق المتجعدة",
+      "lineEn": "Curling leaves are a symptom. Check water, then light, then temperature, and write down the order.",
+      "lineAr": "تجعّد الأوراق عَرَض. افحص الماء، ثم الضوء، ثم الحرارة، واكتب الترتيب."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "harvest",
+      "voiceKey": "talk.nexo.harvest",
+      "labelEn": "Harvest",
+      "labelAr": "الحصاد",
+      "lineEn": "Harvest what is ready, not what you hope will be ready. Fresh food is morale you can weigh.",
+      "lineAr": "احصد ما هو جاهز، لا ما تأمل أن يكون جاهزًا. الغذاء الطازج روح معنوية يمكن وزنها."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "reserve",
+      "voiceKey": "talk.aziz.reserve",
+      "labelEn": "Battery reserve",
+      "labelAr": "احتياطي البطارية",
+      "lineEn": "Reserve is not spare power. Below the line, every kilowatt is a choice.",
+      "lineAr": "الاحتياطي ليس طاقة فائضة. تحت الحد، كل كيلوواط خيار."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "solar",
+      "voiceKey": "talk.aziz.solar",
+      "labelEn": "Solar input",
+      "labelAr": "دخل الشمس",
+      "lineEn": "At the pole the Sun grazes the horizon. The array tracks it, but dust steals the edge.",
+      "lineAr": "عند القطب تلامس الشمس الأفق. الألواح تتعقبها، لكن الغبار يسرق الحافة."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "dust",
+      "voiceKey": "talk.aziz.dust",
+      "labelEn": "Dust on arrays",
+      "labelAr": "الغبار على الألواح",
+      "lineEn": "A dirty array is a pay cut for the whole colony. Clean it before you add load.",
+      "lineAr": "اللوح المغبر خفض في دخل المستعمرة كلها. نظفه قبل أن تضيف حملًا."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "shedding",
+      "voiceKey": "talk.aziz.shedding",
+      "labelEn": "Load shedding",
+      "labelAr": "فصل الأحمال",
+      "lineEn": "Shed the greenhouse and the lab first. Heat and life support keep priority.",
+      "lineAr": "افصل البيت الزجاجي والمختبر أولًا. الحرارة ودعم الحياة لهما الأولوية."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "night",
+      "voiceKey": "talk.aziz.night",
+      "labelEn": "Night and storage",
+      "labelAr": "الليل والتخزين",
+      "lineEn": "The battery carries the night. If the night is longer than the reserve, we reduce the load before we gamble.",
+      "lineAr": "البطارية تحمل الليل. إن كان الليل أطول من الاحتياطي، نقلّل الحمل قبل أن نقامر."
+    },
+    {
+      "npcId": "npc_abdelaziz",
+      "id": "cost",
+      "voiceKey": "talk.aziz.cost",
+      "labelEn": "The cost of a kilowatt",
+      "labelAr": "ثمن الكيلوواط",
+      "lineEn": "Every kilowatt is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
+      "lineAr": "كل كيلوواط مُستعار من الشمس ويُسدَّد ليلًا. أنفقه مرتين ونخسرهما معًا."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "signal",
+      "voiceKey": "talk.ahmed.signal",
+      "labelEn": "Lost signal",
+      "labelAr": "فقدان الإشارة",
+      "lineEn": "The rover did not vanish. It stopped reporting. Those are different problems.",
+      "lineAr": "الروفر لم يختفِ. توقف عن الإبلاغ. هاتان مشكلتان مختلفتان."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "power",
+      "voiceKey": "talk.ahmed.power",
+      "labelEn": "Rover power",
+      "labelAr": "طاقة الروفر",
+      "lineEn": "Check the battery before the motor. A dead cell looks like a seized wheel from a distance.",
+      "lineAr": "افحص البطارية قبل المحرك. خلية ميتة تبدو من بعيد كعجلة متوقفة."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "wheels",
+      "voiceKey": "talk.ahmed.wheels",
+      "labelEn": "Wheels and terrain",
+      "labelAr": "العجلات والتضاريس",
+      "lineEn": "A wheel that spins is not always a wheel that grips. Read the slope and the tread.",
+      "lineAr": "العجلة التي تدور ليست دائمًا عجلة تثبت. اقرأ المنحدر ونقشة الإطار."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "recovery",
+      "voiceKey": "talk.ahmed.recovery",
+      "labelEn": "Recovery",
+      "labelAr": "الاستعادة",
+      "lineEn": "Recovery starts with line of sight. If I cannot see it, I send a survey rover first.",
+      "lineAr": "الاستعادة تبدأ بخط النظر. إن لم أره، أرسل روفر مسح أولًا."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "eva",
+      "voiceKey": "talk.ahmed.eva",
+      "labelEn": "EVA preparation",
+      "labelAr": "التحضير للسير الفضائي",
+      "lineEn": "Dust in the airlock seal is a real hazard. Clean the floor before the next suit goes out.",
+      "lineAr": "الغبار في ختم الأيرلوك خطر حقيقي. نظف الأرضية قبل خروج البدلة التالية."
+    },
+    {
+      "npcId": "npc_ahmed",
+      "id": "limits",
+      "voiceKey": "talk.ahmed.limits",
+      "labelEn": "Machine limits",
+      "labelAr": "حدود الآلة",
+      "lineEn": "The rover is not a hero. It has a power budget, a thermal limit and a driver who needs sleep.",
+      "lineAr": "الروفر ليس بطلًا. لديه ميزانية طاقة وحد حراري وسائق يحتاج إلى النوم."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "link",
+      "voiceKey": "talk.nexo.link",
+      "labelEn": "Earth link",
+      "labelAr": "رابط الأرض",
+      "lineEn": "The link can be quiet without being dead. Check the antenna, then the relay, then the path.",
+      "lineAr": "الرابط قد يكون هادئًا دون أن يكون ميتًا. افحص الهوائي، ثم المرحل، ثم المسار."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "antenna",
+      "voiceKey": "talk.nexo.antenna",
+      "labelEn": "Antenna dust",
+      "labelAr": "غبار الهوائي",
+      "lineEn": "Dust on the antenna looks like a software fault from the console. Clean it and compare.",
+      "lineAr": "غبار الهوائي يبدو من الكونسول كعطل برمجي. نظفه وقارن."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "data",
+      "voiceKey": "talk.nexo.data",
+      "labelEn": "Where the data came from",
+      "labelAr": "من أين جاءت البيانات",
+      "lineEn": "Where did the data come from? That is the first question. A sensor fault can look exactly like a power fault.",
+      "lineAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول. عطل الحساس قد يبدو تمامًا كعطل الطاقة."
+    },
+    {
+      "npcId": "npc_nexo",
+      "id": "earth",
+      "voiceKey": "talk.nexo.earth",
+      "labelEn": "Talking to Earth",
+      "labelAr": "التحدث إلى الأرض",
+      "lineEn": "The delay is part of the conversation. We send the whole picture, not a guess, and we wait.",
+      "lineAr": "التأخير جزء من المحادثة. نرسل الصورة كاملة، لا تخمينًا، ثم ننتظر."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "material",
+      "voiceKey": "talk.mostafa.material",
+      "labelEn": "Regolith as material",
+      "labelAr": "الثرى كمادة",
+      "lineEn": "Regolith is cheap. A bad seal is not. We test the mix before we trust the wall.",
+      "lineAr": "الثرى رخيص. الختم السيئ ليس كذلك. نختبر الخليط قبل أن نثق بالجدار."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "printing",
+      "voiceKey": "talk.mostafa.printing",
+      "labelEn": "Printing a wall",
+      "labelAr": "طباعة جدار",
+      "lineEn": "A printed wall is layers with a plan. Mass, strength and insulation, then we build.",
+      "lineAr": "الجدار المطبوع طبقات لها خطة. الكتلة والقوة والعزل، ثم نبني."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "seal",
+      "voiceKey": "talk.mostafa.seal",
+      "labelEn": "Seals",
+      "labelAr": "الأختام",
+      "lineEn": "The seal is the part that keeps the pressure in. It gets the test, not the ribbon.",
+      "lineAr": "الختم هو ما يحفظ الضغط. له يكون الاختبار، لا الشريط."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "survey",
+      "voiceKey": "talk.mostafa.survey",
+      "labelEn": "Site survey",
+      "labelAr": "مسح الموقع",
+      "lineEn": "No survey, no print. A wall on a bad slope is a wall that fights the regolith.",
+      "lineAr": "لا مسح، لا طباعة. الجدار على منحدر سيئ جدار يصارع الثرى."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "mockup",
+      "voiceKey": "talk.mostafa.mockup",
+      "labelEn": "Mock-ups",
+      "labelAr": "النماذج",
+      "lineEn": "Test the mock-up before you trust the wall. It is cheaper to break a model than a module.",
+      "lineAr": "اختبر النموذج قبل أن تثق بالجدار. كسر نموذج أرخص من كسر وحدة."
+    },
+    {
+      "npcId": "npc_mostafa",
+      "id": "shielding",
+      "voiceKey": "talk.mostafa.shielding",
+      "labelEn": "Shielding",
+      "labelAr": "التدريع",
+      "lineEn": "Regolith shielding buys dose and thermal stability. It also buys mass, so we place it where it pays.",
+      "lineAr": "تدريع الثرى يشتري خفض الجرعة والاستقرار الحراري. يشتري أيضًا كتلة، لذا نضعه حيث يفيد."
+    }
+  ]
+}

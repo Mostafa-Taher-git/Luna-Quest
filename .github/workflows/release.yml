@@ -7,6 +7,8 @@ name: Release
 #   · LunaQuest-v<tag>-Web.zip      — the browser build, unzip and serve, or use the Pages link
 #   · LunaQuest-v<tag>-Windows.zip — Godot .NET export for Windows
 #   · LunaQuest-v<tag>-Linux.zip   — Godot .NET export for Linux
+#   · LunaQuest-GDScript-Web.zip   — the pure-GDScript web export (stock Godot, no .NET)
+#   · LunaQuest-GDScript-Windows.zip / -Linux.zip — the GDScript desktop exports
 #   · the intro film as a shareable MP4
 #
 # The Godot job is allowed to fail without sinking the release: the web build is the one that
@@ -120,9 +122,60 @@ jobs:
           path: out/*.zip
           if-no-files-found: warn
 
+  gdscript:
+    name: GDScript exports (web, Windows, Linux)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync the shared assets into the GDScript project
+        run: bash tools/sync-gdscript-assets.sh
+      - name: Fetch Godot and the standard export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          curl -fL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q templates.tpz -d templates
+          mv templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import the project
+        run: ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --import || true
+      - name: Export the browser build (the one the .NET project cannot make)
+        run: |
+          set -euo pipefail
+          ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript \
+            --export-release "Web" build/web/index.html
+          test -f engines/godot-gdscript/LunaQuest.GDScript/build/web/index.wasm
+      - name: Export both desktop builds
+        run: |
+          set -euo pipefail
+          ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript \
+            --export-release "Linux" build/linux/luna-quest-gdscript.x86_64
+          ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript \
+            --export-release "Windows" build/windows/luna-quest-gdscript.exe
+          chmod +x engines/godot-gdscript/LunaQuest.GDScript/build/linux/luna-quest-gdscript.x86_64
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          base="engines/godot-gdscript/LunaQuest.GDScript/build"
+          ( cd "$base/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
+          ( cd "$base/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
+          ( cd "$base/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
+          ls -lh out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-builds
+          path: out/*.zip
+          if-no-files-found: warn
+
   publish:
     name: Publish the release
-    needs: [web, godot]
+    needs: [web, godot, gdscript]
     if: always() && needs.web.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -149,6 +202,10 @@ jobs:
             Desktop builds are Godot 4 .NET exports. Unzip, then run `LunaQuest.exe` on Windows
             or `./LunaQuest.x86_64` on Linux.
 
+            The `LunaQuest-GDScript-*` archives are the same game built from the pure-GDScript
+            project with stock Godot 4.7.2 — no .NET runtime needed anywhere. The GDScript web
+            zip is a self-contained site: unzip it behind any static server and play.
+
             The intro film is the original render of the game world and is included unchanged.
 
             Saved games use schema 2 and are interchangeable between the Godot, Unity and web
@@ -156,4 +213,5 @@ jobs:
           files: |
             artifacts/web-zip/*.zip
             artifacts/godot-builds/*.zip
+            artifacts/gdscript-builds/*.zip
             artifacts/intro-film/*.mp4

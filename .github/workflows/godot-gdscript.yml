@@ -1,0 +1,165 @@
+name: GDScript build
+
+# The pure-GDScript edition of Luna-Quest, built with stock Godot 4.7.2 — no .NET, no Mono.
+#
+# Every push and pull request: import the project headlessly, run the main scene for a few
+# hundred frames, and fail the job if the engine printed a parse error or a script error. That is
+# the same check a developer runs locally, so a broken script cannot reach a tag.
+#
+# On main, tags and manual runs it also exports the three builds — including the web build, which
+# the .NET project cannot produce — and, when asked, publishes the web build to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      export:
+        description: 'Export the desktop and web builds'
+        type: boolean
+        default: true
+      deploy_web:
+        description: 'Publish the GDScript web build to GitHub Pages'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gdscript-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.7.2'
+  PROJECT_DIR: engines/godot-gdscript/LunaQuest.GDScript
+
+jobs:
+  validate:
+    name: Import and run headless
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate the content the game reads
+        run: node tools/check-content.mjs
+      - name: Sync the shared assets into the GDScript project
+        run: bash tools/sync-gdscript-assets.sh
+      - name: Fetch Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          ./godot --version
+      - name: Import the project (parses every script, imports every asset)
+        run: |
+          set -euo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --import 2>&1 | tee import.log
+          if grep -Eq "Parse Error|SCRIPT ERROR|Failed to load script" import.log; then
+            echo "::error::GDScript failed to parse — see the log above."
+            exit 1
+          fi
+      - name: Run the game headlessly for 400 frames
+        run: |
+          set -euo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --quit-after 400 2>&1 | tee run.log
+          if grep -Eq "SCRIPT ERROR|Invalid call|Cannot call method|Nonexistent function" run.log; then
+            echo "::error::A script failed at runtime — see the log above."
+            exit 1
+          fi
+          grep -q "Luna-Quest (GDScript): ready" run.log || {
+            echo "::error::The game did not report a successful boot."
+            exit 1
+          }
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-logs
+          path: |
+            import.log
+            run.log
+          if-no-files-found: warn
+
+  export:
+    name: Export web, Windows and Linux
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync the shared assets into the GDScript project
+        run: bash tools/sync-gdscript-assets.sh
+      - name: Fetch Godot and the export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          curl -fL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q templates.tpz -d templates
+          mv templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import
+        run: ./godot --headless --path "$PROJECT_DIR" --import || true
+      - name: Export
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          ./godot --headless --path "$PROJECT_DIR" --export-release "Web" build/web/index.html
+          ./godot --headless --path "$PROJECT_DIR" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64
+          ./godot --headless --path "$PROJECT_DIR" --export-release "Windows" build/windows/luna-quest-gdscript.exe
+          chmod +x "$PROJECT_DIR/build/linux/luna-quest-gdscript.x86_64"
+          test -f "$PROJECT_DIR/build/web/index.html"
+          test -f "$PROJECT_DIR/build/web/index.wasm"
+          test -f "$PROJECT_DIR/build/web/index.pck"
+          cp "$PROJECT_DIR/build/web/"* out/ 2>/dev/null || true
+          ( cd "$PROJECT_DIR/build/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
+          ( cd "$PROJECT_DIR/build/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
+          ( cd "$PROJECT_DIR/build/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
+          ls -lh out
+      - name: Upload the three builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-builds
+          path: out/LunaQuest-GDScript-*.zip
+          if-no-files-found: error
+      - name: Keep the web build for Pages
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-web
+          path: ${{ env.PROJECT_DIR }}/build/web
+          if-no-files-found: error
+
+  pages:
+    name: Publish the GDScript web build
+    needs: export
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_web == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gdscript-web
+          path: site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,57 @@
+; Luna-Quest: The Living Moon Colony — GDScript edition
+;
+; A pure-GDScript port of the game, next to the Godot 4.7.2 .NET and Unity projects. It needs
+; nothing but a stock Godot 4 editor to open and edit — no .NET, no Mono, no C# toolchain —
+; and, unlike the .NET build, it can be exported to the web.
+;
+; Open this folder in Godot 4.7.2 (standard, not mono), press F5.
+
+config_version=5
+
+[application]
+
+config/name="Luna-Quest (GDScript)"
+config/description="A walkable lunar colony on the Shackleton rim. Thirty Earth days, six crew, one commander and NEXO. Pure GDScript, web-exportable."
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Content="*res://scripts/content.gd"
+Voice="*res://scripts/voice.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[physics]
+
+common/physics_ticks_per_second=60
+3d/default_gravity=1.62
+
+[rendering]
+
+; The Compatibility renderer is what the web export can run, so the desktop builds use it too:
+; one build, one set of shaders, no surprises when someone opens the page.
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/anisotropic_filtering_level=2
+lights_and_shadows/directional_shadow/size=2048
+environment/defaults/default_clear_color=Color(0.02, 0.024, 0.035, 1)
+anti_aliasing/quality/msaa_3d=2
+
+[gdnative]
+
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
