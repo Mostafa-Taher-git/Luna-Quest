@@ -31,6 +31,13 @@ var _subtitle_until := 0
 func _ready() -> void:
 	randomize()
 
+	# `godot --headless --path . -- --selftest` flies the whole mission and exits non-zero on any
+	# broken rule. CI runs it before every build, and so can anyone with Godot.
+	if OS.get_cmdline_user_args().has("--selftest"):
+		var passed := LQSelfTest.new().run()
+		get_tree().quit(0 if passed else 1)
+		return
+
 	hud = LunaHud.new()
 	hud.name = "Hud"
 	add_child(hud)
