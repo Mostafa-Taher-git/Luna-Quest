@@ -70,13 +70,18 @@ namespace LunaQuest.Godot
             {
                 BackgroundMode = global::Godot.Environment.BGMode.Color,
                 BackgroundColor = new Color(0.006f, 0.008f, 0.016f),
+                // There is no atmosphere on the Moon, so there is no sky bounce: the only
+                // ambient light is earthshine, and it is weak. The old flat 0.82 energy filled
+                // every shadow and made the whole colony read as one washed-out white box.
                 AmbientLightSource = global::Godot.Environment.AmbientSource.Color,
-                AmbientLightColor = new Color(0.42f, 0.5f, 0.66f),
-                AmbientLightEnergy = 0.82f,
+                AmbientLightColor = new Color(0.30f, 0.40f, 0.62f),
+                AmbientLightEnergy = 0.17f,
                 TonemapMode = global::Godot.Environment.ToneMapper.Filmic,
+                TonemapExposure = 1.05f,
+                TonemapWhite = 6.0f,
                 GlowEnabled = true,
-                GlowIntensity = 0.42f,
-                GlowBloom = 0.15f,
+                GlowIntensity = 0.28f,
+                GlowBloom = 0.12f,
             };
             var we = new WorldEnvironment { Environment = env, Name = "SpaceEnvironment" };
             AddChild(we);
@@ -84,8 +89,10 @@ namespace LunaQuest.Godot
             _sun = new DirectionalLight3D
             {
                 Name = "LowSun",
-                LightColor = new Color(1f, 0.96f, 0.9f),
-                LightEnergy = 2.0f,
+                LightColor = new Color(1f, 0.97f, 0.93f),
+                // Direct sunlight is the only strong light source out here, so it carries the
+                // scene: brighter than the old value now that ambient no longer washes it out.
+                LightEnergy = 2.6f,
                 ShadowEnabled = true,
                 // A grazing polar Sun is the worst case for shadow acne: tighter cascades,
                 // more normal bias and a little blur keep the regolith clean.
@@ -108,8 +115,8 @@ namespace LunaQuest.Godot
             var fill = new DirectionalLight3D
             {
                 Name = "EarthShine",
-                LightColor = new Color(0.45f, 0.6f, 0.85f),
-                LightEnergy = 0.28f,
+                LightColor = new Color(0.42f, 0.58f, 0.88f),
+                LightEnergy = 0.22f,
                 ShadowEnabled = false,
                 RotationDegrees = new Vector3(-35, 145, 0),
             };
@@ -1010,7 +1017,18 @@ namespace LunaQuest.Godot
         {
             var blackGlass = Mat(new Color(0.012f, 0.018f, 0.032f), 0.45f, 0.06f);
             var dark = Mat(new Color(0.045f, 0.05f, 0.06f), 0.2f, 0.45f);
-            var white = Mat(new Color(0.82f, 0.84f, 0.87f), 0.08f, 0.55f);
+            // The suit itself: a slightly warm off-white with a rim highlight. Untextured
+            // white against black space has no silhouette without the rim, which is exactly
+            // why the astronaut read as a washed-out blob in the first place.
+            var white = new StandardMaterial3D
+            {
+                AlbedoColor = new Color(0.80f, 0.82f, 0.85f),
+                Metallic = 0.04f,
+                Roughness = 0.62f,
+                RimEnabled = true,
+                Rim = 0.55f,
+                RimTint = 0.35f,
+            };
             var packMat = Mat(new Color(0.40f, 0.44f, 0.50f), 0.18f, 0.45f);
             var accent = Mat(new Color(0.92f, 0.52f, 0.12f), 0.25f, 0.4f);
             var screen = Mat(new Color(0.05f, 0.5f, 0.85f), 0.1f, 0.2f, 1.6f);
@@ -1021,8 +1039,11 @@ namespace LunaQuest.Godot
                 for (int s = 0; s < mi.Mesh.GetSurfaceCount(); s++)
                 {
                     var m = mi.Mesh.SurfaceGetMaterial(s);
-                    if (m != null && m.ResourceName.ToLowerInvariant().Contains("visier"))
+                    string surface = m?.ResourceName.ToLowerInvariant() ?? "";
+                    if (surface.Contains("visier"))
                         mi.SetSurfaceOverrideMaterial(s, blackGlass);
+                    else
+                        mi.SetSurfaceOverrideMaterial(s, white);
                 }
             }
 

@@ -1,9 +1,58 @@
 # Luna-Quest test report
 
-**Build:** full dialogue system and complete 8-NPC roster pass, 14 November 2026  
+**Build:** v3.1 — browser edition, crew and colony art pass, release automation, 14 November 2026  
 **Repository:** <https://github.com/Mostafa-Taher-git/Luna-Quest>  
 **Primary runtime:** Godot 4.7.2 .NET on Linux (Mesa Intel HD 4600, Vulkan)  
-**Secondary runtime:** Unity 6.3 LTS project (dual-engine architecture)
+**Secondary runtime:** Unity 6.3 LTS project (dual-engine architecture)  
+**Third runtime:** Browser (Three.js + Vite), headless Chromium verification
+
+## Browser edition (Three.js)
+
+The browser build is the one that needs no install, so it is tested on its own terms.
+
+```bash
+cd web
+node --test test/*.test.mjs     # simulation, world build, content wiring
+node ../tools/check-content.mjs # content/JSON consistency
+npm run build                   # production bundle
+```
+
+| Check | Result |
+|---|---|
+| `web` unit tests | **36 passed, 0 failed** (`sim.test.mjs`, `world.test.mjs`) |
+| Content consistency (`tools/check-content.mjs`) | exit 0 — 16 buildings, 7 crew, 15 incident rules, 11 objectives, 17 research notes, 44 dialogue topics, 94 voiced lines |
+| Production build | `web/dist` builds clean: 811 kB JS (219 kB gzip), 12 kB CSS, Noto Sans Latin and Arabic |
+| Static payload | ~60 MB — the Sketchfab kit models and the intro film dominate; only the kit stems referenced by `props.js` are copied |
+| Headless Chromium run | boots, plays the intro film, reaches the start screen and a playable colony with no page errors |
+| Console on load | `16 buildings, 7 crew, 36 kit props, 26 rocks, 45 consoles`; `dressing 15 materials from 369 meshes (0 kept whole)` |
+| Render budget | 552 draw calls, 957 k triangles at quality 2 (colony 346 meshes) |
+
+What the headless run verified, in a real Chromium with SwiftShader:
+
+- the intro film plays (VP9/WebM, H.264/MP4 as a second `<source>`; the fallback matters —
+  Chromium's bundled build refuses the MP4);
+- the start screen, the HUD, the journal and the pause screen all render;
+- a walkable colony: 16 buildings with interiors, 45 consoles, 36 kit props, 26 rocks, and the
+  paved plaza spine;
+- all seven NPCs stand at 1.75 m with their feet on the surface (measured by raycast, not by
+  eye — an earlier build had them four times too tall because a rig's bind pose was measured
+  instead of its skeleton);
+- the Cute Astronaut is the only human model, dressed with the fabric map, a painted visor
+  (a mirrored material renders black without an environment probe), the orange visor frame,
+  chest unit and life-support pack;
+- quality adaptation steps 2 → 1 → 0 (shadow map off, then the far terrain band off).
+
+### Known limitations of the web edition
+
+- SwiftShader is software rendering; the measured frame rate there (about 1 fps) says nothing
+  about a real GPU. Performance work was judged by draw calls and triangle counts instead.
+- The Cute Astronaut GLB is a rigid mesh with a folded-legged pose and a stray visor copy
+  parked several metres from the body; the suit is posed as authored, and the visor is rebuilt
+  in-engine.
+- Effects are conservative on purpose: no point lights per room, no transmission glass, no
+  post-processing, so the build stays playable on integrated graphics.
+
+---
 
 ## Automated simulation tests
 

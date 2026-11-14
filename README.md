@@ -22,7 +22,9 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
-| Voice pack | 55 real MP3 lines from open Piper models, bilingual subtitles, no runtime cloud TTS |
+| Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
+| **Browser edition (Three.js)** | **Complete; built with Vite, played and screenshotted in headless Chromium, 36 web checks passing** |
+| CI and releases | `ci.yml` (content + C# core + web), `pages.yml` (browser build to Pages), `release.yml` (web ZIP, intro film, Godot Windows/Linux) |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -32,6 +34,32 @@ listen and move the player; the simulation is one deterministic core with a shar
 ---
 
 ## Play
+
+### Browser (no install)
+
+The whole colony also runs in a browser. It is plain ES modules on **Three.js** (no engine
+download, no plugin), and it loads the same JSON content, runs the same simulation rules,
+plays the same intro film and reads the same save files as the C# builds.
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:5173
+```
+
+```bash
+npm run build      # static site in web/dist, ~60 MB with the sketchfab kit models
+npm run preview    # serve the production build on http://localhost:4173
+npm test           # 36 headless checks: simulation, world build, content wiring
+```
+
+Drag the mouse to look, `W A S D` to walk, `Shift` to run, `Space` to jump, `E` to use a
+console or talk to a crew member, `V` for the helmet view, `J` for the journal, `H` for help,
+`Esc` for the pause screen, `F5`/`F9` to save and load. Saves live in `localStorage` under
+`lunaquest-web-save-v2`.
+
+![Airlock and suit facility](docs/screenshots/web-airlock.png)
+![Crew member outside Life Support](docs/screenshots/web-crew.png)
 
 ### Godot
 
@@ -295,6 +323,8 @@ Luna-Quest-Game/
 ├── shared/
 │   ├── LunaQuest.Core/      simulation, content loader, save contract
 │   └── LunaQuest.Tests/     console test harness
+├── web/                     browser edition (Three.js + Vite): terrain, colony, crew,
+│                            intro film, HUD, dialogue, save/load
 ├── tools/                   content sync, astronaut bake, voice-pack generator
 ├── README.md
 ├── CREDITS.md

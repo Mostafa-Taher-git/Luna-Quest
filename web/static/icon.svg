@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#16233a"/>
+      <stop offset="1" stop-color="#05070c"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="13" fill="url(#sky)"/>
+  <circle cx="44" cy="19" r="6.6" fill="#3f7fd0"/>
+  <path d="M38.6 16.4a6.6 6.6 0 0 0 9.2 6.4 6.6 6.6 0 1 1-9.2-6.4z" fill="#1c3f6e" opacity="0.55"/>
+  <circle cx="44" cy="19" r="6.6" fill="none" stroke="#9fd0ff" stroke-width="0.7" opacity="0.7"/>
+  <path d="M0 43c9-3 15-1 22 1.5S40 47 64 41v23H0z" fill="#2b3138"/>
+  <path d="M8 41.5h13v-6.5l-6.5-4-6.5 4z" fill="#dfe6ee"/>
+  <rect x="10" y="37" width="9" height="2" fill="#f2a93b"/>
+  <circle cx="14.5" cy="33.6" r="1.5" fill="#58c6e8"/>
+  <path d="M28 41.5h12v-4.6l-6-3.4-6 3.4z" fill="#c9d3dd"/>
+  <rect x="29.5" y="38.4" width="9" height="1.6" fill="#9fd0ff" opacity="0.8"/>
+  <rect x="43" y="33" width="1.4" height="9.5" fill="#93a3b8"/>
+  <circle cx="43.7" cy="31.6" r="2.4" fill="none" stroke="#f2a93b" stroke-width="1"/>
+  <circle cx="22" cy="12" r="0.8" fill="#fff" opacity="0.85"/>
+  <circle cx="13" cy="20" r="0.6" fill="#fff" opacity="0.7"/>
+  <circle cx="51" cy="31" r="0.6" fill="#fff" opacity="0.6"/>
+  <circle cx="31" cy="13" r="0.5" fill="#fff" opacity="0.5"/>
+</svg>

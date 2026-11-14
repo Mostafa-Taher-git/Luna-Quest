@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>Luna-Quest — The Living Moon Colony</title>
+    <meta
+      name="description"
+      content="Thirty Earth days on the Shackleton rim. Six crew, one commander, one robot. Walk the colony, read every console, keep everyone alive."
+    />
+    <meta name="theme-color" content="#05070c" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="preload" href="./fonts/noto-sans-latin.woff" as="font" type="font/woff" crossorigin />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Luna-Quest colony view"></canvas>
+
+    <!-- ── boot / loading ─────────────────────────────────────────────── -->
+    <div id="boot" class="screen">
+      <div class="boot-inner">
+        <div class="wordmark">LUNA<span>·</span>QUEST</div>
+        <div class="boot-line" id="boot-line">Loading colony…</div>
+        <div class="boot-bar"><i id="boot-progress"></i></div>
+      </div>
+    </div>
+
+    <!-- ── intro film (the existing film, never re-rendered) ───────────── -->
+    <div id="intro" class="screen hidden">
+      <video id="intro-video" playsinline preload="auto" poster="./media/intro-poster.jpg">
+        <source src="./media/intro.webm" type="video/webm" />
+        <source src="./media/intro.mp4" type="video/mp4" />
+      </video>
+      <div class="intro-vignette"></div>
+      <button id="intro-skip" class="ghost-button" type="button">Skip intro</button>
+    </div>
+
+    <!-- ── start screen ─────────────────────────────────────────────────── -->
+    <div id="start" class="screen hidden">
+      <div class="start-card">
+        <div class="eyebrow">SHACKLETON RIM · 89.9° S · DAY 1</div>
+        <h1>Luna-Quest</h1>
+        <p class="tagline">The Living Moon Colony</p>
+        <p class="briefing">
+          You are the new commander. Six crew, one robot, thirty Earth days. Air, water, power, food,
+          heat and dust — read the numbers before you touch anything.
+        </p>
+        <label class="field">
+          <span>Commander name</span>
+          <input id="commander-name" type="text" maxlength="24" autocomplete="off" spellcheck="false" value="Mostafa" />
+        </label>
+        <div class="row">
+          <button id="begin" class="primary-button" type="button">Begin the shift</button>
+          <button id="lang-toggle" class="ghost-button" type="button">العربية</button>
+        </div>
+        <div class="start-notes">
+          <span><b>WASD</b> walk</span><span><b>Shift</b> run</span><span><b>Space</b> jump</span>
+          <span><b>E</b> console</span><span><b>V</b> view</span><span><b>J</b> journal</span>
+          <span><b>G</b> math</span><span><b>H</b> help</span><span><b>F5 / F9</b> save / load</span>
+        </div>
+        <p class="start-foot">
+          Same rules as the Godot and Unity builds. No combat, no permanent failure. Nothing here is
+          a real mission plan — it is a teaching model with real numbers.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── in-game HUD ──────────────────────────────────────────────────── -->
+    <div id="hud" class="hidden">
+      <header id="topbar">
+        <div class="brand">LUNA-QUEST <span>The Living Moon Colony</span></div>
+        <div class="site">SHACKLETON RIM · 89.9° S · 7 HUMANS + NEXO</div>
+        <div class="clock"><b id="clock-day">Day 1</b> <span id="clock-time">06:00</span></div>
+        <div class="sol"><span id="mission-progress-label">Day 1 / 30</span><i><b id="mission-progress"></b></i></div>
+        <button id="lang-toggle-hud" class="chip" type="button">العربية</button>
+      </header>
+
+      <section id="status" class="panel">
+        <h2>Colony status</h2>
+        <div id="gauges"></div>
+        <div class="panel-foot"><span><b>G</b> resource math</span><span><b>J</b> journal</span></div>
+      </section>
+
+      <section id="log" class="panel">
+        <h2>Colony log</h2>
+        <div id="log-list"></div>
+      </section>
+
+      <section id="tasks" class="panel">
+        <h2>Shift board</h2>
+        <ol id="task-list"></ol>
+      </section>
+
+      <div id="prompt" class="hidden"><b>E</b> <span id="prompt-text">Use console</span></div>
+      <div id="toast" class="hidden"></div>
+      <div id="subtitle" class="hidden"></div>
+      <div id="speed" class="hidden"><span id="speed-label"></span></div>
+    </div>
+
+    <!-- ── overlays ─────────────────────────────────────────────────────── -->
+    <div id="overlay" class="screen hidden">
+      <div class="overlay-card">
+        <button id="overlay-close" class="chip close" type="button" aria-label="Close">✕</button>
+        <div id="overlay-body"></div>
+      </div>
+    </div>
+
+    <div id="fatal" class="screen hidden">
+      <div class="overlay-card">
+        <h2>Something stopped the colony</h2>
+        <p id="fatal-message"></p>
+        <p class="start-foot">
+          The web build ran into an error. Reload to try again; if it repeats, the details above are
+          what a bug report needs.
+        </p>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

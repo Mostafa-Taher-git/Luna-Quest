@@ -185,7 +185,7 @@
     },
     {
       "id": "power_farm", "nameEn": "Power Farm", "nameAr": "مزرعة الطاقة", "category": "functional",
-      "position": [-52, -2], "footprint": [18, 14], "height": 4.2, "color": "#8b97a5",
+      "position": [-62, -8], "footprint": [18, 14], "height": 4.2, "color": "#8b97a5",
       "powerKw": 0.5, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
       "rooms": [
         { "id": "inverter", "nameEn": "Inverter Room", "nameAr": "غرفة العواكس", "purpose": "Convert and condition array power", "size": [6, 5], "offset": [0, 0] },

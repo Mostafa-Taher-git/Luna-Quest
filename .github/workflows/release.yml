@@ -1,0 +1,159 @@
+name: Release
+
+# Tag a commit and the release builds itself:
+#   git tag v3.1 && git push origin v3.1
+#
+# Outputs, all attached to one GitHub Release:
+#   · LunaQuest-v<tag>-Web.zip      — the browser build, unzip and serve, or use the Pages link
+#   · LunaQuest-v<tag>-Windows.zip — Godot .NET export for Windows
+#   · LunaQuest-v<tag>-Linux.zip   — Godot .NET export for Linux
+#   · the intro film as a shareable MP4
+#
+# The Godot job is allowed to fail without sinking the release: the web build is the one that
+# needs no install, so it must always ship. If the Godot toolchain moves or the version needs
+# bumping, only that job goes red.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create (for example v3.1)'
+        required: true
+        default: 'v3.1'
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: '4.7.2'
+  NODE_VERSION: '22'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  web:
+    name: Browser build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Package the site
+        working-directory: .
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cd web/dist
+          zip -qr ../../out/LunaQuest-Web.zip .
+          cd ../..
+          ls -lh out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-zip
+          path: out/LunaQuest-Web.zip
+
+  film:
+    name: Intro film
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intro-film
+          path: assets/video/intro.mp4
+
+  godot:
+    name: Godot exports (Windows, Linux)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Fetch Godot .NET and the mono export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64" godot-dir
+          curl -fL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_mono_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable.mono"
+          unzip -q templates.tpz -d templates
+          mv templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable.mono/"
+      - name: Build the C# assemblies
+        run: dotnet build engines/godot/LunaQuest.Godot/LunaQuest.Godot.csproj -c Release
+      - name: Import assets
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path engines/godot/LunaQuest.Godot --import || true
+      - name: Export both desktop builds
+        run: |
+          set -euo pipefail
+          mkdir -p engines/godot/LunaQuest.Godot/build/windows engines/godot/LunaQuest.Godot/build/linux
+          ./godot-dir/Godot_v* --headless --path engines/godot/LunaQuest.Godot \
+            --export-release "Linux" build/linux/LunaQuest.x86_64
+          ./godot-dir/Godot_v* --headless --path engines/godot/LunaQuest.Godot \
+            --export-release "Windows Desktop" build/windows/LunaQuest.exe
+          chmod +x engines/godot/LunaQuest.Godot/build/linux/LunaQuest.x86_64
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          cd engines/godot/LunaQuest.Godot/build/linux && zip -qr ../../../../../out/LunaQuest-Linux.zip . && cd -
+          cd engines/godot/LunaQuest.Godot/build/windows && zip -qr ../../../../../out/LunaQuest-Windows.zip . && cd -
+          ls -lh out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-builds
+          path: out/*.zip
+          if-no-files-found: warn
+
+  publish:
+    name: Publish the release
+    needs: [web, godot]
+    if: always() && needs.web.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Show what arrived
+        run: find artifacts -type f -printf '%p  %s bytes\n' | sort
+      - name: Create the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          name: Luna-Quest ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          draft: false
+          generate_release_notes: true
+          body: |
+            **Luna-Quest — The Living Moon Colony**
+
+            Play in the browser: open the Pages deployment of this repository, or unzip
+            `LunaQuest-Web.zip` behind any static web server. No install, no plugins.
+
+            Desktop builds are Godot 4 .NET exports. Unzip, then run `LunaQuest.exe` on Windows
+            or `./LunaQuest.x86_64` on Linux.
+
+            The intro film is the original render of the game world and is included unchanged.
+
+            Saved games use schema 2 and are interchangeable between the Godot, Unity and web
+            builds. The simulation is deterministic at a one-second step.
+          files: |
+            artifacts/web-zip/*.zip
+            artifacts/godot-builds/*.zip
+            artifacts/intro-film/*.mp4
