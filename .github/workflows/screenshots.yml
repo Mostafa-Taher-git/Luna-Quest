@@ -1,0 +1,82 @@
+name: README screenshots
+
+# The frames in the README are photographs of the real game, so they are taken by a browser that
+# can actually render it. This sandbox cannot (no GPU, no Chrome, no display), so the capture job
+# lives here: manual trigger only, costs nothing on a push, and leaves the frames as an artifact
+# that can be committed to docs/screenshots/.
+#
+#   gh workflow run screenshots.yml --ref <branch>
+#   gh run download <id> -n readme-shots -D shots
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Only capture frames whose name contains this text (blank = all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture frames
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build the browser edition
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+          test -f dist/media/intro.mp4
+          test -f dist/models/astronaut/cute_astronaut.glb
+
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capture the frames
+        run: |
+          node tools/capture-readme.mjs --out shots ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+
+      - name: Upload the frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: readme-shots
+          path: shots
+          retention-days: 14
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '### README frames'
+            echo ''
+            if [ -f shots/report.json ]; then
+              node -e "
+                const r = require('./shots/report.json');
+                for (const s of r.report) {
+                  console.log(s.error ? '| ' + s.name + ' | failed: ' + s.error + ' |'
+                                      : '| ' + s.name + ' | ' + s.kb + ' kB | ' + s.note + ' |');
+                }
+                console.log('');
+                console.log('page errors: ' + r.errors.length);
+              "
+            else
+              echo 'No report — the capture step did not start.'
+            fi
+            echo ''
+            echo 'Artifact: `readme-shots`'
+          } >> "$GITHUB_STEP_SUMMARY"
