@@ -97,9 +97,10 @@ jobs:
             echo "::notice::audit: $line"
           done < <(grep -E "AUDIT OK|AUDIT FAILED" audit.log | head -3)
           if [ $code -ne 0 ] || ! grep -q "AUDIT OK" audit.log; then
+            echo "::error::audit: $(grep -E '  · ' audit.log | head -14 | tr '\n' '|')"
             while IFS= read -r line; do
               echo "::error::audit: $line"
-            done < <(grep -E "  · |SCRIPT ERROR|Invalid" audit.log | head -20)
+            done < <(grep -E "SCRIPT ERROR|Invalid" audit.log | head -6)
             tail -c 4000 audit.log
             exit 1
           fi

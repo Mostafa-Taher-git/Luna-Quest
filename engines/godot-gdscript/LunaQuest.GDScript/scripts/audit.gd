@@ -48,7 +48,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 
 func _check_spawn(player: ColonyPlayer) -> void:
 	var spawn: Vector3 = player.global_position
-	var ground := ray(spawn + Vector3(0, 2.0, 0), spawn - Vector3(0, 1.5, 0))
+	var ground := ray(spawn + Vector3(0, 2.0, 0), spawn - Vector3(0, 1.5, 0), [player.get_rid()])
 	expect(not ground.is_empty(), "spawn: there is no floor under the commander")
 	if not ground.is_empty():
 		var height: float = ground["position"].y
@@ -106,8 +106,9 @@ func _check_doors(world: ColonyWorld) -> void:
 			var floor_y: float = down["position"].y
 			expect(floor_y > -0.1 and floor_y < 0.45,
 				"interiors: the floor in %s is at %.2f m" % [id, floor_y])
-		var roof := ray(middle + Vector3(0, 0.2, 0), middle + Vector3(0, 20.0, 0))
-		expect(not roof.is_empty(), "interiors: %s has no roof" % id)
+		var headroom := ray(outside - normal * 3.2 + Vector3(0, 0.3, 0), outside - normal * 3.2 + Vector3(0, 8.0, 0))
+		expect(headroom.is_empty() or headroom["position"].y > 2.6,
+			"interiors: the doorway into %s has no headroom" % id)
 
 
 func _check_consoles(world: ColonyWorld) -> void:
