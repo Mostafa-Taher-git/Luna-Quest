@@ -21,10 +21,11 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
 | Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 174 scene checks passing, exported for Web, Windows and Linux** |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
 | **Browser edition (Three.js)** | **Complete; built with Vite, played and screenshotted in headless Chromium, 36 web checks passing** |
-| CI and releases | `ci.yml` (content + C# core + web), `pages.yml` (browser build to Pages), `release.yml` (web ZIP, intro film, Godot Windows/Linux) |
+| CI and releases | `ci.yml` (content + C# core + web), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `pages.yml` (browser build to Pages), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web) |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -75,6 +76,27 @@ dotnet build engines/godot/LunaQuest.Godot/LunaQuest.Godot.csproj
 
 Requirements: **Godot 4.7.2 .NET** and a .NET SDK that supports `netstandard2.1`
 (.NET 8 or newer is fine).
+
+### GDScript (stock Godot — no .NET anywhere)
+
+A third project, `engines/godot-gdscript/LunaQuest.GDScript`, is the same game written in plain
+GDScript. It needs nothing but a standard Godot 4.7.2 editor, and — unlike the .NET project — it
+exports to the web, which is what CI ships as `LunaQuest-GDScript-Web.zip`.
+
+```bash
+# one-time: copy the shared astronaut, kit models, intro film and voice pack in
+bash tools/sync-gdscript-assets.sh
+
+# then open the project in Godot 4.7.2 (standard, not mono) and press F5, or:
+godot --path engines/godot-gdscript/LunaQuest.GDScript
+
+# no GPU required to check it:
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 544 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 174 checks
+```
+
+Full notes, controls and the file map:
+[`engines/godot-gdscript/LunaQuest.GDScript/README.md`](engines/godot-gdscript/LunaQuest.GDScript/README.md).
 
 ### Unity
 
@@ -318,14 +340,16 @@ Luna-Quest-Game/
 │                            crops, learning, research, voice manifest
 ├── docs/                    design docs, research, screenshots, licenses
 ├── engines/
-│   ├── godot/LunaQuest.Godot/
+│   ├── godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
+│   ├── godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
 │   └── unity/LunaQuest.Unity/
 ├── shared/
 │   ├── LunaQuest.Core/      simulation, content loader, save contract
 │   └── LunaQuest.Tests/     console test harness
 ├── web/                     browser edition (Three.js + Vite): terrain, colony, crew,
 │                            intro film, HUD, dialogue, save/load
-├── tools/                   content sync, astronaut bake, voice-pack generator
+├── tools/                   content sync, astronaut bake, voice-pack generator,
+│                            sync-gdscript-assets.sh
 ├── README.md
 ├── CREDITS.md
 └── LICENSE

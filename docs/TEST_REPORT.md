@@ -1,10 +1,11 @@
 # Luna-Quest test report
 
-**Build:** v3.1 — browser edition, crew and colony art pass, release automation, 14 November 2026  
+**Build:** v3.2 — GDScript port, browser edition, crew and colony art pass, release automation, 14 November 2026  
 **Repository:** <https://github.com/Mostafa-Taher-git/Luna-Quest>  
 **Primary runtime:** Godot 4.7.2 .NET on Linux (Mesa Intel HD 4600, Vulkan)  
 **Secondary runtime:** Unity 6.3 LTS project (dual-engine architecture)  
-**Third runtime:** Browser (Three.js + Vite), headless Chromium verification
+**Third runtime:** Browser (Three.js + Vite), headless Chromium verification  
+**Fourth runtime:** Stock Godot 4.7.2 GDScript (no .NET), headless import, self-test, scene audit and Web/Windows/Linux exports
 
 ## Browser edition (Three.js)
 
@@ -106,6 +107,41 @@ Observed:
 - selecting a topic plays the character's voiced dialogue audio and displays the bilingual subtitle;
 - the pause screen stops the clock and resource consumption;
 - voice pack integrity check validates 103/103 audio files with 0 missing keys.
+
+## GDScript edition (stock Godot 4.7.2, no .NET)
+
+The third engine is checked without a GPU and without a display, because that is what CI has — and
+because a game that only works on the machine it was written on is not finished.
+
+```bash
+bash tools/sync-gdscript-assets.sh
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --import
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --quit-after 400
+```
+
+| Check | Result |
+|---|---|
+| Import (`--import`) | every script parsed, every asset imported; no `Parse Error`, no `SCRIPT ERROR` |
+| Thirty-day self-test (`-- --selftest`) | **544 checks passed**, 0 failed |
+| Mission flown | 30 simulated days, **81 events raised**, **51 scripted beats fired** (all ten named beats plus threshold notices) |
+| Resource floors over a full mission | battery, oxygen and water reach 0% for a commander who touches nothing — by design, there is no fail state; cabin holds 13.3–21.0 °C |
+| Whole content exercised | all 16 buildings, 45 consoles, 18 actions, 44 dialogue topics, 11 objectives unlocked, 7 crew |
+| Voice pack | 79 spoken character and dialogue lines resolve to files; the 15 incident headlines are narration and degrade to subtitles |
+| Save contract | schema 2 round-trips through JSON into a fresh simulation: clock, battery, journal, crew trust and player name all restored |
+| Scene audit (`-- --audit`) | **174 checks passed**: 16 doorways walkable, 45 consoles reachable from standing height, spawn clear and floored, no crew inside a wall, 12/12 headings closed by the traverse markers |
+| Headless boot (`--quit-after 400`) | the real scene builds 16 modules, 7 crew and 45 consoles and runs 400 frames with no script errors |
+| Web export | `index.html`, `index.wasm`, `index.pck` produced (exit 0) |
+| Linux export | `luna-quest-gdscript.x86_64` produced (exit 0) |
+| Windows export | `luna-quest-gdscript.exe` produced (exit 0) |
+| CI | `.github/workflows/godot-gdscript.yml` — validate on every push and pull request; exports on `main`, tags and manual runs; optional Pages publish |
+
+Not verified here, and stated plainly: **this build environment cannot render the GDScript edition.**
+There is no display, no GPU, and the Godot editor download host is blocked, so the scene is verified
+by physics queries (the audit) and by the rules it runs (the self-test) rather than by looking at
+it. The same content, crew, buildings and materials are rendered and screenshotted in the browser
+edition, which is built from the identical JSON and is checked with headless Chromium.
 
 ## Official 8-Crew Roster
 

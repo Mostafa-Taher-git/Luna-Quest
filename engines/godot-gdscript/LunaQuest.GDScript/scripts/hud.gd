@@ -585,6 +585,16 @@ func play_intro(path: String) -> bool:
 
 	intro_video.finished.connect(func(): stop_intro())
 	intro_video.play()
+
+	# Watchdog: if the platform cannot decode the film (a browser without Theora, for instance) the
+	# player must still reach the title card instead of a black rectangle with a Skip button.
+	var guard := Timer.new()
+	var length: float = intro_video.get_stream_length()
+	guard.wait_time = maxf(6.0, length + 1.5)
+	guard.one_shot = true
+	guard.autostart = true
+	guard.timeout.connect(func(): stop_intro())
+	add_child(guard)
 	return true
 
 
