@@ -28,7 +28,20 @@ namespace LunaQuest.Unity
         private float _yaw = 180f;
         private float _pitch = -8f;
         private float _vertical;
-        private bool _jumpQueued;
+        private float _coyote;
+        private float _jumpBuffer;
+        private float _bob;
+        private Vector3 _horizontal;
+
+        private const float GroundAcceleration = 24f;
+        private const float GroundDeceleration = 30f;
+        private const float AirAcceleration = 7f;
+        private const float CoyoteSeconds = 0.14f;
+        private const float JumpBufferSeconds = 0.16f;
+        private const float InteractReach = 3.2f;
+
+        public float Yaw => _yaw;
+        public float Pitch => _pitch;
 
         public string FocusPrompt
         {
@@ -112,6 +125,8 @@ namespace LunaQuest.Unity
         {
             if (Game == null || Game.Hud == null) return;
 
+            float dt = Mathf.Min(Time.deltaTime, 0.05f);
+
             if (Game.InputActive && Cursor.lockState == CursorLockMode.Locked)
             {
                 _yaw += Input.GetAxis("Mouse X") * 2.1f;
@@ -124,56 +139,78 @@ namespace LunaQuest.Unity
             _pivot.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
 
             Vector3 input = Vector3.zero;
+            bool sprinting = false;
             if (Game.InputActive)
             {
                 if (Input.GetKey(KeyCode.W)) input.z += 1f;
                 if (Input.GetKey(KeyCode.S)) input.z -= 1f;
                 if (Input.GetKey(KeyCode.D)) input.x += 1f;
                 if (Input.GetKey(KeyCode.A)) input.x -= 1f;
-                if (Input.GetKeyDown(KeyCode.Space)) _jumpQueued = true;
+                sprinting = Input.GetKey(KeyCode.LeftShift) && input.sqrMagnitude > 0.01f;
+                if (Input.GetKeyDown(KeyCode.Space)) _jumpBuffer = JumpBufferSeconds;
             }
+
+            if (_jumpBuffer > 0f) _jumpBuffer = Mathf.Max(0f, _jumpBuffer - dt);
 
             Vector3 dir = Quaternion.Euler(0f, _yaw, 0f) * input.normalized;
-            float speed = Input.GetKey(KeyCode.LeftShift) ? RunSpeed : WalkSpeed;
+            float speed = sprinting ? RunSpeed : WalkSpeed;
+            Vector3 target = dir * speed;
 
-            Vector3 velocity = new Vector3(dir.x * speed, _vertical, dir.z * speed);
+            bool grounded = _controller.isGrounded;
+            if (grounded) _coyote = CoyoteSeconds;
+            else _coyote = Mathf.Max(0f, _coyote - dt);
 
-            if (_controller.isGrounded)
+            float accel = grounded
+                ? (input.sqrMagnitude > 0.01f ? GroundAcceleration : GroundDeceleration)
+                : AirAcceleration;
+            _horizontal = Vector3.Lerp(_horizontal, target, 1f - Mathf.Exp(-accel * dt));
+
+            if (grounded && _vertical < 0f) _vertical = -2.0f;
+            else if (!grounded) _vertical -= Gravity * dt;
+
+            if (_jumpBuffer > 0f && _coyote > 0f)
             {
-                if (velocity.y < 0f) velocity.y = -1.0f;
-                if (_jumpQueued)
-                {
-                    velocity.y = JumpSpeed;
-                    _jumpQueued = false;
-                }
+                _vertical = JumpSpeed;
+                _jumpBuffer = 0f;
+                _coyote = 0f;
             }
-            else
-            {
-                velocity.y -= Gravity * Time.deltaTime;
-            }
-            _vertical = velocity.y;
 
-            _controller.Move(velocity * Time.deltaTime);
+            Vector3 velocity = new Vector3(_horizontal.x, _vertical, _horizontal.z);
+            _controller.Move(velocity * dt);
 
             if (dir.sqrMagnitude > 0.01f)
             {
                 float targetYaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
                 Visual.rotation = Quaternion.Slerp(Visual.rotation,
-                    Quaternion.Euler(0f, targetYaw, 0f), Time.deltaTime * 10f);
+                    Quaternion.Euler(0f, targetYaw, 0f), dt * 12f);
             }
 
-            UpdateCameraCollision();
+            float targetFov = ThirdPerson ? 70f : 78f;
+            if (sprinting) targetFov += 4f;
+            Camera.fieldOfView = Mathf.Lerp(Camera.fieldOfView, targetFov, 1f - Mathf.Exp(-8f * dt));
+
+            UpdateCameraCollision(dt, sprinting);
             UpdateFocus();
         }
 
-        private void UpdateCameraCollision()
+        private void UpdateCameraCollision(float dt, bool sprinting)
         {
             if (!ThirdPerson)
             {
-                Camera.transform.localPosition = new Vector3(0f, 0f, -0.05f);
+                float speed = new Vector2(_horizontal.x, _horizontal.z).magnitude;
+                bool moving = speed > 0.5f && _controller.isGrounded;
+                if (moving) _bob += dt * (sprinting ? 11f : 7.5f);
+                else _bob = Mathf.Lerp(_bob, 0f, 1f - Mathf.Exp(-8f * dt));
+
+                float amount = moving ? 1f : 0.15f;
+                Camera.transform.localPosition = new Vector3(
+                    Mathf.Cos(_bob) * 0.009f * amount,
+                    Mathf.Sin(_bob * 2f) * 0.012f * amount,
+                    -0.05f);
                 return;
             }
 
+            _bob = 0f;
             const float wanted = 3.9f;
             float distance = wanted;
             if (Physics.SphereCast(_pivot.position, 0.22f, -_pivot.forward, out RaycastHit hit,
@@ -183,44 +220,58 @@ namespace LunaQuest.Unity
             Camera.transform.localPosition = new Vector3(0f, 0f, -distance);
         }
 
+        /// <summary>
+        /// Focus comes from the centre of the camera so stations cannot be used through walls.
+        /// The distance is measured from the suit, keeping both cameras equally usable.
+        /// </summary>
         private void UpdateFocus()
         {
             FocusStation = null;
             FocusCrew = null;
             if (!Game.Started || Game.World == null) return;
 
-            float best = 3.0f * 3.0f;
-            foreach (var station in Game.World.Stations)
+            Ray ray = Camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            if (!Physics.Raycast(ray, out RaycastHit hit, 60f, ~(1 << 2), QueryTriggerInteraction.Collide))
+                return;
+
+            var station = hit.collider.GetComponentInParent<Station>();
+            if (station != null)
             {
-                if (station == null) continue;
-                float d = (station.transform.position - transform.position).sqrMagnitude;
-                if (d < best) { best = d; FocusStation = station; }
+                if ((station.transform.position - transform.position).sqrMagnitude <= InteractReach * InteractReach)
+                    FocusStation = station;
+                return;
             }
 
-            float bestCrew = 2.7f * 2.7f;
-            foreach (var crew in Game.World.Crew)
-            {
-                if (crew == null) continue;
-                float d = (crew.transform.position - transform.position).sqrMagnitude;
-                if (d < bestCrew)
-                {
-                    bestCrew = d;
-                    FocusCrew = crew;
-                    FocusStation = null;
-                }
-            }
+            var crew = hit.collider.GetComponentInParent<CrewAgent>();
+            if (crew != null && (crew.transform.position - transform.position).sqrMagnitude <= 2.9f * 2.9f)
+                FocusCrew = crew;
         }
 
-        public void ToggleView()
+        public void SetThirdPerson(bool thirdPerson, bool announce)
         {
-            ThirdPerson = !ThirdPerson;
+            ThirdPerson = thirdPerson;
             Visual.gameObject.SetActive(ThirdPerson);
             _suitLight.enabled = !ThirdPerson;
             _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.45f : 1.58f, 0f);
             Camera.fieldOfView = ThirdPerson ? 70f : 78f;
-            Game.Hud.ShowSubtitle(
-                L.T(ThirdPerson ? "Third-person suit camera" : "Helmet view",
-                    ThirdPerson ? "كاميرا البدلة" : "منظور الخوذة"), 2f);
+            Camera.transform.localPosition = new Vector3(0f, 0f, -0.05f);
+            _bob = 0f;
+            Game.Hud?.SetFirstPerson(!ThirdPerson);
+            if (announce)
+            {
+                Game.Hud.ShowSubtitle(
+                    L.T(ThirdPerson ? "Third-person suit camera" : "Helmet view",
+                        ThirdPerson ? "كاميرا البدلة" : "منظور الخوذة"), 2f);
+            }
+        }
+
+        public void ToggleView() => SetThirdPerson(!ThirdPerson, true);
+
+        public void SetLook(float yaw, float pitch)
+        {
+            _yaw = yaw;
+            _pitch = Mathf.Clamp(pitch, -72f, 72f);
+            _pivot.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
         }
     }
 }

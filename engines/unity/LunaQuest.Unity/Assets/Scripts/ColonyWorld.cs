@@ -537,6 +537,14 @@ namespace LunaQuest.Unity
                 station.PromptEn = ip.NameEn;
                 station.PromptAr = ip.NameAr;
                 Stations.Add(station);
+
+                // Give the console a trigger volume on the interaction layer so the camera
+                // ray can select it and walls can still block the line of sight.
+                console.layer = 8;
+                var interactCollider = console.AddComponent<BoxCollider>();
+                interactCollider.isTrigger = true;
+                interactCollider.center = new Vector3(0f, 0.95f, 0.1f);
+                interactCollider.size = new Vector3(1.15f, 1.9f, 1.2f);
             }
         }
 

@@ -203,6 +203,50 @@ namespace LunaQuest.Tests
                 readEn);
             Check("read station unlocks its journal entry", reader.Learning.HasEntry("obj_sample"));
             Check("read station counts as evidence", reader.State.DataPoints > 0);
+
+            // Every console in buildings.json must map to real behaviour. Harvest is skipped
+            // because a fresh colony has no ripe biomass yet; it is covered just above.
+            int unmapped = 0;
+            string unmappedIds = "";
+            foreach (var building in db.Buildings)
+            {
+                foreach (var point in building.Interactions)
+                {
+                    if (point.Id == "harvest") continue;
+                    var probe = new ColonySimulation(db);
+                    if (!probe.Interact(building.Id, point.Id, out _, out _))
+                    {
+                        unmapped++;
+                        unmappedIds += $"{building.Id}/{point.Id} ";
+                    }
+                }
+            }
+            Check("every console maps to an action", unmapped == 0, unmappedIds.Trim());
+
+            var mapped = new ColonySimulation(db);
+            mapped.State.RelayHealth = 0.4;
+            mapped.Interact("mission_control", "comms_desk", out _, out _);
+            Check("comms desk repairs the relay", mapped.State.RelayHealth > 0.7, $"{mapped.State.RelayHealth}");
+
+            mapped.State.SensorDust = 0.9;
+            mapped.Interact("comms_tower", "antenna", out _, out _);
+            Check("antenna cleaning removes sensor dust", mapped.State.SensorDust < 0.3, $"{mapped.State.SensorDust}");
+
+            mapped.State.AirlockDust = 0.8;
+            mapped.Interact("airlock", "dust_removal", out _, out _);
+            Check("dust station cleans the airlock", mapped.State.AirlockDust < 0.3, $"{mapped.State.AirlockDust}");
+
+            bool lights = mapped.State.GrowLightsOn;
+            mapped.Interact("greenhouse", "grow_lights", out _, out _);
+            Check("grow lights toggle", mapped.State.GrowLightsOn != lights);
+
+            mapped.State.AverageFatigue = 0.8;
+            mapped.Interact("medical", "checkup", out _, out _);
+            Check("check-up lowers crew fatigue", mapped.State.AverageFatigue < 0.75, $"{mapped.State.AverageFatigue}");
+
+            double oxygen = mapped.State.O2Kg;
+            mapped.Interact("regolith_plant", "intake", out _, out _);
+            Check("regolith intake produces oxygen", mapped.State.O2Kg > oxygen, $"{oxygen} -> {mapped.State.O2Kg}");
         }
 
         private static void IncidentTests()

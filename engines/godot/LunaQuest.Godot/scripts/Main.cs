@@ -50,19 +50,20 @@ namespace LunaQuest.Godot
             _lastSavedDay = Sim.Clock.Day;
 
             World = new WorldBuilder { Name = "Colony" };
+            World.ProcessMode = ProcessModeEnum.Pausable;
             AddChild(World);
             World.Build(this, Sim);
 
-            Voice = new VoicePlayer { Name = "Voice" };
+            Voice = new VoicePlayer { Name = "Voice", ProcessMode = ProcessModeEnum.Pausable };
             AddChild(Voice);
 
-            Player = new PlayerController { Name = "Commander" };
+            Player = new PlayerController { Name = "Commander", ProcessMode = ProcessModeEnum.Pausable };
             AddChild(Player);
             Player.GlobalPosition = new Vector3(0, 0.1f, 23);
             Player.Visual.AddChild(World.CreateAstronaut(1.78f));
             Player.InputLocked = true;
 
-            Hud = new Hud { Name = "Hud" };
+            Hud = new Hud { Name = "Hud", ProcessMode = ProcessModeEnum.Always };
             AddChild(Hud);
             Hud.Bind(this);
             Voice.Bind(Hud);
@@ -81,12 +82,38 @@ namespace LunaQuest.Godot
         {
             bool autoStart = false;
             bool portrait = false;
+            bool firstPerson = false;
+            bool voiceCheck = false;
+            bool voiceDemo = false;
+            Vector3? spawn = null;
+            float? lookYaw = null, lookPitch = null;
             var args = new List<string>(OS.GetCmdlineArgs());
             args.AddRange(OS.GetCmdlineUserArgs());
             foreach (var arg in args)
             {
                 if (arg == "--autostart") autoStart = true;
                 else if (arg == "--portrait") portrait = true;
+                else if (arg == "--first-person") firstPerson = true;
+                else if (arg == "--voice-check") voiceCheck = true;
+                else if (arg == "--voice-demo") voiceDemo = true;
+                else if (arg.StartsWith("--spawn=", StringComparison.Ordinal))
+                {
+                    var parts = arg.Substring("--spawn=".Length).Split(',');
+                    if (parts.Length >= 2 &&
+                        float.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x) &&
+                        float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float z))
+                        spawn = new Vector3(x, 0.4f, z);
+                }
+                else if (arg.StartsWith("--look=", StringComparison.Ordinal))
+                {
+                    var parts = arg.Substring("--look=".Length).Split(',');
+                    if (parts.Length >= 1 &&
+                        float.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float yaw))
+                        lookYaw = yaw;
+                    if (parts.Length >= 2 &&
+                        float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float pitch))
+                        lookPitch = pitch;
+                }
                 else if (arg.StartsWith("--screenshot=", StringComparison.Ordinal))
                 {
                     _screenshotPath = arg.Substring("--screenshot=".Length);
@@ -98,11 +125,34 @@ namespace LunaQuest.Godot
                         _screenshotTimer = d;
                 }
             }
+            if (spawn.HasValue) Player.GlobalPosition = spawn.Value;
+            if (lookYaw.HasValue || lookPitch.HasValue)
+                Player.ResetLook(lookYaw ?? 0f, lookPitch ?? -0.12f);
             if (autoStart) CallDeferred(nameof(AutoStart));
+            if (firstPerson) CallDeferred(nameof(FirstPersonView));
             if (portrait) CallDeferred(nameof(Portrait));
+            if (voiceCheck) CallDeferred(nameof(VoicePackCheck));
+            if (voiceDemo) CallDeferred(nameof(VoiceDemo));
+        }
+
+        private void VoiceDemo()
+        {
+            var profile = Sim.Content.Npcs.Find(n => n.Id == "npc_safaa") ?? Sim.Content.Npcs[0];
+            Voice.Speak(profile, true);
+            GD.Print($"Voice demo: {profile.NameEn} greeting, playing={Voice.IsPlaying}.");
+        }
+
+        private void VoicePackCheck()
+        {
+            var (total, problems) = Voice.VerifyPack();
+            GD.Print($"Voice pack: {total} lines, {problems.Count} problem(s).");
+            foreach (string problem in problems) GD.Print($"  {problem}");
+            GetTree().Quit(problems.Count == 0 ? 0 : 1);
         }
 
         private void AutoStart() => BeginGame("Amara Okafor");
+
+        private void FirstPersonView() => Player.SetThirdPerson(false, false);
 
         private void Portrait() => Player.PortraitCamera();
 
@@ -110,7 +160,7 @@ namespace LunaQuest.Godot
         {
             if (Sim == null) return;
 
-            if (Started)
+            if (Started && !GetTree().Paused)
             {
                 var events = Sim.Step(delta);
                 foreach (var e in events) Deliver(e);
@@ -154,35 +204,69 @@ namespace LunaQuest.Godot
 
         public override void _UnhandledInput(InputEvent @event)
         {
-            if (Started)
+            if (!Started)
             {
-                if (@event.IsActionPressed("journal")) Hud.ToggleJournal();
-                if (@event.IsActionPressed("resources")) Hud.TogglePlants();
-                if (@event.IsActionPressed("help")) Hud.ToggleHelp();
-                if (@event.IsActionPressed("language")) ToggleLanguage();
-                if (@event.IsActionPressed("save_game")) SaveGame(true);
                 if (@event.IsActionPressed("load_game")) LoadGame();
+                return;
+            }
 
-                if (@event.IsActionPressed("ui_cancel"))
-                {
-                    Hud.CloseOverlays();
-                    if (Input.MouseMode == Input.MouseModeEnum.Captured)
-                    {
-                        Input.MouseMode = Input.MouseModeEnum.Visible;
-                        Player.InputLocked = true;
-                    }
-                }
-                else if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed &&
-                         Input.MouseMode == Input.MouseModeEnum.Visible)
-                {
-                    Input.MouseMode = Input.MouseModeEnum.Captured;
-                    Player.InputLocked = false;
-                }
-            }
-            else if (@event.IsActionPressed("load_game"))
+            if (@event.IsActionPressed("ui_cancel"))
             {
-                LoadGame();
+                HandleCancel();
+                return;
             }
+
+            if (GetTree().Paused) return;
+
+            if (@event.IsActionPressed("journal")) Hud.ToggleJournal();
+            if (@event.IsActionPressed("resources")) Hud.TogglePlants();
+            if (@event.IsActionPressed("help")) Hud.ToggleHelp();
+            if (@event.IsActionPressed("language")) ToggleLanguage();
+            if (@event.IsActionPressed("save_game")) SaveGame(true);
+            if (@event.IsActionPressed("load_game")) LoadGame();
+
+            if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed &&
+                Input.MouseMode == Input.MouseModeEnum.Visible && !Hud.AnyOverlayVisible)
+            {
+                Input.MouseMode = Input.MouseModeEnum.Captured;
+                Player.InputLocked = false;
+            }
+        }
+
+        /// <summary>
+        /// Esc is a single, predictable control: close a panel, recapture a released mouse, pause,
+        /// or resume. It never leaves the player unlocked without telling them.
+        /// </summary>
+        private void HandleCancel()
+        {
+            if (Hud.PauseVisible) { ResumeGame(); return; }
+            if (Hud.AnyOverlayVisible)
+            {
+                Hud.CloseOverlays();
+                Input.MouseMode = Input.MouseModeEnum.Captured;
+                return;
+            }
+            if (Input.MouseMode != Input.MouseModeEnum.Captured) ResumeGame();
+            else PauseGame();
+        }
+
+        public void PauseGame()
+        {
+            if (!Started || GetTree().Paused) return;
+            GetTree().Paused = true;
+            Player.InputLocked = true;
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+            Hud.ShowPause(true);
+            Hud.SetPrompt("");
+        }
+
+        public void ResumeGame()
+        {
+            if (!Started) return;
+            GetTree().Paused = false;
+            Hud.ShowPause(false);
+            Player.InputLocked = false;
+            Input.MouseMode = Input.MouseModeEnum.Captured;
         }
 
         // ---- game flow -------------------------------------------------------
@@ -192,7 +276,9 @@ namespace LunaQuest.Godot
             if (Started) return;
             Sim.PlayerName = string.IsNullOrWhiteSpace(playerName) ? "Amara Okafor" : playerName.Trim();
             Started = true;
+            GetTree().Paused = false;
             Hud.HideStart();
+            Hud.ShowPause(false);
             Player.InputLocked = false;
             Input.MouseMode = Input.MouseModeEnum.Captured;
             Hud.ShowToast(L.T("Suit link nominal. The colony is yours.",
@@ -272,6 +358,8 @@ namespace LunaQuest.Godot
                 data.Extras["playerY"] = Player.GlobalPosition.Y;
                 data.Extras["playerZ"] = Player.GlobalPosition.Z;
                 data.Extras["thirdPerson"] = Player.ThirdPerson;
+                data.Extras["yaw"] = Player.Yaw;
+                data.Extras["pitch"] = Player.Pitch;
 
                 using var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
                 if (file == null)
@@ -304,19 +392,38 @@ namespace LunaQuest.Godot
                 var data = SaveData.FromJson(text);
                 data.Apply(Sim);
 
-                if (data.Extras.TryGetValue("playerX", out var px) &&
-                    data.Extras.TryGetValue("playerZ", out var pz))
-                {
-                    float x = (float)LunaQuest.Core.Content.Json.Num(px);
-                    float z = (float)LunaQuest.Core.Content.Json.Num(pz);
-                    Player.GlobalPosition = new Vector3(x, 0.2f, z);
-                }
+                float x = 0f, y = 0.2f, z = 23f;
+                if (data.Extras.TryGetValue("playerX", out var px))
+                    x = (float)LunaQuest.Core.Content.Json.Num(px);
+                if (data.Extras.TryGetValue("playerY", out var py))
+                    y = (float)LunaQuest.Core.Content.Json.Num(py, 0.2);
+                if (data.Extras.TryGetValue("playerZ", out var pz))
+                    z = (float)LunaQuest.Core.Content.Json.Num(pz);
+                Player.GlobalPosition = new Vector3(x, y, z);
+
+                bool thirdPerson = true;
+                if (data.Extras.TryGetValue("thirdPerson", out var tp))
+                    thirdPerson = LunaQuest.Core.Content.Json.Bool(tp, true);
+                Player.SetThirdPerson(thirdPerson, false);
+
+                float yaw = 0f, pitch = -0.12f;
+                if (data.Extras.TryGetValue("yaw", out var pyaw))
+                    yaw = (float)LunaQuest.Core.Content.Json.Num(pyaw);
+                if (data.Extras.TryGetValue("pitch", out var ppitch))
+                    pitch = (float)LunaQuest.Core.Content.Json.Num(ppitch, -0.12);
+                Player.ResetLook(yaw, pitch);
+
+                // Guard against save files written under an older, taller layout: an obviously
+                // invalid height is clamped rather than dropping the player out of the world.
+                if (y < -1f) Player.GlobalPosition = new Vector3(x, 0.4f, z);
 
                 L.Arabic = Sim.Language == "ar";
                 Hud.RefreshLanguage();
                 World.RefreshLanguage();
                 Started = true;
+                GetTree().Paused = false;
                 Hud.HideStart();
+                Hud.ShowPause(false);
                 Player.InputLocked = false;
                 Input.MouseMode = Input.MouseModeEnum.Captured;
                 _lastSavedDay = Sim.Clock.Day;

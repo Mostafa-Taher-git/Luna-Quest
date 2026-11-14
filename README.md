@@ -18,10 +18,11 @@ listen and move the player; the simulation is one deterministic core with a shar
 
 | Part | State |
 |---|---|
-| Shared simulation core | Complete, `netstandard2.1`, 419 automated checks passing |
-| Content (buildings, crew, incidents, crops, learning) | Complete, six JSON files |
-| Godot 4.7.2 .NET project | Complete; built, launched and screenshotted on Linux |
-| Unity 6.3 LTS project | Complete; compile-checked with 0 warnings / 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
+| Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
+| Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
+| Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
+| Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
+| Voice pack | 55 real MP3 lines from open Piper models, bilingual subtitles, no runtime cloud TTS |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -68,8 +69,8 @@ dotnet run --project shared/LunaQuest.Tests/LunaQuest.Tests.csproj
 ```
 
 The console test harness needs no NuGet packages. It checks the clock, resource
-conservation, crop and food rules, incidents, learning evidence, save round-trips and a
-full simulated mission. Current result: **419 passed, 0 failed**.
+conservation, crop and food rules, incidents, learning evidence, save round-trips, every
+station console mapping and a full simulated mission. Current result: **426 passed, 0 failed**.
 
 ---
 
@@ -88,10 +89,27 @@ full simulated mission. Current result: **419 passed, 0 failed**.
 | Controls / help | `H` | `H` |
 | Save / load | `F5` / `F9` | `F5` / `F9` |
 | English / العربية | `L` | `L` |
-| Release mouse / close panel | `Esc` | `Esc` |
+| Pause / resume | `Esc` | `Esc` |
+| Close a panel / release the mouse | `Esc` | `Esc` |
 
 The HUD is bilingual. The language switch changes labels, prompts, crew lines and the
 journal without restarting the simulation.
+
+### Movement and cameras
+
+- **Third person by default.** The astronaut is visible, the spring arm pulls in when a
+  wall is behind the player, and the suit turns toward the direction of travel.
+- **First person on `V`.** The camera moves to the helmet, the astronaut mesh is hidden and
+  a visor rim, glass reflection and centre crosshair appear. Head bob and a slightly wider
+  field of view make the two modes feel different.
+- **Low-gravity movement.** Lunar gravity is `1.62 m/s²`. Ground acceleration, air control,
+  a `0.14 s` coyote window, a `0.16 s` jump buffer and floor snapping keep the suit from
+  feeling floaty or unresponsive.
+- **Interaction needs line of sight.** A ray from the centre of the camera must hit the
+  console, and the suit must be within reach. Consoles cannot be used through walls.
+- **`Esc` is predictable.** It closes an open panel, recaptures a released mouse, pauses the
+  colony, or resumes it. The pause screen stops the simulation clock and every resource
+  draw.
 
 ---
 
@@ -200,6 +218,24 @@ water stress and light hours.
   skill in the field journal. Reading an observation station unlocks its objective; the
   journal then shows what was practiced and the source/evidence class.
 
+### Voice and subtitles
+
+Every crew member has a distinct recorded voice identity, a greeting and four rotating
+ambient barks. Fifteen incident lines are spoken by the crew member who owns that system.
+The current pack is **55 real MP3 lines**, generated offline with Piper from open voice
+models, and every line carries an English and Arabic subtitle. The game never calls a cloud
+speech service at runtime.
+
+- Greetings play when you talk to a crew member.
+- Barks are short, spaced out, and never loop into a wall of dialogue.
+- Incident lines are chosen from the same fixed pack, so a missing file is a build error,
+  not a surprise at runtime.
+- `--voice-check` loads every pack entry and reports missing keys or files.
+- `--voice-demo` speaks one greeting at startup, for audio checks.
+
+The models and their licenses are listed in `docs/licenses/piper-voices.md`. The Arabic
+text is a subtitle translation, not Arabic speech.
+
 ---
 
 ## The 30-day arc
@@ -251,7 +287,7 @@ it. The clock changes presentation only; the resource arithmetic is the same in 
 Luna-Quest-Game/
 ├── assets/                  astronaut GLB, Earth texture, fonts, voice pack
 ├── content/                 source-of-truth JSON: buildings, npcs, incidents,
-│                            crops, learning, research
+│                            crops, learning, research, voice manifest
 ├── docs/                    design docs, research, screenshots, licenses
 ├── engines/
 │   ├── godot/LunaQuest.Godot/
@@ -259,7 +295,7 @@ Luna-Quest-Game/
 ├── shared/
 │   ├── LunaQuest.Core/      simulation, content loader, save contract
 │   └── LunaQuest.Tests/     console test harness
-├── tools/                   content sync and astronaut bake scripts
+├── tools/                   content sync, astronaut bake, voice-pack generator
 ├── README.md
 ├── CREDITS.md
 └── LICENSE
@@ -269,7 +305,7 @@ Luna-Quest-Game/
 
 ## Content and modding
 
-The six JSON files in `content/` are the source of truth for both engines:
+The seven JSON files in `content/` are the source of truth for both engines:
 
 | File | Contents |
 |---|---|
@@ -279,6 +315,7 @@ The six JSON files in `content/` are the source of truth for both engines:
 | `crops.json` | 9 crop references and cycle data |
 | `learning.json` | 11 objectives and evidence classes |
 | `research.json` | 17 research notes and source links |
+| `voices.json` | voice cast, every spoken line and its Arabic subtitle |
 
 The parser is dependency-free (`shared/LunaQuest.Core/Content/Json.cs`), so Unity, Godot and
 the tests read the same bytes with the same rules.
@@ -289,8 +326,10 @@ After editing content or assets:
 ./tools/sync-content.sh
 ```
 
-This copies JSON, the shared core, textures, fonts and voice into both engine projects and
-the Unity core mirror. It does not overwrite engine adapter code.
+This copies JSON, the shared core, textures, fonts and the voice pack into both engine
+projects and the Unity core mirror. It does not overwrite engine adapter code. Godot then
+needs an import pass (`Godot --headless --import --path engines/godot/LunaQuest.Godot`)
+after new audio or textures are added.
 
 ### Rebuilding the Unity astronaut
 
@@ -316,10 +355,21 @@ Godot --path engines/godot/LunaQuest.Godot --autostart \
 # Front portrait for model checks
 Godot --path engines/godot/LunaQuest.Godot --autostart --portrait \
   --screenshot=/tmp/portrait.png --shot-delay=5
+
+# Start in the helmet view, at a fixed position and look direction
+Godot --path engines/godot/LunaQuest.Godot --autostart --first-person \
+  --spawn=-2.9,15.2 --look=0,0 --screenshot=/tmp/station.png --shot-delay=6
+
+# Verify the whole voice pack, then quit
+Godot --headless --path engines/godot/LunaQuest.Godot -- --voice-check
+
+# Speak one greeting at startup, for an audio check
+Godot --path engines/godot/LunaQuest.Godot --autostart --voice-demo
 ```
 
-Unity has no screenshot flag; press Play and use the Game view. The start overlay is the
-same name/language screen.
+`--spawn=x,z` and `--look=yaw,pitch` are development helpers for repeatable screenshots.
+They are inert in normal play. Unity has no screenshot flag; press Play and use the Game
+view. The start overlay is the same name/language screen.
 
 ---
 
@@ -341,10 +391,12 @@ one adapter can be loaded by the other after copying the file to the other engin
   assemblies with 0 warnings/0 errors, and the scene/project files are hand-authored. The
   first editor open may regenerate missing `Library/`, `QualitySettings` or `GraphicsSettings`
   files; that is normal. Use Unity 6.3 LTS and the built-in render pipeline.
-- **Voice rights are unconfirmed.** The 55 MP3 crew lines are inherited from the team's
-  Luna-Quest V1 prototype. The repository is public at the team's request, but the
-  performance and distribution rights are still unconfirmed: clear them before shipping a
-  public build. See `CREDITS.md`.
+- **Voice is synthetic and English-only.** The 55 lines were generated offline with Piper
+  from open voice models. Arabic is a subtitle translation; there is no Arabic speech in the
+  pack. The models and licenses are listed in `docs/licenses/piper-voices.md`.
+- **Dialogue is bark-based.** Each crew member has a greeting and four ambient lines rather
+  than a branching conversation tree. The exposition lives on the consoles and in the
+  journal, which keeps the HUD readable and the voices short.
 - **Two crew names are pending team approval** by design: the Agriculture and Food Engineer
   and the Communications and Software Engineer. They display as “Name pending approval” and
   are not invented.
@@ -363,7 +415,8 @@ one adapter can be loaded by the other after copying the file to the other engin
   project; see `CREDITS.md`.
 - **Earth texture** from Solar System Scope — CC BY 4.0.
 - **DejaVu Sans** and **Noto Naskh Arabic** fonts under their respective free licenses.
-- Crew voice pack inherited from the Luna-Quest V1 prototype; rights pending confirmation.
+- Crew voice pack generated offline with **Piper** from open voice models; cast and licenses
+  in `docs/licenses/piper-voices.md`.
 - Design, research and content from the Luna-Quest team (GDD v2.2, architecture v2.2).
 
 Full attribution and license texts: [`CREDITS.md`](CREDITS.md) and
@@ -373,5 +426,4 @@ Full attribution and license texts: [`CREDITS.md`](CREDITS.md) and
 
 Source code is released under the **MIT License** (see [`LICENSE`](LICENSE)). Third-party
 art, fonts, voice and research documents remain under their own licenses; the MIT license
-does not override them. The voice pack's performance and distribution rights are still
-unconfirmed; do not ship a public build containing it until the team clears those rights.
+does not override them. See [`CREDITS.md`](CREDITS.md) for the current notices.

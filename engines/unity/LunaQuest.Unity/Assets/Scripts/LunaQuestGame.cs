@@ -92,7 +92,7 @@ namespace LunaQuest.Unity
         {
             if (Sim == null) return;
 
-            if (Started)
+            if (Started && !Paused)
             {
                 var events = Sim.Step(Time.deltaTime);
                 foreach (var e in events) Deliver(e);
@@ -119,12 +119,31 @@ namespace LunaQuest.Unity
                 Hud.Draw();
         }
 
+        public bool Paused { get; private set; }
+
+        public void PauseGame()
+        {
+            if (!Started || Paused) return;
+            Paused = true;
+            Time.timeScale = 0f;
+            UnlockCursor();
+        }
+
+        public void ResumeGame()
+        {
+            if (!Started) return;
+            Paused = false;
+            Time.timeScale = 1f;
+            LockCursor();
+        }
+
         private void HandleKeys()
         {
             if (Hud == null) return;
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {
+                if (Paused) { ResumeGame(); return; }
                 if (Hud.OverlayOpen)
                 {
                     Hud.CloseOverlays();
@@ -132,13 +151,13 @@ namespace LunaQuest.Unity
                 }
                 else if (Started)
                 {
-                    if (Cursor.lockState == CursorLockMode.Locked) UnlockCursor();
+                    if (Cursor.lockState == CursorLockMode.Locked) PauseGame();
                     else LockCursor();
                 }
                 return;
             }
 
-            if (!Started) return;
+            if (!Started || Paused) return;
 
             if (Input.GetKeyDown(KeyCode.J)) { Hud.ToggleJournal(); UnlockCursor(); }
             if (Input.GetKeyDown(KeyCode.H)) { Hud.ToggleHelp(); UnlockCursor(); }
@@ -160,6 +179,8 @@ namespace LunaQuest.Unity
             if (Started) return;
             Sim.PlayerName = string.IsNullOrWhiteSpace(playerName) ? "Amara Okafor" : playerName.Trim();
             Started = true;
+            Paused = false;
+            Time.timeScale = 1f;
             LockCursor();
             Hud.ShowToast(L.T("Suit link nominal. The colony is yours.",
                 "رابط البدلة سليم. المستعمرة مسؤوليتك."), 5f);
@@ -268,6 +289,8 @@ namespace LunaQuest.Unity
                 data.Extras["playerY"] = Player.transform.position.y;
                 data.Extras["playerZ"] = Player.transform.position.z;
                 data.Extras["thirdPerson"] = Player.ThirdPerson;
+                data.Extras["yaw"] = Player.Yaw;
+                data.Extras["pitch"] = Player.Pitch;
                 File.WriteAllText(SavePath, data.ToJson());
                 if (announce)
                     Hud.ShowToast(L.T("Colony saved.", "حُفظت المستعمرة."), 2.5f);
@@ -295,18 +318,34 @@ namespace LunaQuest.Unity
                 var data = SaveData.FromJson(File.ReadAllText(SavePath));
                 data.Apply(Sim);
 
-                if (data.Extras.TryGetValue("playerX", out object px) &&
-                    data.Extras.TryGetValue("playerZ", out object pz))
-                {
-                    float x = (float)LunaQuest.Core.Content.Json.Num(px);
-                    float z = (float)LunaQuest.Core.Content.Json.Num(pz);
-                    Player.Teleport(new Vector3(x, 0.2f, z));
-                }
+                float x = 0f, y = 0.3f, z = 23f;
+                if (data.Extras.TryGetValue("playerX", out object px))
+                    x = (float)LunaQuest.Core.Content.Json.Num(px);
+                if (data.Extras.TryGetValue("playerY", out object py))
+                    y = (float)LunaQuest.Core.Content.Json.Num(py, 0.3);
+                if (data.Extras.TryGetValue("playerZ", out object pz))
+                    z = (float)LunaQuest.Core.Content.Json.Num(pz);
+                if (y < -1f) y = 0.4f;
+                Player.Teleport(new Vector3(x, y, z));
+
+                bool thirdPerson = true;
+                if (data.Extras.TryGetValue("thirdPerson", out object tp))
+                    thirdPerson = LunaQuest.Core.Content.Json.Bool(tp, true);
+                Player.SetThirdPerson(thirdPerson, false);
+
+                float yaw = 180f, pitch = -8f;
+                if (data.Extras.TryGetValue("yaw", out object pyaw))
+                    yaw = (float)LunaQuest.Core.Content.Json.Num(pyaw, 180.0);
+                if (data.Extras.TryGetValue("pitch", out object ppitch))
+                    pitch = (float)LunaQuest.Core.Content.Json.Num(ppitch, -8.0);
+                Player.SetLook(yaw, pitch);
 
                 L.Arabic = Sim.Language == "ar";
                 World.RefreshLanguage();
                 Hud.OnLanguageChanged();
                 Started = true;
+                Paused = false;
+                Time.timeScale = 1f;
                 _lastSavedDay = Sim.Clock.Day;
                 LockCursor();
                 Hud.ShowToast(L.T("Colony restored.", "استُعيدت المستعمرة."), 3f);

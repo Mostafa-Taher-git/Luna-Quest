@@ -20,9 +20,11 @@ namespace LunaQuest.Godot
         private Label _startTitle = null!, _startSub = null!, _nameLabel = null!, _startHint = null!, _startControls = null!;
         private ProgressBar _missionBar = null!;
         private VBoxContainer _feed = null!, _journalList = null!, _plantsBox = null!;
-        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!;
+        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!, _pausePanel = null!;
+        private VisorOverlay _visor = null!;
+        private ColorRect _pauseDim = null!;
         private LineEdit _nameEdit = null!;
-        private Button _begin = null!, _lang = null!;
+        private Button _begin = null!, _lang = null!, _resume = null!;
         private readonly Dictionary<string, ProgressBar> _bars = new Dictionary<string, ProgressBar>();
         private readonly Dictionary<string, Label> _vals = new Dictionary<string, Label>();
         private readonly Dictionary<Label, (string en, string ar)> _texts = new Dictionary<Label, (string en, string ar)>();
@@ -75,12 +77,14 @@ namespace LunaQuest.Godot
             AddChild(_root);
             ApplyTheme();
 
+            BuildVisor();
             BuildTopBar();
             BuildResourcePanel();
             BuildFeed();
             BuildPrompt();
             BuildSubtitle();
             BuildOverlays();
+            BuildPause();
             BuildStart();
         }
 
@@ -93,6 +97,13 @@ namespace LunaQuest.Godot
             };
             _root.Theme = theme;
             _root.LayoutDirection = L.Arabic ? Control.LayoutDirectionEnum.Rtl : Control.LayoutDirectionEnum.Ltr;
+        }
+
+        private void BuildVisor()
+        {
+            _visor = new VisorOverlay { Name = "Visor", Visible = false };
+            _visor.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            _root.AddChild(_visor);
         }
 
         private void BuildTopBar()
@@ -399,13 +410,13 @@ namespace LunaQuest.Godot
                 "E  use the station you are facing\n" +
                 "J  journal          G  resource math          H  this panel\n" +
                 "F5  save            F9  load            L  language\n" +
-                "Esc  release the mouse",
+                "Esc  pause / release the mouse",
                 "WASD  حركة          Shift  جري          Space  قفز\n" +
                 "الفأرة  النظر          V  منظور أول / ثالث\n" +
                 "E  استخدام المحطة المقابلة\n" +
                 "J  الدفتر          G  حسابات الموارد          H  هذه اللوحة\n" +
                 "F5  حفظ            F9  تحميل            L  اللغة\n" +
-                "Esc  تحرير الفأرة");
+                "Esc  إيقاف مؤقت / تحرير الفأرة");
             helpBody.AddThemeFontSizeOverride("font_size", 15);
             hc.AddChild(helpBody);
 
@@ -434,6 +445,59 @@ namespace LunaQuest.Godot
             _plantsBox = new VBoxContainer();
             _plantsBox.AddThemeConstantOverride("separation", 4);
             pc.AddChild(_plantsBox);
+        }
+
+        private void BuildPause()
+        {
+            _pauseDim = new ColorRect
+            {
+                Color = new Color(0f, 0f, 0f, 0.55f),
+                Visible = false,
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+            };
+            _pauseDim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            _root.AddChild(_pauseDim);
+
+            _pausePanel = Panel(new Color(0.01f, 0.02f, 0.035f, 0.97f), new Color(0.35f, 0.75f, 0.95f, 0.65f));
+            _pausePanel.AnchorLeft = 0.32f;
+            _pausePanel.AnchorRight = 0.68f;
+            _pausePanel.AnchorTop = 0.3f;
+            _pausePanel.AnchorBottom = 0.7f;
+            _pausePanel.Visible = false;
+            _root.AddChild(_pausePanel);
+
+            var m = new MarginContainer();
+            foreach (var k in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+                m.AddThemeConstantOverride(k, 24);
+            _pausePanel.AddChild(m);
+
+            var col = new VBoxContainer();
+            col.AddThemeConstantOverride("separation", 12);
+            m.AddChild(col);
+
+            var title = Txt(new Label { HorizontalAlignment = HorizontalAlignment.Center }, "PAUSED", "متوقف مؤقتًا");
+            title.AddThemeFontSizeOverride("font_size", 30);
+            col.AddChild(title);
+
+            var body = Txt(new Label
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            },
+                "The colony clock is stopped. Nothing is consumed while you are away.",
+                "ساعة المستعمرة متوقفة. لا يُستهلك شيء أثناء غيابك.");
+            body.AddThemeFontSizeOverride("font_size", 13);
+            body.Modulate = new Color(0.65f, 0.78f, 0.9f);
+            col.AddChild(body);
+
+            _resume = new Button { Text = "Resume", CustomMinimumSize = new Vector2(0, 42) };
+            _resume.Pressed += () => _main.ResumeGame();
+            col.AddChild(_resume);
+
+            var hint = Txt(new Label { HorizontalAlignment = HorizontalAlignment.Center }, "Esc  resume", "Esc  استئناف");
+            hint.AddThemeFontSizeOverride("font_size", 12);
+            hint.Modulate = new Color(0.5f, 0.65f, 0.8f);
+            col.AddChild(hint);
         }
 
         private void BuildStart()
@@ -659,6 +723,25 @@ namespace LunaQuest.Godot
             _plantsPanel.Visible = false;
         }
 
+        public bool AnyOverlayVisible => _journalPanel.Visible || _helpPanel.Visible || _plantsPanel.Visible || _pausePanel.Visible;
+
+        public bool PauseVisible => _pausePanel.Visible;
+
+        public void ShowPause(bool paused)
+        {
+            _pausePanel.Visible = paused;
+            _pauseDim.Visible = paused;
+            _promptPanel.Visible = false;
+            if (paused) _resume.GrabFocus();
+            else _resume.ReleaseFocus();
+        }
+
+        public void SetFirstPerson(bool firstPerson)
+        {
+            _visor.Visible = firstPerson;
+            if (firstPerson) _visor.QueueRedraw();
+        }
+
         private void RefreshJournal()
         {
             foreach (var c in _journalList.GetChildren()) c.QueueFree();
@@ -751,6 +834,7 @@ namespace LunaQuest.Godot
             }
             _lang.Text = L.Arabic ? "EN" : "العربية";
             _begin.Text = L.Arabic ? "ابدأ المهمة" : "Begin the mission";
+            _resume.Text = L.T("Resume", "استئناف");
             _nameEdit.Text = _main.Sim.PlayerName;
             _day.Text = _main.Sim.Clock.Stamp();
             _journalTitle.Text = L.T("FIELD JOURNAL", "دفتر الميدان");
@@ -804,6 +888,45 @@ namespace LunaQuest.Godot
             };
             bar.AddThemeStyleboxOverride("background", bg);
             bar.AddThemeStyleboxOverride("fill", fill);
+        }
+    }
+
+    /// <summary>
+    /// Helmet presentation for the first-person camera: a dark visor rim, a faint glass
+    /// reflection and a functional crosshair that matches the interaction ray.
+    /// </summary>
+    public partial class VisorOverlay : Control
+    {
+        public override void _Ready()
+        {
+            MouseFilter = MouseFilterEnum.Ignore;
+            SetAnchorsPreset(LayoutPreset.FullRect);
+            Resized += QueueRedraw;
+        }
+
+        public override void _Draw()
+        {
+            Vector2 size = Size;
+            if (size.X < 32 || size.Y < 32) return;
+
+            var rim = new Color(0.01f, 0.025f, 0.04f, 0.66f);
+            float band = Mathf.Max(16f, size.Y * 0.03f);
+            DrawRect(new Rect2(0, 0, size.X, band), rim);
+            DrawRect(new Rect2(0, size.Y - band, size.X, band), rim);
+            DrawRect(new Rect2(0, 0, band, size.Y), rim);
+            DrawRect(new Rect2(size.X - band, 0, band, size.Y), rim);
+
+            var glass = new Color(0.35f, 0.7f, 1f, 0.07f);
+            DrawRect(new Rect2(0, band, size.X, 2), glass);
+            DrawRect(new Rect2(band, 0, 2, size.Y), glass);
+
+            Vector2 center = new Vector2(size.X * 0.5f, size.Y * 0.5f);
+            var mark = new Color(0.72f, 0.95f, 1f, 0.82f);
+            DrawCircle(center, 2.0f, mark);
+            DrawLine(center + new Vector2(-13, 0), center + new Vector2(-5, 0), mark, 1.5f);
+            DrawLine(center + new Vector2(5, 0), center + new Vector2(13, 0), mark, 1.5f);
+            DrawLine(center + new Vector2(0, -13), center + new Vector2(0, -5), mark, 1.5f);
+            DrawLine(center + new Vector2(0, 5), center + new Vector2(0, 13), mark, 1.5f);
         }
     }
 }

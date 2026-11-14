@@ -23,7 +23,7 @@ namespace LunaQuest.Godot
         {
             Monitoring = true;
             Monitorable = true;
-            CollisionLayer = 0;
+            CollisionLayer = 16; // interaction ray layer
             CollisionMask = 2; // player body layer
             AddToGroup("interactable");
 

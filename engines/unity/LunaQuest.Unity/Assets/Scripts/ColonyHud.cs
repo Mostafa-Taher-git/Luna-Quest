@@ -40,6 +40,7 @@ namespace LunaQuest.Unity
         private bool _journalOpen;
         private bool _helpOpen;
         private bool _mathOpen;
+        private bool _firstPerson;
         private Vector2 _journalScroll;
         private float _baseWidth = 1600f;
         private float _baseHeight = 900f;
@@ -125,6 +126,11 @@ namespace LunaQuest.Unity
             // The start screen is drawn from LunaQuestGame.Started, so nothing to hide.
         }
 
+        public void SetFirstPerson(bool firstPerson)
+        {
+            _firstPerson = firstPerson;
+        }
+
         // ---- drawing ---------------------------------------------------------
 
         public void Draw()
@@ -147,6 +153,7 @@ namespace LunaQuest.Unity
                 return;
             }
 
+            DrawVisor(w, h);
             DrawTopBar(w);
             DrawStatusPanel();
             DrawLogPanel(w);
@@ -163,7 +170,30 @@ namespace LunaQuest.Unity
                     new Color(0.78f, 0.95f, 1f, a), TextAnchor.MiddleCenter, true, true);
             }
 
+            if (_game.Paused) DrawPause(w, h);
+
             GUI.matrix = Matrix4x4.identity;
+        }
+
+        private void DrawPause(float w, float h)
+        {
+            GUI.DrawTexture(new Rect(0f, 0f, w, h), DrawWhite(), ScaleMode.StretchToFill, true, 0f,
+                new Color(0f, 0f, 0f, 0.55f), 0f, 0f);
+
+            var panel = new Rect(w * 0.5f - 230f, h * 0.5f - 140f, 460f, 280f);
+            Panel(panel, new Color(0.02f, 0.035f, 0.055f, 0.98f), new Color(0.35f, 0.75f, 0.95f, 0.7f));
+            Text(new Rect(panel.x, panel.y + 30f, panel.width, 40f),
+                L.T("PAUSED", "متوقف مؤقتًا"), 28, new Color(0.94f, 0.97f, 1f), TextAnchor.MiddleCenter, true);
+            Text(new Rect(panel.x + 30f, panel.y + 86f, panel.width - 60f, 56f),
+                L.T("The colony clock is stopped. Nothing is consumed while you are away.",
+                    "ساعة المستعمرة متوقفة. لا يُستهلك شيء أثناء غيابك."),
+                13, new Color(0.65f, 0.78f, 0.9f), TextAnchor.MiddleCenter, false, true);
+            if (Button(new Rect(panel.x + 130f, panel.y + 158f, panel.width - 260f, 42f),
+                    L.T("Resume", "استئناف"), 15))
+                _game.ResumeGame();
+            Text(new Rect(panel.x, panel.y + 212f, panel.width, 24f),
+                L.T("Esc  resume", "Esc  استئناف"), 12,
+                new Color(0.5f, 0.65f, 0.8f), TextAnchor.MiddleCenter);
         }
 
         private Texture2D DrawWhite()
@@ -331,6 +361,27 @@ namespace LunaQuest.Unity
         }
 
         // ---- top bar ---------------------------------------------------------
+
+        private void DrawVisor(float w, float h)
+        {
+            if (!_firstPerson) return;
+
+            var rim = new Color(0.01f, 0.025f, 0.04f, 0.66f);
+            float band = Mathf.Max(16f, h * 0.03f);
+            GUI.DrawTexture(new Rect(0f, 0f, w, band), DrawWhite(), ScaleMode.StretchToFill, true, 0f, rim, 0f, 0f);
+            GUI.DrawTexture(new Rect(0f, h - band, w, band), DrawWhite(), ScaleMode.StretchToFill, true, 0f, rim, 0f, 0f);
+            GUI.DrawTexture(new Rect(0f, 0f, band, h), DrawWhite(), ScaleMode.StretchToFill, true, 0f, rim, 0f, 0f);
+            GUI.DrawTexture(new Rect(w - band, 0f, band, h), DrawWhite(), ScaleMode.StretchToFill, true, 0f, rim, 0f, 0f);
+
+            float cx = w * 0.5f;
+            float cy = h * 0.5f;
+            var mark = new Color(0.72f, 0.95f, 1f, 0.82f);
+            GUI.DrawTexture(new Rect(cx - 2f, cy - 2f, 4f, 4f), DrawWhite(), ScaleMode.StretchToFill, true, 0f, mark, 0f, 0f);
+            GUI.DrawTexture(new Rect(cx - 13f, cy - 1f, 8f, 2f), DrawWhite(), ScaleMode.StretchToFill, true, 0f, mark, 0f, 0f);
+            GUI.DrawTexture(new Rect(cx + 5f, cy - 1f, 8f, 2f), DrawWhite(), ScaleMode.StretchToFill, true, 0f, mark, 0f, 0f);
+            GUI.DrawTexture(new Rect(cx - 1f, cy - 13f, 2f, 8f), DrawWhite(), ScaleMode.StretchToFill, true, 0f, mark, 0f, 0f);
+            GUI.DrawTexture(new Rect(cx - 1f, cy + 5f, 2f, 8f), DrawWhite(), ScaleMode.StretchToFill, true, 0f, mark, 0f, 0f);
+        }
 
         private void DrawTopBar(float w)
         {

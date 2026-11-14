@@ -30,6 +30,14 @@ namespace LunaQuest.Unity
             DisplayNameAr = nameAr;
             transform.position = position;
             _target = position;
+
+            // Ray-focus volume on the same interaction layer as the consoles.
+            gameObject.layer = 8;
+            var capsule = gameObject.AddComponent<CapsuleCollider>();
+            capsule.isTrigger = true;
+            capsule.center = new Vector3(0f, 1.0f, 0f);
+            capsule.height = 1.9f;
+            capsule.radius = 0.42f;
         }
 
         private void Update()

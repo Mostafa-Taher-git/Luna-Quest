@@ -21,7 +21,11 @@ namespace LunaQuest.Core.Sim
         RestCrew,
         RepairArray,
         InspectCrop,
-        BalanceLoad
+        BalanceLoad,
+        ToggleGrowLights,
+        MedicalCheckup,
+        Exercise,
+        ProcessRegolith
     }
 
     /// <summary>
@@ -465,6 +469,50 @@ namespace LunaQuest.Core.Sim
                     messageEn = "Grow lights shed for six hours. Heat and life support keep priority until the battery recovers.";
                     messageAr = "فُصلت أضواء النمو ست ساعات. تبقى الحرارة ودعم الحياة لهما الأولوية حتى تتعافى البطارية.";
                     return true;
+
+                case PlayerAction.ToggleGrowLights:
+                    State.GrowLightsOn = !State.GrowLightsOn;
+                    State.GrowLightsResumeAtMinute = -1;
+                    Complete("obj_power_budget", "grow_lights", "engineering");
+                    if (State.GrowLightsOn)
+                    {
+                        messageEn = "Grow lights on. 2.0 kW from the colony bus, no direct Sun.";
+                        messageAr = "أضواء النمو تعمل. 2.0 كيلوواط من شبكة المستعمرة، بدون شمس مباشرة.";
+                    }
+                    else
+                    {
+                        messageEn = "Grow lights off. The crop slows, but life support keeps its power.";
+                        messageAr = "أضواء النمو متوقفة. يتباطأ المحصول، لكن دعم الحياة يحتفظ بطاقته.";
+                    }
+                    return true;
+
+                case PlayerAction.MedicalCheckup:
+                    State.AverageFatigue = Math.Max(0.0, State.AverageFatigue - 0.10);
+                    State.AverageMorale = Math.Min(1.0, State.AverageMorale + 0.03);
+                    State.SuitEnergy = 1.0;
+                    foreach (var st in Npcs.States.Values)
+                        st.Fatigue = Math.Max(0.0, st.Fatigue - 0.10);
+                    Complete("obj_crew_rest", "checkup", "health");
+                    messageEn = "Check-up logged. Resting heart rates, hydration and dose are within limits.";
+                    messageAr = "سُجل الفحص. معدلات القلب أثناء الراحة والترطيب والجرعة ضمن الحدود.";
+                    return true;
+
+                case PlayerAction.Exercise:
+                    State.AverageFatigue = Math.Max(0.0, State.AverageFatigue - 0.05);
+                    State.AverageMorale = Math.Min(1.0, State.AverageMorale + 0.04);
+                    State.SuitEnergy = 1.0;
+                    Complete("obj_crew_rest", "exercise", "health");
+                    messageEn = "Resistance session done. Bone and muscle load counters the low gravity.";
+                    messageAr = "انتهت جلسة المقاومة. الحمل العضلي والعظمي يوازن الجاذبية المنخفضة.";
+                    return true;
+
+                case PlayerAction.ProcessRegolith:
+                    State.O2Kg = Math.Min(State.O2CapacityKg, State.O2Kg + 0.20);
+                    State.DataPoints += 1.0;
+                    Complete("obj_air_scrubber", "intake", "chemistry");
+                    messageEn = "Regolith feed screened. The oxygen plant extracts a measured 0.2 kg of O2.";
+                    messageAr = "فُحصت تغذية الثرى. يستخلص مصنع الأكسجين 0.2 كغ من الأكسجين.";
+                    return true;
             }
             return false;
         }
@@ -500,15 +548,25 @@ namespace LunaQuest.Core.Sim
                 case "clean_arrays": return TryAction(PlayerAction.CleanArrays, out messageEn, out messageAr);
                 case "clean_sensors": return TryAction(PlayerAction.CleanSensors, out messageEn, out messageAr);
                 case "clean_airlock": return TryAction(PlayerAction.CleanAirlock, out messageEn, out messageAr);
+                case "dust_removal":
+                case "eva_prep": return TryAction(PlayerAction.CleanAirlock, out messageEn, out messageAr);
                 case "harvest": return TryAction(PlayerAction.HarvestCrops, out messageEn, out messageAr);
                 case "clean_filter": return TryAction(PlayerAction.CleanFilter, out messageEn, out messageAr);
                 case "replace_scrubber": return TryAction(PlayerAction.ReplaceScrubber, out messageEn, out messageAr);
-                case "repair_relay": return TryAction(PlayerAction.RepairRelay, out messageEn, out messageAr);
+                case "repair_relay":
+                case "comms_desk": return TryAction(PlayerAction.RepairRelay, out messageEn, out messageAr);
                 case "repair_array": return TryAction(PlayerAction.RepairArray, out messageEn, out messageAr);
-                case "collect_sample": return TryAction(PlayerAction.CollectSample, out messageEn, out messageAr);
+                case "antenna": return TryAction(PlayerAction.CleanSensors, out messageEn, out messageAr);
+                case "collect_sample":
+                case "sample_intake": return TryAction(PlayerAction.CollectSample, out messageEn, out messageAr);
                 case "shelter": return TryAction(PlayerAction.ShelterCrew, out messageEn, out messageAr);
                 case "rest": return TryAction(PlayerAction.RestCrew, out messageEn, out messageAr);
+                case "checkup": return TryAction(PlayerAction.MedicalCheckup, out messageEn, out messageAr);
+                case "exercise": return TryAction(PlayerAction.Exercise, out messageEn, out messageAr);
+                case "intake": return TryAction(PlayerAction.ProcessRegolith, out messageEn, out messageAr);
+                case "crop_monitor":
                 case "inspect_crop": return TryAction(PlayerAction.InspectCrop, out messageEn, out messageAr);
+                case "grow_lights": return TryAction(PlayerAction.ToggleGrowLights, out messageEn, out messageAr);
                 case "balance_load": return TryAction(PlayerAction.BalanceLoad, out messageEn, out messageAr);
                 case "repair_o2":
                     State.O2GeneratorRunning = true;
