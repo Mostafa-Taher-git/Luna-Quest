@@ -35,7 +35,7 @@ func _ready() -> void:
 
 	ray = RayCast3D.new()
 	ray.target_position = Vector3(0, 0, -3.4)
-	ray.collide_with_areas = false
+	ray.collide_with_areas = true
 	ray.collide_with_bodies = true
 	ray.enabled = true
 	camera.add_child(ray)

@@ -9,7 +9,7 @@ extends Node3D
 const INTRO_STREAM := "res://assets/video/intro.ogv"
 const SAVE_PATH := "user://lunaquest-save.json"
 const OPENING_MINUTE := 8 * 60
-const SPAWN := Vector3(0.0, 0.3, 27.0)
+const SPAWN := Vector3(0.0, 0.3, -14.0)
 
 var sim: LQSim
 var world: ColonyWorld
@@ -61,6 +61,7 @@ func _ready() -> void:
 	player = ColonyPlayer.new()
 	player.name = "Commander"
 	player.position = SPAWN
+	player.rotation.y = PI
 	player.can_move = false
 	add_child(player)
 	var suit := crew_astronaut()
@@ -137,6 +138,7 @@ func _begin_session() -> void:
 	mission_complete = false
 	player.can_move = true
 	player.position = SPAWN
+	player.rotation.y = PI
 	player.set_third_person(false)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.hide_start_screen()

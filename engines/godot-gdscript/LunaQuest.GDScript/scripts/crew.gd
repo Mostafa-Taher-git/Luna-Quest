@@ -97,20 +97,27 @@ func _spot_for(building: Dictionary, npc_id: String) -> Vector3:
 		return Vector3(0, 0, 16)
 	var pos: Array = building.get("position", [0, 0])
 	var footprint: Array = building.get("footprint", [10, 8])
+	var centre := Vector3(float(pos[0]), 0.0, float(pos[1]))
+
+	# Face the plaza: pick the wall whose outward normal points most directly at the origin, which
+	# is the same door the world builder cut.
+	var to_plaza := Vector2(-centre.x, -centre.z)
+	var normal := Vector3(0, 0, -1)
+	var extent: float = float(footprint[1]) * 0.5
+	if absf(to_plaza.x) > absf(to_plaza.y):
+		normal = Vector3(signf(to_plaza.x), 0, 0)
+		extent = float(footprint[0]) * 0.5
+	elif to_plaza.length() > 0.01:
+		normal = Vector3(0, 0, signf(to_plaza.y))
+
+	var tangent := Vector3(-normal.z, 0.0, normal.x)
 	var hash := 0
 	for i in range(npc_id.length()):
 		hash += npc_id.unicode_at(i)
-	var side := 1.0 if npc_id.length() % 2 == 0 else -1.0
-	var spread: float = side * (2.2 + float(hash % 5) * 0.9)
-	var dir := Vector3(float(pos[0]), 0.0, float(pos[1]))
-	if dir.length() < 0.01:
-		dir = Vector3(0, 0, 1)
-	var outward: Vector3 = -dir.normalized()
-	var edge: float = float(footprint[1]) * 0.5 + 2.6
-	var spot: Vector3 = dir + outward * -edge
-	# Spread along the tangent so two crew never stand in the same place.
-	var tangent := Vector3(-outward.z, 0.0, outward.x)
-	return spot + tangent * spread
+	var spread: float = float((hash % 5) - 2) * 1.7
+	var stand := centre + normal * (extent + 2.4) + tangent * spread
+	stand.y = 0.06
+	return stand
 
 
 func _build_astronaut(root: Node3D, trim: Color) -> void:

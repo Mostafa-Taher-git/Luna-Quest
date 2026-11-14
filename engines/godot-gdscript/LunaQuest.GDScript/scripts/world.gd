@@ -33,6 +33,7 @@ func build() -> void:
 	_make_plaza()
 	for building in Content.buildings:
 		_make_building(building)
+	_make_perimeter()
 	_make_rocks()
 	_make_rovers()
 	_make_landing_pad()
@@ -327,14 +328,16 @@ func _make_plaza() -> void:
 	add_child(plaza)
 
 	# A paved spine between the airlock and the habitat, with painted edges.
-	_box(plaza, Vector3(26, 0.14, 44), Vector3(0, 0.07, 14), _mat("paving", Color(0.46, 0.46, 0.45), 0.9))
-	_box(plaza, Vector3(0.5, 0.16, 44), Vector3(-12.6, 0.09, 14), _mat("paving_light", Color(0.6, 0.6, 0.58), 0.9))
-	_box(plaza, Vector3(0.5, 0.16, 44), Vector3(12.6, 0.09, 14), _mat("paving_light", Color(0.6, 0.6, 0.58), 0.9))
-	_box(plaza, Vector3(22, 0.05, 44), Vector3(0, 0.15, 14), _glow("accent_line", Color(0.85, 0.52, 0.19), Color(0.85, 0.52, 0.19), 0.35))
+	var spine := 56.0
+	var centre := 8.0
+	_box(plaza, Vector3(26, 0.14, spine), Vector3(0, 0.07, centre), _mat("paving", Color(0.46, 0.46, 0.45), 0.9))
+	_box(plaza, Vector3(0.5, 0.16, spine), Vector3(-12.6, 0.09, centre), _mat("paving_light", Color(0.6, 0.6, 0.58), 0.9))
+	_box(plaza, Vector3(0.5, 0.16, spine), Vector3(12.6, 0.09, centre), _mat("paving_light", Color(0.6, 0.6, 0.58), 0.9))
+	_box(plaza, Vector3(22, 0.05, spine), Vector3(0, 0.15, centre), _glow("accent_line", Color(0.85, 0.52, 0.19), Color(0.85, 0.52, 0.19), 0.35))
 
 	# Bollards with lit tops, and a couple of bare regolith strips either side.
 	for i in range(6):
-		var z := -6.0 + i * 8.0
+		var z := -14.0 + i * 8.0
 		for side in [-1.0, 1.0]:
 			var x: float = side * 13.4
 			_cylinder(plaza, 0.16, 1.15, Vector3(x, 0.6, z), _mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55))
@@ -370,9 +373,10 @@ func _make_building(building: Dictionary) -> void:
 	var wall_mat := _mat("hull", Color(0.83, 0.86, 0.89), 0.62, 0.08)
 	var trim_mat := _mat("trim_%s" % id, tint.lerp(Color(0.85, 0.52, 0.19), 0.45), 0.6, 0.1)
 
-	# Pad and steps.
-	_box(group, Vector3(w + 3.2, 0.3, d + 3.2), Vector3(0, 0.15, 0), _mat("paving", Color(0.46, 0.46, 0.45), 0.9))
-	_blocker(group, Vector3(w + 3.2, 0.3, d + 3.2), Vector3(0, 0.15, 0))
+	# Pad. It is sunk so its surface sits 6 cm proud of the regolith: the capsule walks over that
+	# without a step, and the doorway stays walkable.
+	_box(group, Vector3(w + 3.2, 0.3, d + 3.2), Vector3(0, -0.09, 0), _mat("paving", Color(0.46, 0.46, 0.45), 0.9))
+	_blocker(group, Vector3(w + 3.2, 0.3, d + 3.2), Vector3(0, -0.09, 0))
 
 	var door := _door_direction(building)
 	var door_width := 2.4
@@ -513,7 +517,7 @@ func _make_sign(group: Node3D, building: Dictionary, w: float, d: float, h: floa
 		_:
 			offset = Vector3(-w * 0.5 - 0.16, h - 0.75, 0)
 			yaw = -PI * 0.5
-	var label := _label(group, "%s\n%s" % [text_en, text_ar], offset, yaw, 48, 0.0055)
+	var label := _label(group, "%s\n%s" % [text_en, text_ar], offset, yaw, 48, 0.0075)
 	label.name = "Sign_%s" % building.get("id", "")
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -525,7 +529,9 @@ func _make_interactions(group: Node3D, building: Dictionary, w: float, d: float,
 	for i in range(count):
 		var point: Dictionary = interactions[i]
 		# Consoles line the wall opposite the door, spaced across the room.
-		var spread: float = (float(i) - (count - 1) * 0.5) * 2.6
+		var room := w if door < 2 else d
+		var limit: float = maxf(0.0, room * 0.5 - 1.8)
+		var spread: float = clampf((float(i) - (count - 1) * 0.5) * 2.6, -limit, limit)
 		var local := Vector3.ZERO
 		var yaw := 0.0
 		match door:
@@ -553,10 +559,12 @@ func _make_interactions(group: Node3D, building: Dictionary, w: float, d: float,
 		label.name = "ConsoleLabel"
 
 		var body := StaticBody3D.new()
-		body.position = Vector3(0, 0.6, 0)
+		body.position = Vector3(0, 0.875, 0)
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = Vector3(1.15, 1.2, 0.62)
+		# Full height: the player looks from 1.66 m, so the panel has to reach the eye line or the
+		# crosshair sails over it into the wall.
+		box.size = Vector3(1.15, 1.75, 0.62)
 		shape.shape = box
 		body.add_child(shape)
 		body.set_meta("interaction_id", str(point.get("id", "")))
@@ -577,6 +585,32 @@ func _make_interior_light(group: Node3D, w: float, d: float, h: float) -> void:
 	var panel := _box(group, Vector3(minf(w * 0.5, 3.4), 0.08, 0.7), Vector3(0, h - 0.2, 0),
 		_glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.94, 0.82), 2.0))
 	panel.name = "CeilingLight"
+
+
+# ---- the traverse limit ----------------------------------------------------
+
+## The colony is graded flat inside 110 m; beyond that the regolith rolls. This ring is the survey
+## line the crew are cleared to, and it keeps the player on ground the collision actually models.
+func _make_perimeter() -> void:
+	var group := Node3D.new()
+	group.name = "TraverseLimit"
+	add_child(group)
+	var radius := 118.0
+	var segments := 28
+	for i in range(segments):
+		var angle := TAU * float(i) / float(segments)
+		var x := cos(angle) * radius
+		var z := sin(angle) * radius
+		var post := _cylinder(group, 0.12, 1.3, Vector3(x, 0.65, z),
+			_mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55))
+		post.name = "Marker_%d" % i
+		var cap := _box(group, Vector3(0.26, 0.26, 0.26), Vector3(x, 1.36, z),
+			_glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.93, 0.78), 1.8))
+		cap.name = "MarkerLight_%d" % i
+		# One flat barrier per segment: cheap, and it follows the circle well enough at 26 m.
+		var width := 2.0 * radius * sin(PI / float(segments)) + 1.0
+		var blocker := _blocker(group, Vector3(width, 2.4, 0.6), Vector3(x, 1.2, z))
+		blocker.rotation.y = -angle + PI * 0.5
 
 
 # ---- set dressing ----------------------------------------------------------
