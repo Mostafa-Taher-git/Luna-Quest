@@ -40,12 +40,17 @@ namespace LunaQuest.Unity
         private bool _journalOpen;
         private bool _helpOpen;
         private bool _mathOpen;
+        private bool _dialogueOpen;
+        private NpcProfile _dialogueNpc;
+        private DialogueTopic _dialogueCurrent;
+        private readonly List<DialogueTopic> _dialogueList = new List<DialogueTopic>();
+        private Vector2 _dialogueScroll;
         private bool _firstPerson;
         private Vector2 _journalScroll;
         private float _baseWidth = 1600f;
         private float _baseHeight = 900f;
 
-        public bool OverlayOpen => _journalOpen || _helpOpen || _mathOpen;
+        public bool OverlayOpen => _journalOpen || _helpOpen || _mathOpen || _dialogueOpen;
 
         public ColonyHud(LunaQuestGame game)
         {
@@ -109,11 +114,38 @@ namespace LunaQuest.Unity
             if (_mathOpen) { _journalOpen = false; _helpOpen = false; }
         }
 
+        public void OpenDialogue(NpcProfile profile, List<DialogueTopic> topics)
+        {
+            _dialogueNpc = profile;
+            _dialogueCurrent = null;
+            _dialogueList.Clear();
+            if (topics != null) _dialogueList.AddRange(topics);
+            _journalOpen = false;
+            _helpOpen = false;
+            _mathOpen = false;
+            _dialogueOpen = true;
+            _dialogueScroll = Vector2.zero;
+        }
+
+        public void SetDialogueTopic(DialogueTopic topic)
+        {
+            _dialogueCurrent = topic;
+        }
+
+        public void CloseDialogue()
+        {
+            _dialogueOpen = false;
+            _dialogueNpc = null;
+            _dialogueCurrent = null;
+            _dialogueList.Clear();
+        }
+
         public void CloseOverlays()
         {
             _journalOpen = false;
             _helpOpen = false;
             _mathOpen = false;
+            CloseDialogue();
         }
 
         public void OnLanguageChanged()
@@ -162,6 +194,7 @@ namespace LunaQuest.Unity
             if (_journalOpen) DrawJournal(new Rect(w * 0.16f, 92f, w * 0.68f, h - 184f));
             if (_helpOpen) DrawHelp(new Rect(w * 0.26f, 140f, w * 0.48f, h - 280f));
             if (_mathOpen) DrawMath(new Rect(w - 620f, 86f, 604f, 650f));
+            if (_dialogueOpen && _dialogueNpc != null) DrawDialogue(new Rect(w * 0.18f, 75f, w * 0.64f, h - 150f));
 
             if (_toastTimer > 0f && !OverlayOpen)
             {
@@ -743,6 +776,63 @@ namespace LunaQuest.Unity
                 L.T("Every engine step consumes the same numbers; the clock only changes presentation.",
                     "كل خطوة محاكاة تستهلك الأرقام نفسها؛ الساعة تغيّر العرض فقط."),
                 9, new Color(0.45f, 0.6f, 0.72f), TextAnchor.MiddleLeft, false, true);
+        }
+
+        private void DrawDialogue(Rect rect)
+        {
+            OverlayBase(rect, _dialogueNpc.DisplayNameEn, _dialogueNpc.DisplayNameAr);
+
+            Text(new Rect(rect.x + 20f, rect.y + 44f, rect.width - 40f, 20f),
+                L.T(_dialogueNpc.RoleEn, _dialogueNpc.RoleAr),
+                13, new Color(0.55f, 0.8f, 0.95f), TextAnchor.MiddleLeft, true);
+
+            string skills = string.Join(" | ", _dialogueNpc.Skills);
+            if (!string.IsNullOrEmpty(skills))
+            {
+                Text(new Rect(rect.x + 20f, rect.y + 66f, rect.width - 40f, 18f),
+                    $"{L.T("Skills", "المهارات")}: {skills}",
+                    11, new Color(0.65f, 0.9f, 0.8f));
+            }
+
+            string resp = L.T(_dialogueNpc.ResponsibilitiesEn, _dialogueNpc.ResponsibilitiesAr);
+            if (!string.IsNullOrEmpty(resp))
+            {
+                Text(new Rect(rect.x + 20f, rect.y + 86f, rect.width - 40f, 34f),
+                    resp, 11, new Color(0.78f, 0.85f, 0.92f), TextAnchor.UpperLeft, false, true);
+            }
+
+            string greeting = L.T(_dialogueNpc.GreetingEn, _dialogueNpc.GreetingAr);
+            if (!string.IsNullOrEmpty(greeting))
+            {
+                Text(new Rect(rect.x + 20f, rect.y + 122f, rect.width - 40f, 24f),
+                    $"“{greeting}”", 13, new Color(0.9f, 0.95f, 1f), TextAnchor.MiddleLeft, true);
+            }
+
+            var view = new Rect(rect.x + 20f, rect.y + 152f, rect.width - 40f, rect.height - 250f);
+            float itemH = 38f;
+            var content = new Rect(0f, 0f, view.width - 22f, _dialogueList.Count * (itemH + 6f));
+            _dialogueScroll = GUI.BeginScrollView(view, _dialogueScroll, content, false, true);
+            float y = 0f;
+            for (int i = 0; i < _dialogueList.Count; i++)
+            {
+                var topic = _dialogueList[i];
+                var btnRect = new Rect(0f, y, content.width, itemH);
+                if (Button(btnRect, $"{i + 1}.  " + L.T(topic.LabelEn, topic.LabelAr), 13))
+                {
+                    _game.AskNpcTopic(topic);
+                }
+                y += itemH + 6f;
+            }
+            GUI.EndScrollView();
+
+            var lineRect = new Rect(rect.x + 20f, rect.yMax - 90f, rect.width - 40f, 60f);
+            Panel(lineRect, new Color(0.04f, 0.07f, 0.11f, 0.97f), new Color(0.35f, 0.7f, 0.9f, 0.4f));
+            string lineText = _dialogueCurrent != null
+                ? L.T(_dialogueCurrent.LineEn, _dialogueCurrent.LineAr)
+                : L.T("Choose a topic. One short line, then back to work.", "اختر موضوعًا. سطر قصير ثم نعود للعمل.");
+            Color lineColor = _dialogueCurrent != null ? new Color(0.93f, 0.97f, 1f) : new Color(0.6f, 0.72f, 0.84f);
+            Text(new Rect(lineRect.x + 12f, lineRect.y + 8f, lineRect.width - 24f, lineRect.height - 16f),
+                lineText, 13, lineColor, TextAnchor.UpperLeft, false, true);
         }
     }
 }

@@ -72,7 +72,29 @@ def main() -> int:
 
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
     cast = data["cast"]
-    lines = data["lines"]
+    lines = list(data["lines"])
+
+    # Crew topics live in content/dialogue.json so the label, the subtitle and the
+    # spoken line share one source. They are merged into the same generated pack.
+    dialogue_path = root / "content" / "dialogue.json"
+    topic_count = 0
+    if dialogue_path.exists():
+        dialogue = json.loads(dialogue_path.read_text(encoding="utf-8"))
+        for topic in dialogue.get("topics", []):
+            lines.append({
+                "key": topic["voiceKey"],
+                "speaker": topic["npcId"],
+                "text": topic["lineEn"],
+                "textAr": topic["lineAr"],
+            })
+            topic_count += 1
+
+    seen = set()
+    for line in lines:
+        if line["key"] in seen:
+            print(f"error: duplicate voice key {line['key']}", file=sys.stderr)
+            return 2
+        seen.add(line["key"])
     out_dir.mkdir(parents=True, exist_ok=True)
 
     missing_models = sorted({
@@ -151,6 +173,7 @@ def main() -> int:
         "provider": data.get("provider", "piper"),
         "comment": data.get("comment", ""),
         "sourceManifest": str(manifest_path.relative_to(root)),
+        "sourceDialogue": str(dialogue_path.relative_to(root)) if dialogue_path.exists() else None,
         "cast": {
             npc: {
                 "prefix": entry["prefix"],
@@ -161,6 +184,7 @@ def main() -> int:
             for npc, entry in cast.items()
         },
         "lineCount": len(lines),
+        "topicLines": topic_count,
         "generatedThisRun": generated,
         "reusedThisRun": skipped,
         "runtimeCloudTts": False,

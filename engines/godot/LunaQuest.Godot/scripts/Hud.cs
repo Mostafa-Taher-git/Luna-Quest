@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using LunaQuest.Core.Content;
+using LunaQuest.Core.Domain;
 using LunaQuest.Core.Sim;
 
 namespace LunaQuest.Godot
@@ -18,13 +19,18 @@ namespace LunaQuest.Godot
         private Label _day = null!, _mission = null!, _prompt = null!, _subtitle = null!, _toast = null!, _sector = null!;
         private Label _feedTitle = null!, _journalTitle = null!, _helpTitle = null!, _plantsTitle = null!;
         private Label _startTitle = null!, _startSub = null!, _nameLabel = null!, _startHint = null!, _startControls = null!;
+        private Label _dialogueName = null!, _dialogueRole = null!, _dialogueGreeting = null!, _dialogueLine = null!;
+        private Label _dialogueSkills = null!, _dialogueResp = null!;
         private ProgressBar _missionBar = null!;
-        private VBoxContainer _feed = null!, _journalList = null!, _plantsBox = null!;
-        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!, _pausePanel = null!;
+        private VBoxContainer _feed = null!, _journalList = null!, _plantsBox = null!, _dialogueTopics = null!;
+        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!, _pausePanel = null!, _dialoguePanel = null!;
         private VisorOverlay _visor = null!;
         private ColorRect _pauseDim = null!;
         private LineEdit _nameEdit = null!;
-        private Button _begin = null!, _lang = null!, _resume = null!;
+        private Button _begin = null!, _lang = null!, _resume = null!, _dialogueLeave = null!;
+        private NpcProfile? _dialogueNpc;
+        private DialogueTopic? _dialogueCurrent;
+        private readonly List<DialogueTopic> _dialogueList = new List<DialogueTopic>();
         private readonly Dictionary<string, ProgressBar> _bars = new Dictionary<string, ProgressBar>();
         private readonly Dictionary<string, Label> _vals = new Dictionary<string, Label>();
         private readonly Dictionary<Label, (string en, string ar)> _texts = new Dictionary<Label, (string en, string ar)>();
@@ -84,6 +90,7 @@ namespace LunaQuest.Godot
             BuildPrompt();
             BuildSubtitle();
             BuildOverlays();
+            BuildDialogue();
             BuildPause();
             BuildStart();
         }
@@ -447,6 +454,97 @@ namespace LunaQuest.Godot
             pc.AddChild(_plantsBox);
         }
 
+        /// <summary>
+        /// A conversation is a short, selectable topic list, not a branching tree. The
+        /// greeting plays once, then the player picks one of six lines and leaves.
+        /// </summary>
+        private void BuildDialogue()
+        {
+            _dialoguePanel = Panel(new Color(0.025f, 0.045f, 0.065f, 0.97f), new Color(0.4f, 0.8f, 0.95f, 0.8f));
+            _dialoguePanel.AnchorLeft = 0.2f;
+            _dialoguePanel.AnchorRight = 0.8f;
+            _dialoguePanel.AnchorTop = 0.12f;
+            _dialoguePanel.AnchorBottom = 0.88f;
+            _dialoguePanel.Visible = false;
+            _dialoguePanel.MouseFilter = Control.MouseFilterEnum.Stop;
+            _root.AddChild(_dialoguePanel);
+
+            var m = new MarginContainer();
+            foreach (var k in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+                m.AddThemeConstantOverride(k, 20);
+            _dialoguePanel.AddChild(m);
+
+            var col = new VBoxContainer();
+            col.AddThemeConstantOverride("separation", 8);
+            m.AddChild(col);
+
+            var header = new HBoxContainer();
+            header.AddThemeConstantOverride("separation", 12);
+            col.AddChild(header);
+            var id = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            id.AddThemeConstantOverride("separation", 0);
+            header.AddChild(id);
+
+            _dialogueName = new Label();
+            _dialogueName.AddThemeFontSizeOverride("font_size", 24);
+            id.AddChild(_dialogueName);
+
+            _dialogueRole = new Label { Modulate = new Color(0.55f, 0.8f, 0.95f) };
+            _dialogueRole.AddThemeFontSizeOverride("font_size", 14);
+            id.AddChild(_dialogueRole);
+
+            _dialogueLeave = new Button { CustomMinimumSize = new Vector2(110, 0) };
+            _dialogueLeave.Pressed += () => _main.CloseDialogue();
+            header.AddChild(_dialogueLeave);
+
+            _dialogueSkills = new Label
+            {
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                Modulate = new Color(0.65f, 0.9f, 0.8f),
+            };
+            _dialogueSkills.AddThemeFontSizeOverride("font_size", 13);
+            col.AddChild(_dialogueSkills);
+
+            _dialogueResp = new Label
+            {
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                Modulate = new Color(0.78f, 0.85f, 0.92f),
+            };
+            _dialogueResp.AddThemeFontSizeOverride("font_size", 13);
+            col.AddChild(_dialogueResp);
+
+            _dialogueGreeting = new Label
+            {
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                Modulate = new Color(0.9f, 0.95f, 1f),
+            };
+            _dialogueGreeting.AddThemeFontSizeOverride("font_size", 15);
+            col.AddChild(_dialogueGreeting);
+
+            var rule = new HSeparator();
+            rule.Modulate = new Color(0.35f, 0.7f, 0.9f, 0.4f);
+            col.AddChild(rule);
+
+            var scroll = new ScrollContainer
+            {
+                SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            };
+            col.AddChild(scroll);
+            _dialogueTopics = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            _dialogueTopics.AddThemeConstantOverride("separation", 6);
+            scroll.AddChild(_dialogueTopics);
+
+            _dialogueLine = new Label
+            {
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                CustomMinimumSize = new Vector2(0, 64),
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            _dialogueLine.AddThemeFontSizeOverride("font_size", 15);
+            col.AddChild(_dialogueLine);
+        }
+
         private void BuildPause()
         {
             _pauseDim = new ColorRect
@@ -628,7 +726,7 @@ namespace LunaQuest.Godot
 
         public void SetPrompt(string text)
         {
-            bool show = !string.IsNullOrEmpty(text) && _main.Started;
+            bool show = !string.IsNullOrEmpty(text) && _main.Started && !DialogueVisible;
             _promptPanel.Visible = show;
             if (show) _prompt.Text = L.T("E   ", "E   ") + text;
         }
@@ -710,6 +808,89 @@ namespace LunaQuest.Godot
 
         public void ToggleHelp() => _helpPanel.Visible = !_helpPanel.Visible;
 
+        public bool DialogueVisible => _dialoguePanel.Visible;
+
+        public void OpenDialogue(NpcProfile profile, List<DialogueTopic> topics)
+        {
+            _dialogueNpc = profile;
+            _dialogueCurrent = null;
+            _dialogueList.Clear();
+            _dialogueList.AddRange(topics);
+            _journalPanel.Visible = false;
+            _helpPanel.Visible = false;
+            _plantsPanel.Visible = false;
+            _promptPanel.Visible = false;
+            _dialoguePanel.Visible = true;
+            RefreshDialogue();
+        }
+
+        public void SetDialogueTopic(DialogueTopic topic)
+        {
+            _dialogueCurrent = topic;
+            SetDialogueLine(L.T(topic.LineEn, topic.LineAr));
+        }
+
+        public void CloseDialogue()
+        {
+            _dialoguePanel.Visible = false;
+            _dialogueNpc = null;
+            _dialogueCurrent = null;
+            _dialogueList.Clear();
+            foreach (var c in _dialogueTopics.GetChildren()) c.QueueFree();
+        }
+
+        private void RefreshDialogue()
+        {
+            if (_dialogueNpc == null) return;
+            _dialogueName.Text = L.T(_dialogueNpc.DisplayNameEn, _dialogueNpc.DisplayNameAr);
+            _dialogueRole.Text = L.T(_dialogueNpc.RoleEn, _dialogueNpc.RoleAr);
+
+            string skills = string.Join(" | ", _dialogueNpc.Skills);
+            _dialogueSkills.Text = string.IsNullOrEmpty(skills) ? "" : $"{L.T("Skills", "المهارات")}: {skills}";
+            _dialogueSkills.Visible = !string.IsNullOrEmpty(skills);
+
+            string resp = L.T(_dialogueNpc.ResponsibilitiesEn, _dialogueNpc.ResponsibilitiesAr);
+            _dialogueResp.Text = resp;
+            _dialogueResp.Visible = !string.IsNullOrEmpty(resp);
+
+            string greeting = L.T(_dialogueNpc.GreetingEn, _dialogueNpc.GreetingAr);
+            _dialogueGreeting.Text = string.IsNullOrEmpty(greeting) ? "" : $"“{greeting}”";
+            _dialogueGreeting.Visible = !string.IsNullOrEmpty(greeting);
+            _dialogueLeave.Text = L.T("Leave", "إنهاء");
+
+            foreach (var c in _dialogueTopics.GetChildren()) c.QueueFree();
+            for (int i = 0; i < _dialogueList.Count; i++)
+            {
+                var topic = _dialogueList[i];
+                var button = new Button
+                {
+                    Text = $"{i + 1}.  " + L.T(topic.LabelEn, topic.LabelAr),
+                    Alignment = HorizontalAlignment.Left,
+                    CustomMinimumSize = new Vector2(0, 34),
+                };
+                button.AddThemeFontSizeOverride("font_size", 15);
+                button.Pressed += () => _main.AskNpcTopic(topic);
+                _dialogueTopics.AddChild(button);
+            }
+
+            if (_dialogueCurrent != null)
+                SetDialogueLine(L.T(_dialogueCurrent.LineEn, _dialogueCurrent.LineAr));
+            else
+                SetDialogueLine("");
+        }
+
+        private void SetDialogueLine(string text)
+        {
+            bool hint = string.IsNullOrEmpty(text);
+            _dialogueLine.Text = hint
+                ? L.T("Choose a topic. One short line, then back to work.",
+                    "اختر موضوعًا. سطر قصير ثم نعود للعمل.")
+                : text;
+            _dialogueLine.Modulate = hint
+                ? new Color(0.6f, 0.72f, 0.84f)
+                : new Color(0.93f, 0.97f, 1f);
+        }
+
         public void TogglePlants()
         {
             _plantsPanel.Visible = !_plantsPanel.Visible;
@@ -723,7 +904,7 @@ namespace LunaQuest.Godot
             _plantsPanel.Visible = false;
         }
 
-        public bool AnyOverlayVisible => _journalPanel.Visible || _helpPanel.Visible || _plantsPanel.Visible || _pausePanel.Visible;
+        public bool AnyOverlayVisible => _journalPanel.Visible || _helpPanel.Visible || _plantsPanel.Visible || _pausePanel.Visible || _dialoguePanel.Visible;
 
         public bool PauseVisible => _pausePanel.Visible;
 
@@ -845,6 +1026,7 @@ namespace LunaQuest.Godot
             _feedItems.Clear();
             if (_journalPanel.Visible) RefreshJournal();
             if (_plantsPanel.Visible) RefreshPlants();
+            if (_dialoguePanel.Visible) RefreshDialogue();
         }
 
         // ---- helpers ---------------------------------------------------------

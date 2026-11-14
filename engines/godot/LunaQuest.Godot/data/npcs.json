@@ -4,210 +4,758 @@
   "npcs": [
     {
       "id": "npc_safaa",
-      "nameEn": "Dr. Safaa", "nameAr": "د. صفاء",
+      "nameEn": "Dr. Safaa",
+      "nameAr": "د. صفاء",
       "nameStatus": "approved",
-      "roleEn": "Flight Surgeon — Medical Clinic", "roleAr": "طبيب الرحلة — العيادة الطبية",
+      "roleEn": "Mission Physician — Medical Clinic",
+      "roleAr": "طبيب المهمة — العيادة الطبية",
       "locationId": "medical",
-      "skills": ["emergency medicine", "basic surgery", "radiation health", "dentistry", "telemedicine"],
-      "traits": ["compassionate", "methodical", "respects privacy", "explains the limits of medical advice"],
-      "knownSystems": ["health", "radiation", "crew"],
-      "relationships": ["npc_nour", "npc_alaa"],
+      "skills": [
+        "Emergency Medicine",
+        "Surgical Basics",
+        "Radiation Health",
+        "Dentistry",
+        "Telemedicine"
+      ],
+      "traits": [
+        "compassionate",
+        "methodical",
+        "respects privacy",
+        "explains the limits of medical advice"
+      ],
+      "knownSystems": [
+        "health",
+        "radiation",
+        "crew"
+      ],
+      "relationships": [
+        "npc_nour",
+        "npc_alaa"
+      ],
       "storySeedEn": "Safaa must balance a crew member's need for rest against the mission schedule. The player learns that human safety is part of colony success.",
       "storySeedAr": "توازن صفاء بين حاجة أحد أفراد الطاقم للراحة ومتطلبات جدول المهمة، وتعلّم اللاعب أن سلامة الإنسان جزء من نجاح المستعمرة.",
       "boundaryEn": "Health content is educational and non-diagnostic. It is not medical advice for the player or any real crew.",
       "greetingEn": "Sit. Tell me what changed since your last shift, not what you think I want to hear.",
       "greetingAr": "اجلس. أخبرني بما تغيّر منذ مناوبتك الأخيرة، لا بما تظن أنني أريد سماعه.",
       "schedule": [
-        { "start": 0, "end": 6.5, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6.5, "end": 8, "location": "habitat", "activityEn": "morning check-in", "activityAr": "فحص صباحي" },
-        { "start": 8, "end": 13, "location": "medical", "activityEn": "crew check-ups", "activityAr": "فحوص الطاقم" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18, "location": "medical", "activityEn": "dose records and telemedicine", "activityAr": "سجلات الجرعة والطب عن بُعد" },
-        { "start": 18, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6.5,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6.5,
+          "end": 8,
+          "location": "habitat",
+          "activityEn": "morning check-in",
+          "activityAr": "فحص صباحي"
+        },
+        {
+          "start": 8,
+          "end": 13,
+          "location": "medical",
+          "activityEn": "crew check-ups",
+          "activityAr": "فحوص الطاقم"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18,
+          "location": "medical",
+          "activityEn": "dose records and telemedicine",
+          "activityAr": "سجلات الجرعة والطب عن بُعد"
+        },
+        {
+          "start": 18,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Treats injuries and illnesses, monitors radiation exposure and musculoskeletal health, and coordinates telemedicine with doctors back on Earth.",
+      "responsibilitiesAr": "علاج الإصابات والأمراض، ومتابعة التعرض الإشعاعي وصحة الجهاز العضلي الهيكلي، وتنسيق الطب عن بُعد مع الأطباء على الأرض."
     },
     {
       "id": "npc_nour",
-      "nameEn": "Noor", "nameAr": "نور",
+      "nameEn": "Noor",
+      "nameAr": "نور",
       "nameStatus": "approved",
-      "roleEn": "Life Support Engineer — Air and Water Station", "roleAr": "مهندسة دعم الحياة — محطة الهواء والماء",
+      "roleEn": "Life Support Engineer — Air and Water Station",
+      "roleAr": "مهندسة دعم الحياة — محطة الهواء والماء",
       "locationId": "life_support",
-      "skills": ["chemical engineering", "plumbing and pumps", "sensors", "rapid repair", "fault diagnosis"],
-      "traits": ["practical", "firm", "spots anomalies quickly", "explains how life support is one connected system"],
-      "knownSystems": ["life_support", "water", "air", "pressure"],
-      "relationships": ["npc_safaa", "npc_abdelaziz"],
+      "skills": [
+        "Chemical Engineering",
+        "Plumbing and Pumps",
+        "Sensors",
+        "Rapid Repair"
+      ],
+      "traits": [
+        "practical",
+        "firm",
+        "spots anomalies quickly",
+        "explains how life support is one connected system"
+      ],
+      "knownSystems": [
+        "life_support",
+        "water",
+        "air",
+        "pressure"
+      ],
+      "relationships": [
+        "npc_safaa",
+        "npc_abdelaziz"
+      ],
       "storySeedEn": "Airflow drops or a reading goes strange. Noor refuses to swap the scrubber at random and walks the player through sensor, flow, then filter.",
       "storySeedAr": "يتراجع تدفق الهواء أو تظهر قراءة غير طبيعية؛ ترفض نور تبديل المرشح عشوائيًا وتطلب من اللاعب فحص الحساس والتدفق والمرشح بالترتيب.",
       "boundaryEn": "Apollo 13 happened in a spacecraft during flight, not at a lunar base.",
       "greetingEn": "Water in, water out, air in, air out. Show me the number you don't believe.",
       "greetingAr": "ماء يدخل، ماء يخرج، هواء يدخل، هواء يخرج. أرني الرقم الذي لا تصدقه.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 12, "location": "life_support", "activityEn": "air and water rounds", "activityAr": "جولات الهواء والماء" },
-        { "start": 12, "end": 13, "location": "greenhouse", "activityEn": "irrigation check", "activityAr": "فحص الري" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 19, "location": "life_support", "activityEn": "filter service", "activityAr": "صيانة المرشحات" },
-        { "start": 19, "end": 22, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 22, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 12,
+          "location": "life_support",
+          "activityEn": "air and water rounds",
+          "activityAr": "جولات الهواء والماء"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "greenhouse",
+          "activityEn": "irrigation check",
+          "activityAr": "فحص الري"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 19,
+          "location": "life_support",
+          "activityEn": "filter service",
+          "activityAr": "صيانة المرشحات"
+        },
+        {
+          "start": 19,
+          "end": 22,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 22,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Maintains oxygen supply, carbon dioxide removal, water recycling, and atmospheric pressure—the most critical function at the base.",
+      "responsibilitiesAr": "الحفاظ على إمداد الأكسجين، وإزالة ثاني أكسيد الكربون، وإعادة تدوير المياه، والضغط الجوي — الوظيفة الأكثر حيوية في القاعدة."
     },
     {
       "id": "npc_alaa",
-      "nameEn": "Dr. Alaa", "nameAr": "د. آلاء",
+      "nameEn": "Dr. Alaa",
+      "nameAr": "د. آلاء",
       "nameStatus": "approved",
-      "roleEn": "Geologist and Resources Lead — Ice Prospecting Site", "roleAr": "عالمة جيولوجيا ومسؤولة الموارد — موقع دراسة الجليد",
+      "roleEn": "Geologist and Resource Officer — Ice Mining Site",
+      "roleAr": "عالمة جيولوجيا ومسؤولة الموارد — موقع تعدين واستخراج الجليد",
       "locationId": "ice_site",
-      "skills": ["geology", "drilling", "chemistry", "sample analysis", "rover driving"],
-      "traits": ["curious", "scientific", "checks the evidence", "does not rush to conclusions"],
-      "knownSystems": ["geology", "water", "samples"],
-      "relationships": ["npc_safaa", "npc_mostafa"],
+      "skills": [
+        "Geology",
+        "Drilling",
+        "Chemistry",
+        "Rover Operation"
+      ],
+      "traits": [
+        "curious",
+        "scientific",
+        "checks the evidence",
+        "does not rush to conclusions"
+      ],
+      "knownSystems": [
+        "geology",
+        "water",
+        "samples"
+      ],
+      "relationships": [
+        "npc_safaa",
+        "npc_mostafa"
+      ],
       "storySeedEn": "A reading hints at frozen volatiles. Alaa asks for the site, a repeat measurement and a documented sample before anyone calls it a resource.",
       "storySeedAr": "تظهر قراءة تشير إلى مادة متجمدة محتملة؛ تطلب آلاء تحديد الموقع وتكرار القياس وجمع عينة موثقة قبل اعتبارها موردًا.",
       "boundaryEn": "Apollo 17 inspires the field geology, not the extraction of ice from a permanently shadowed crater.",
       "greetingEn": "One reading is a rumour. Two readings on the same sample are a measurement.",
       "greetingAr": "قراءة واحدة إشاعة. قراءتان على العينة نفسها قياس.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7.5, "location": "habitat", "activityEn": "meal and EVA prep", "activityAr": "وجبة وتحضير للسير الفضائي" },
-        { "start": 7.5, "end": 12, "location": "ice_site", "activityEn": "drill and sample", "activityAr": "حفر وأخذ عينات" },
-        { "start": 12, "end": 13, "location": "airlock", "activityEn": "dust removal", "activityAr": "إزالة الغبار" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18, "location": "lab", "activityEn": "sample analysis", "activityAr": "تحليل العينات" },
-        { "start": 18, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7.5,
+          "location": "habitat",
+          "activityEn": "meal and EVA prep",
+          "activityAr": "وجبة وتحضير للسير الفضائي"
+        },
+        {
+          "start": 7.5,
+          "end": 12,
+          "location": "ice_site",
+          "activityEn": "drill and sample",
+          "activityAr": "حفر وأخذ عينات"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "airlock",
+          "activityEn": "dust removal",
+          "activityAr": "إزالة الغبار"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18,
+          "location": "lab",
+          "activityEn": "sample analysis",
+          "activityAr": "تحليل العينات"
+        },
+        {
+          "start": 18,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Searches for and extracts water ice from permanently shadowed craters, converting it into drinking water, oxygen, and rocket fuel.",
+      "responsibilitiesAr": "البحث عن جليد الماء واستخراجه من الفوهات المظلمة دائمًا، وتحويله إلى ماء شرب وأكسجين ووقود للصواريخ."
     },
     {
       "id": "npc_agriculture_engineer",
-      "nameEn": "", "nameAr": "مهندسة الزراعة — الاسم قيد الاعتماد",
+      "nameEn": "",
+      "nameAr": "مهندسة الزراعة — الاسم قيد الاعتماد",
       "nameStatus": "pending_team_approval",
-      "roleEn": "Agriculture and Food Engineer — Greenhouse", "roleAr": "مهندسة زراعية ومسؤولة الغذاء — البيت الزجاجي",
+      "roleEn": "Agricultural Engineer and Food Officer — Greenhouse",
+      "roleAr": "مهندسة زراعية ومسؤولة الغذاء — البيت الزجاجي",
       "locationId": "greenhouse",
-      "skills": ["plant science", "hydroponics", "nutrition", "microbiology", "food safety"],
-      "traits": ["patient", "observant", "works by controlled experiment", "cares about dietary variety"],
-      "knownSystems": ["crops", "food", "water"],
-      "relationships": ["npc_nour", "npc_safaa"],
+      "skills": [
+        "Plant Science",
+        "Hydroponics",
+        "Nutrition",
+        "Microbiology"
+      ],
+      "traits": [
+        "patient",
+        "observant",
+        "works by controlled experiment",
+        "cares about dietary variety"
+      ],
+      "knownSystems": [
+        "crops",
+        "food",
+        "water"
+      ],
+      "relationships": [
+        "npc_nour",
+        "npc_safaa"
+      ],
       "storySeedEn": "A plant batch comes under stress. She asks the player to change one variable at a time and log light, water, nutrients and growth.",
       "storySeedAr": "تتعرض دفعة نباتات للإجهاد؛ تطلب من اللاعب تغيير متغير واحد في كل مرة وتسجيل الضوء والماء والمغذيات ونتائج النمو.",
       "boundaryEn": "EDEN ISS and Veggie are ground and orbital experiments. They do not prove the same yields on the Moon.",
       "greetingEn": "The leaves were fine yesterday. What did we change since yesterday?",
       "greetingAr": "كانت الأوراق بخير أمس. ما الذي غيّرناه منذ أمس؟",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 12, "location": "greenhouse", "activityEn": "crop rounds", "activityAr": "جولات المحاصيل" },
-        { "start": 12, "end": 13, "location": "lab", "activityEn": "nutrient analysis", "activityAr": "تحليل المغذيات" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18.5, "location": "greenhouse", "activityEn": "harvest and food safety", "activityAr": "حصاد وسلامة غذاء" },
-        { "start": 18.5, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 12,
+          "location": "greenhouse",
+          "activityEn": "crop rounds",
+          "activityAr": "جولات المحاصيل"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "lab",
+          "activityEn": "nutrient analysis",
+          "activityAr": "تحليل المغذيات"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18.5,
+          "location": "greenhouse",
+          "activityEn": "harvest and food safety",
+          "activityAr": "حصاد وسلامة غذاء"
+        },
+        {
+          "start": 18.5,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Cultivates fresh vegetables using lunar soil and hydroponics; manages food supplies and crew nutrition.",
+      "responsibilitiesAr": "زراعة الخضراوات الطازجة باستخدام الثرى القمري والزراعة المائية؛ وإدارة الإمدادات الغذائية وتغذية الطاقم."
     },
     {
       "id": "npc_abdelaziz",
-      "nameEn": "Abdel Aziz", "nameAr": "عبد العزيز",
+      "nameEn": "Abdulaziz",
+      "nameAr": "عبد العزيز",
       "nameStatus": "approved",
-      "roleEn": "Power Systems Engineer — Power Farm", "roleAr": "مهندس أنظمة الطاقة — مزرعة الطاقة",
+      "roleEn": "Power Systems Engineer — Energy Farm",
+      "roleAr": "مهندس أنظمة الطاقة — مزرعة الطاقة",
       "locationId": "power_farm",
-      "skills": ["electrical engineering", "nuclear safety", "batteries", "high-voltage work", "load management"],
-      "traits": ["cautious", "methodical", "hates waste", "explains the cost of every power decision"],
-      "knownSystems": ["power", "battery", "array"],
-      "relationships": ["npc_nour", "npc_ahmed"],
+      "skills": [
+        "Electrical Engineering",
+        "Nuclear Safety",
+        "Batteries",
+        "High-Voltage Operations"
+      ],
+      "traits": [
+        "cautious",
+        "methodical",
+        "hates waste",
+        "explains the cost of every power decision"
+      ],
+      "knownSystems": [
+        "power",
+        "battery",
+        "array"
+      ],
+      "relationships": [
+        "npc_nour",
+        "npc_ahmed"
+      ],
       "storySeedEn": "When the reserve drops he lays out the load budget and makes the player choose between uses instead of switching off life support at random.",
       "storySeedAr": "عندما ينخفض مخزون الطاقة، يعرض عبد العزيز ميزانية الأحمال ويطلب من اللاعب المفاضلة بين استخدامات الطاقة بدل إيقاف الأنظمة الحيوية عشوائيًا.",
       "boundaryEn": "Small surface fission reactors are a future research concept, not an operating lunar plant.",
       "greetingEn": "Every kilowatt here is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
       "greetingAr": "كل كيلوواط هنا مُستعار من الشمس ويُسدَّد ليلًا. أنفقه مرتين ونخسرهما معًا.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 12, "location": "power_farm", "activityEn": "array and battery rounds", "activityAr": "جولات الألواح والبطاريات" },
-        { "start": 12, "end": 13, "location": "mission_control", "activityEn": "load planning", "activityAr": "تخطيط الأحمال" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18.5, "location": "power_farm", "activityEn": "inverter service", "activityAr": "صيانة العواكس" },
-        { "start": 18.5, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 12,
+          "location": "power_farm",
+          "activityEn": "array and battery rounds",
+          "activityAr": "جولات الألواح والبطاريات"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "mission_control",
+          "activityEn": "load planning",
+          "activityAr": "تخطيط الأحمال"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18.5,
+          "location": "power_farm",
+          "activityEn": "inverter service",
+          "activityAr": "صيانة العواكس"
+        },
+        {
+          "start": 18.5,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Operates solar panels and a small nuclear reactor to keep the base powered during the 14-day lunar night.",
+      "responsibilitiesAr": "تشغيل الألواح الشمسية ومفاعل نووي صغير لتزويد القاعدة بالطاقة خلال الليل القمري البالغ 14 يومًا."
     },
     {
       "id": "npc_ahmed",
-      "nameEn": "Ahmed", "nameAr": "أحمد",
+      "nameEn": "Ahmed",
+      "nameAr": "أحمد",
       "nameStatus": "approved",
-      "roleEn": "Robotics and Vehicles Officer — Rover Garage", "roleAr": "مسؤول الروبوتات والمركبات — مرآب المركبات",
+      "roleEn": "Robotics and Vehicle Lead — Vehicle Garage",
+      "roleAr": "مسؤول الروبوتات والمركبات — مرآب المركبات",
       "locationId": "garage",
-      "skills": ["robotics", "mechanics", "autonomous control", "remote operation", "fault diagnosis"],
-      "traits": ["practical", "curious", "trusts measurements over guesses", "knows the limits of the machines"],
-      "knownSystems": ["rover", "robot", "eva"],
-      "relationships": ["npc_abdelaziz", "npc_mostafa"],
+      "skills": [
+        "Robotics",
+        "Mechanics",
+        "AI-based Control",
+        "Remote Operation"
+      ],
+      "traits": [
+        "practical",
+        "curious",
+        "trusts measurements over guesses",
+        "knows the limits of the machines"
+      ],
+      "knownSystems": [
+        "rover",
+        "robot",
+        "eva"
+      ],
+      "relationships": [
+        "npc_abdelaziz",
+        "npc_mostafa"
+      ],
       "storySeedEn": "A rover loses contact behind a ridge. Ahmed walks the player through power, line of sight and sensors before deciding to recover it.",
       "storySeedAr": "يفقد الروفر الاتصال خلف حافة تضاريس؛ يطلب أحمد من اللاعب مراجعة الطاقة وخط الرؤية والحساسات قبل اتخاذ قرار الاستعادة.",
       "boundaryEn": "Historic rovers inspire the machines in the game but do not share their design or capability.",
       "greetingEn": "The rover is not lost. It is exactly where we left it, minus the signal.",
       "greetingAr": "الروفر ليس مفقودًا. إنه تمامًا حيث تركناه، ناقصًا الإشارة.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 11.5, "location": "garage", "activityEn": "rover maintenance", "activityAr": "صيانة الروفر" },
-        { "start": 11.5, "end": 13, "location": "ice_site", "activityEn": "drone survey", "activityAr": "مسح بالطائرة المسيّرة" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18.5, "location": "garage", "activityEn": "battery and wheel checks", "activityAr": "فحص البطاريات والعجلات" },
-        { "start": 18.5, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 11.5,
+          "location": "garage",
+          "activityEn": "rover maintenance",
+          "activityAr": "صيانة الروفر"
+        },
+        {
+          "start": 11.5,
+          "end": 13,
+          "location": "ice_site",
+          "activityEn": "drone survey",
+          "activityAr": "مسح بالطائرة المسيّرة"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18.5,
+          "location": "garage",
+          "activityEn": "battery and wheel checks",
+          "activityAr": "فحص البطاريات والعجلات"
+        },
+        {
+          "start": 18.5,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Maintains rovers, drones, and robotic arms used to perform hazardous tasks outside the base.",
+      "responsibilitiesAr": "صيانة المركبات الجوالة والطائرات المسيرة والأذرع الآلية المستخدمة في المهام الخطرة خارج القاعدة."
     },
     {
       "id": "npc_comms_software_engineer",
-      "nameEn": "", "nameAr": "مهندس الاتصالات والبرمجيات — الاسم قيد الاعتماد",
+      "nameEn": "",
+      "nameAr": "مهندس الاتصالات والبرمجيات — الاسم قيد الاعتماد",
       "nameStatus": "pending_team_approval",
-      "roleEn": "Communications and Software Engineer — Communications Tower", "roleAr": "مهندس اتصالات وبرمجيات — برج الاتصالات",
+      "roleEn": "Telecommunications and Software Engineer — Communications Tower",
+      "roleAr": "مهندس اتصالات وبرمجيات — برج الاتصالات",
       "locationId": "comms_tower",
-      "skills": ["networks", "cybersecurity", "programming", "antenna repair", "signal diagnosis"],
-      "traits": ["analytical", "precise", "calm under pressure", "asks where the data came from"],
-      "knownSystems": ["comms", "network", "relay"],
-      "relationships": ["npc_abdelaziz", "npc_ahmed"],
+      "skills": [
+        "Networking",
+        "Cybersecurity",
+        "Programming",
+        "Antenna Repair"
+      ],
+      "traits": [
+        "analytical",
+        "precise",
+        "calm under pressure",
+        "asks where the data came from"
+      ],
+      "knownSystems": [
+        "comms",
+        "network",
+        "relay"
+      ],
+      "relationships": [
+        "npc_abdelaziz",
+        "npc_ahmed"
+      ],
       "storySeedEn": "Base network readings disagree. With the player he separates a sensor fault from power, antenna or a network path.",
       "storySeedAr": "تظهر قراءات متضاربة في شبكة القاعدة؛ يفرّق اللاعب معه بين عطل حساس أو طاقة أو هوائي أو مسار شبكة.",
       "boundaryEn": "Apollo 12 lightning strikes happened near Earth during launch, not on the lunar surface.",
       "greetingEn": "Two systems disagree. One of them is lying, and it is usually the one we did not calibrate.",
       "greetingAr": "نظامان يتناقضان. أحدهما يكذب، وغالبًا هو الذي لم نعايره.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 12, "location": "comms_tower", "activityEn": "link and network checks", "activityAr": "فحص الرابط والشبكة" },
-        { "start": 12, "end": 13, "location": "mission_control", "activityEn": "telemetry review", "activityAr": "مراجعة التليمترية" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 19, "location": "comms_tower", "activityEn": "relay alignment", "activityAr": "محاذاة المرحل" },
-        { "start": 19, "end": 22, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 22, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 12,
+          "location": "comms_tower",
+          "activityEn": "link and network checks",
+          "activityAr": "فحص الرابط والشبكة"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "mission_control",
+          "activityEn": "telemetry review",
+          "activityAr": "مراجعة التليمترية"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 19,
+          "location": "comms_tower",
+          "activityEn": "relay alignment",
+          "activityAr": "محاذاة المرحل"
+        },
+        {
+          "start": 19,
+          "end": 22,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 22,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Maintains the link with Earth, the local network, and base computers; protects systems from radiation-induced malfunctions and cyberattacks.",
+      "responsibilitiesAr": "الحفاظ على الاتصال بالأرض والشبكة المحلية وأجهزة كمبيوتر القاعدة؛ وحماية الأنظمة من الأعطال الناتجة عن الإشعاع والهجمات السيبرانية."
     },
     {
       "id": "npc_mostafa",
-      "nameEn": "Mostafa", "nameAr": "مصطفى",
+      "nameEn": "Mostafa",
+      "nameAr": "مصطفى",
       "nameStatus": "approved",
-      "roleEn": "Construction Engineer — Regolith Printing", "roleAr": "مهندس إنشاءات — طابعة الثرى القمري",
+      "roleEn": "Construction Engineer — Soil Printer",
+      "roleAr": "مهندس إنشاءات — طابعة الثرى القمري",
       "locationId": "regolith_plant",
-      "skills": ["structural engineering", "3D printing", "heavy machinery", "welding", "materials testing"],
-      "traits": ["patient", "practical", "loves prototypes", "refuses to build before the site survey"],
-      "knownSystems": ["construction", "regolith", "shielding"],
-      "relationships": ["npc_alaa", "npc_ahmed"],
+      "skills": [
+        "Structural Engineering",
+        "3D Printing",
+        "Heavy Machinery",
+        "Welding"
+      ],
+      "traits": [
+        "patient",
+        "practical",
+        "loves prototypes",
+        "refuses to build before the site survey"
+      ],
+      "knownSystems": [
+        "construction",
+        "regolith",
+        "shielding"
+      ],
+      "relationships": [
+        "npc_alaa",
+        "npc_ahmed"
+      ],
       "storySeedEn": "Mostafa builds a wall or pad mock-up and tests mass, strength and insulation before proposing it for the colony.",
       "storySeedAr": "يبني مصطفى نموذج جدار أو منصة ويختبر الكتلة والقوة والعزل قبل اقتراح اعتماد التصميم للمستعمرة.",
       "boundaryEn": "3D-printed habitat challenges are research. Printed homes do not yet operate on the Moon.",
       "greetingEn": "A wall is a promise. First we weigh it, then we trust it.",
       "greetingAr": "الجدار وعد. نزنه أولًا، ثم نثق به.",
       "schedule": [
-        { "start": 0, "end": 6, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" },
-        { "start": 6, "end": 7, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 7, "end": 12, "location": "regolith_plant", "activityEn": "print and test", "activityAr": "طباعة واختبار" },
-        { "start": 12, "end": 13, "location": "storm_shelter", "activityEn": "shielding inspection", "activityAr": "فحص التدريع" },
-        { "start": 13, "end": 14, "location": "habitat", "activityEn": "meal", "activityAr": "وجبة" },
-        { "start": 14, "end": 18.5, "location": "regolith_plant", "activityEn": "materials testing", "activityAr": "اختبار المواد" },
-        { "start": 18.5, "end": 21, "location": "habitat", "activityEn": "common room", "activityAr": "الغرفة المشتركة" },
-        { "start": 21, "end": 24, "location": "habitat", "activityEn": "rest", "activityAr": "راحة" }
-      ]
+        {
+          "start": 0,
+          "end": 6,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        },
+        {
+          "start": 6,
+          "end": 7,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 7,
+          "end": 12,
+          "location": "regolith_plant",
+          "activityEn": "print and test",
+          "activityAr": "طباعة واختبار"
+        },
+        {
+          "start": 12,
+          "end": 13,
+          "location": "storm_shelter",
+          "activityEn": "shielding inspection",
+          "activityAr": "فحص التدريع"
+        },
+        {
+          "start": 13,
+          "end": 14,
+          "location": "habitat",
+          "activityEn": "meal",
+          "activityAr": "وجبة"
+        },
+        {
+          "start": 14,
+          "end": 18.5,
+          "location": "regolith_plant",
+          "activityEn": "materials testing",
+          "activityAr": "اختبار المواد"
+        },
+        {
+          "start": 18.5,
+          "end": 21,
+          "location": "habitat",
+          "activityEn": "common room",
+          "activityAr": "الغرفة المشتركة"
+        },
+        {
+          "start": 21,
+          "end": 24,
+          "location": "habitat",
+          "activityEn": "rest",
+          "activityAr": "راحة"
+        }
+      ],
+      "responsibilitiesEn": "Uses 3D-printing technology to construct walls, roads, and landing pads from lunar regolith (moon soil); buries habitats beneath the soil for radiation protection.",
+      "responsibilitiesAr": "استخدام تقنية الطباعة ثلاثية الأبعاد لبناء الجدران والطرق ومنصات الهبوط من الثرى القمري (تربة القمر)؛ ودفن الموائل تحت التربة للحماية من الإشعاع."
     }
   ]
 }

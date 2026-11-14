@@ -2,6 +2,7 @@
   "provider": "piper",
   "comment": "Authoring manifest for the Luna-Quest voice pack. Generate audio with tools/generate_voice_pack.py; the game reads the generated pack.json and MP3 files, never this file.",
   "sourceManifest": "content/voices.json",
+  "sourceDialogue": "content/dialogue.json",
   "cast": {
     "npc_safaa": {
       "prefix": "safaa",
@@ -52,8 +53,9 @@
       "noiseScale": 0.62
     }
   },
-  "lineCount": 55,
-  "generatedThisRun": 55,
+  "lineCount": 103,
+  "topicLines": 48,
+  "generatedThisRun": 103,
   "reusedThisRun": 0,
   "runtimeCloudTts": false,
   "language": "en",

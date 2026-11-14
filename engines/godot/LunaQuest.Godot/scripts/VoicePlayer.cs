@@ -84,10 +84,28 @@ namespace LunaQuest.Godot
         }
 
         /// <summary>
-        /// Development check: every crew voice must have its greeting and four rotating
-        /// barks, and every key in the pack must point at a real imported file.
+        /// Plays one selectable crew topic. The authored voice key and the subtitle come
+        /// from the same dialogue entry, so they cannot drift apart.
         /// </summary>
-        public (int Total, List<string> Problems) VerifyPack()
+        public void SpeakTopic(DialogueTopic topic)
+        {
+            string text = L.Arabic ? topic.LineAr : topic.LineEn;
+            if (_file.TryGetValue(topic.VoiceKey, out string? file))
+                SpeakFile(file, text, 7.0);
+            else
+            {
+                GD.PushWarning($"Voice key missing from pack: {topic.VoiceKey}");
+                SpeakFile($"{topic.VoiceKey}.mp3", text, 7.0);
+            }
+            _barkCooldown = 6.0;
+        }
+
+        /// <summary>
+        /// Development check: every crew voice must have its greeting and four rotating
+        /// barks, every authored dialogue topic must have a key, and every key in the pack
+        /// must point at a real imported file.
+        /// </summary>
+        public (int Total, List<string> Problems) VerifyPack(List<DialogueTopic>? topics = null)
         {
             var problems = new List<string>();
             foreach (var kv in PrefixOf)
@@ -100,6 +118,11 @@ namespace LunaQuest.Godot
                     if (!_file.ContainsKey(bark)) problems.Add($"missing key {bark}");
                 }
             }
+
+            if (topics != null)
+                foreach (var topic in topics)
+                    if (!_file.ContainsKey(topic.VoiceKey))
+                        problems.Add($"missing topic key {topic.VoiceKey}");
 
             foreach (var kv in _file)
             {

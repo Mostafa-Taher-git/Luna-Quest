@@ -22,6 +22,8 @@ namespace LunaQuest.Core.Domain
         public string NameAr = "";
         public string RoleEn = "";
         public string RoleAr = "";
+        public string ResponsibilitiesEn = "";
+        public string ResponsibilitiesAr = "";
         public string LocationId = "";
         public string NameStatus = "approved";
         public List<string> Skills = new List<string>();
@@ -36,8 +38,12 @@ namespace LunaQuest.Core.Domain
         public string GreetingAr = "";
 
         public bool NamePending => NameStatus != "approved";
-        public string DisplayNameEn => NamePending ? "Name pending approval" : NameEn;
-        public string DisplayNameAr => NamePending ? "الاسم قيد الاعتماد" : NameAr;
+        public string DisplayNameEn => NamePending
+            ? (RoleEn.Contains("—") ? RoleEn.Split('—')[0].Trim() : (RoleEn.Contains("·") ? RoleEn.Split('·')[0].Trim() : "Name pending approval"))
+            : NameEn;
+        public string DisplayNameAr => NamePending
+            ? (RoleAr.Contains("—") ? RoleAr.Split('—')[0].Trim() : (RoleAr.Contains("·") ? RoleAr.Split('·')[0].Trim() : "الاسم قيد الاعتماد"))
+            : NameAr;
 
         public ScheduleEntry? CurrentEntry(double hourOfDay)
         {

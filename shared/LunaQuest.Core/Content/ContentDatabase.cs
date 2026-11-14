@@ -51,12 +51,16 @@ namespace LunaQuest.Core.Content
         public List<CropDefinition> Crops = new List<CropDefinition>();
         public List<LearningObjective> Learning = new List<LearningObjective>();
         public List<ResearchRecord> Research = new List<ResearchRecord>();
+        public List<Domain.DialogueTopic> Dialogue = new List<Domain.DialogueTopic>();
 
         public Domain.BuildingDefinition? Building(string id)
             => Buildings.Find(b => b.Id == id);
 
         public Domain.NpcProfile? Npc(string id)
             => Npcs.Find(n => n.Id == id);
+
+        public List<Domain.DialogueTopic> TopicsFor(string npcId)
+            => Dialogue.FindAll(t => t.NpcId == npcId);
 
         public LearningObjective? Objective(string id)
             => Learning.Find(l => l.Id == id);
@@ -70,11 +74,13 @@ namespace LunaQuest.Core.Content
             db.Crops = LoadCrops(Path.Combine(directory, "crops.json"));
             db.Learning = LoadLearning(Path.Combine(directory, "learning.json"));
             db.Research = LoadResearch(Path.Combine(directory, "research.json"));
+            db.Dialogue = LoadDialogue(Path.Combine(directory, "dialogue.json"));
             return db;
         }
 
         public static ContentDatabase LoadFromTexts(
-            string buildings, string npcs, string incidents, string crops, string learning, string research)
+            string buildings, string npcs, string incidents, string crops, string learning, string research,
+            string? dialogue = null)
         {
             return new ContentDatabase
             {
@@ -84,6 +90,7 @@ namespace LunaQuest.Core.Content
                 Crops = ParseCrops(crops),
                 Learning = ParseLearning(learning),
                 Research = ParseResearch(research),
+                Dialogue = dialogue == null ? new List<Domain.DialogueTopic>() : ParseDialogue(dialogue),
             };
         }
 
@@ -171,6 +178,8 @@ namespace LunaQuest.Core.Content
                     NameAr = Json.Str(o["nameAr"]),
                     RoleEn = Json.Str(o["roleEn"]),
                     RoleAr = Json.Str(o["roleAr"]),
+                    ResponsibilitiesEn = Json.Str(o["responsibilitiesEn"]),
+                    ResponsibilitiesAr = Json.Str(o["responsibilitiesAr"]),
                     LocationId = Json.Str(o["locationId"]),
                     NameStatus = Json.Str(o["nameStatus"], "approved"),
                     StorySeedEn = Json.Str(o["storySeedEn"]),
@@ -196,6 +205,32 @@ namespace LunaQuest.Core.Content
                     });
                 }
                 list.Add(n);
+            }
+            return list;
+        }
+
+        // ---- dialogue -------------------------------------------------------
+
+        private static List<Domain.DialogueTopic> LoadDialogue(string path)
+            => File.Exists(path) ? ParseDialogue(File.ReadAllText(path)) : new List<Domain.DialogueTopic>();
+
+        public static List<Domain.DialogueTopic> ParseDialogue(string json)
+        {
+            var list = new List<Domain.DialogueTopic>();
+            var root = Json.Obj(Json.Parse(json));
+            foreach (var item in Json.Arr(root.ContainsKey("topics") ? root["topics"] : null))
+            {
+                var o = Json.Obj(item);
+                list.Add(new Domain.DialogueTopic
+                {
+                    NpcId = Json.Str(o["npcId"]),
+                    Id = Json.Str(o["id"]),
+                    VoiceKey = Json.Str(o["voiceKey"]),
+                    LabelEn = Json.Str(o["labelEn"]),
+                    LabelAr = Json.Str(o["labelAr"]),
+                    LineEn = Json.Str(o["lineEn"]),
+                    LineAr = Json.Str(o["lineAr"]),
+                });
             }
             return list;
         }

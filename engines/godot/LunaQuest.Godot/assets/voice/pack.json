@@ -383,5 +383,341 @@
     "textAr": "لدينا قراءة مواد متطايرة. كررها واحفظ عينة قبل أن نسميها جليدًا.",
     "speaker": "npc_alaa",
     "model": "en_US-norman-medium"
+  },
+  "talk.safaa.sleep": {
+    "file": "talk-safaa-sleep.mp3",
+    "text": "Fatigue is a system. Sleep debt changes reaction time before anyone admits it, and I would rather lose an hour of schedule than a crew member.",
+    "textAr": "الإجهاد نظام. دين النوم يغيّر زمن رد الفعل قبل أن يعترف أحد به، وأفضّل خسارة ساعة من الجدول على خسارة فرد من الطاقم.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.safaa.dose": {
+    "file": "talk-safaa-dose.mp3",
+    "text": "The dose log is cumulative. Shielding and time are the real controls; a number that looks small today still adds up over thirty days.",
+    "textAr": "سجل الجرعة تراكمي. التدريع والوقت هما التحكّم الحقيقي؛ رقم يبدو صغيرًا اليوم يتراكم على مدى ثلاثين يومًا.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.safaa.hydration": {
+    "file": "talk-safaa-hydration.mp3",
+    "text": "Hydration affects headaches, concentration and heart rate. Read the water number before you reach for a pill.",
+    "textAr": "الترطيب يؤثر على الصداع والتركيز ومعدل القلب. اقرأ رقم الماء قبل أن تمد يدك إلى دواء.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.safaa.morale": {
+    "file": "talk-safaa-morale.mp3",
+    "text": "Low morale looks like sloppy work first. Meals, sleep and a short conversation are operational tools, not luxuries.",
+    "textAr": "الروح المعنوية المنخفضة تظهر أولًا كعمل غير متقن. الوجبات والنوم ومحادثة قصيرة أدوات تشغيلية، وليست رفاهية.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.safaa.checkup": {
+    "file": "talk-safaa-checkup.mp3",
+    "text": "I measure resting heart rate, hydration, sleep and dose. I do not diagnose from a console; if something is wrong, we stop and examine it properly.",
+    "textAr": "أقيس معدل القلب أثناء الراحة والترطيب والنوم والجرعة. لا أشخّص من كونسول؛ إن كان هناك خلل نتوقف ونفحصه كما يجب.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.safaa.limits": {
+    "file": "talk-safaa-limits.mp3",
+    "text": "I can explain spaceflight health, but this is not medical advice for you or a real crew. A real symptom belongs with a real clinician.",
+    "textAr": "أستطيع شرح صحة الطيران الفضائي، لكن هذه ليست نصيحة طبية لك أو لطاقم حقيقي. العَرَض الحقيقي مكانه عند طبيب حقيقي.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "talk.noor.airflow": {
+    "file": "talk-noor-airflow.mp3",
+    "text": "Airflow first. A scrubber that is fine cannot fix a fan that is not moving the cabin air.",
+    "textAr": "التدفق أولًا. مرشّح سليم لا يمكنه إصلاح مروحة لا تحرّك هواء المقصورة.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.noor.water_loop": {
+    "file": "talk-noor-water_loop.mp3",
+    "text": "Water in, water out. The recycler recovers most of it, but filter health decides whether the number you see is real.",
+    "textAr": "ماء يدخل، ماء يخرج. المعيد يستعيد معظمه، لكن صحة الفلتر تحدّد إن كان الرقم الذي تراه حقيقيًا.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.noor.filter": {
+    "file": "talk-noor-filter.mp3",
+    "text": "Back-flush the filter, then watch quality. Do not replace a cartridge because one reading is loud.",
+    "textAr": "اغسل الفلتر عكسيًا، ثم راقب الجودة. لا تبدّل الخرطوشة لأن قراءة واحدة صاخبة.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.noor.co2": {
+    "file": "talk-noor-co2.mp3",
+    "text": "Rising carbon dioxide is a flow question before it is a cartridge question. Check the sensor, then the fan, then the bed.",
+    "textAr": "ارتفاع ثاني أكسيد الكربون سؤال تدفق قبل أن يكون سؤال خرطوشة. افحص الحساس، ثم المروحة، ثم وسادة المرشّح.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.noor.leak": {
+    "file": "talk-noor-leak.mp3",
+    "text": "A small leak is a long shift. Find it with pressure and sound before you seal anything.",
+    "textAr": "تسريب صغير يعني مناوبة طويلة. اعثر عليه بالضغط والصوت قبل أن تختم أي شيء.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.noor.priority": {
+    "file": "talk-noor-priority.mp3",
+    "text": "Life support never sheds. The greenhouse and the lab go first; the air and water stay on.",
+    "textAr": "دعم الحياة لا يُفصل أبدًا. البيت الزجاجي والمختبر أولًا؛ الهواء والماء يبقيان.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "talk.alaa.ice": {
+    "file": "talk-alaa-ice.mp3",
+    "text": "A bright signature can be ice, a shadow or a mineral. The angle and a second reading decide.",
+    "textAr": "البصمة اللامعة قد تكون جليدًا أو ظلًا أو معدنًا. الزاوية وقراءة ثانية هما ما يحسم.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.alaa.sample": {
+    "file": "talk-alaa-sample.mp3",
+    "text": "Bag it, photograph the site, write the coordinates. An unlabeled sample is a story, not data.",
+    "textAr": "احفظها، صوّر الموقع، واكتب الإحداثيات. عينة بلا ملصق قصة، وليست بيانات.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.alaa.regolith": {
+    "file": "talk-alaa-regolith.mp3",
+    "text": "The regolith records impacts and weathering. Read the layers slowly and do not flatten the site.",
+    "textAr": "الثرى يسجّل الاصطدامات والتجوية. اقرأ الطبقات ببطء ولا تسوِّ الموقع.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.alaa.site": {
+    "file": "talk-alaa-site.mp3",
+    "text": "I want access, a stable slope, a safe walk and a reason. A resource that is too hard to reach is not a reserve.",
+    "textAr": "أريد وصولًا ومنحدرًا مستقرًا وطريقًا آمنًا وسببًا. مورد يصعب الوصول إليه ليس احتياطيًا.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.alaa.repeat": {
+    "file": "talk-alaa-repeat.mp3",
+    "text": "One reading is a rumour. Repeat it on the same sample, then compare it with a second instrument.",
+    "textAr": "قراءة واحدة إشاعة. كررها على العينة نفسها، ثم قارنها بأداة ثانية.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.alaa.resource": {
+    "file": "talk-alaa-resource.mp3",
+    "text": "We call it a resource only when the volume, the access and the processing cost all make sense.",
+    "textAr": "نسميه موردًا فقط عندما يكون الحجم والوصول وتكلفة المعالجة كلها منطقية.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "talk.agri.light": {
+    "file": "talk-agri-light.mp3",
+    "text": "The pod is sealed, so the light comes from the colony bus. Two kilowatts is a real budget, not a free Sun.",
+    "textAr": "الوحدة مغلقة، لذا يأتي الضوء من شبكة المستعمرة. كيلوواطان ميزانية حقيقية، وليست شمسًا مجانية.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.agri.crop_water": {
+    "file": "talk-agri-crop_water.mp3",
+    "text": "The plants drink from the same tank as the crew. Their condensate comes back, but not all of it.",
+    "textAr": "النباتات تشرب من الخزان نفسه الذي يشرب منه الطاقم. يتكثف بعض الماء ويعود، لكن ليس كله.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.agri.nutrients": {
+    "file": "talk-agri-nutrients.mp3",
+    "text": "Change one variable at a time. If you change light and nutrients together, you learn nothing.",
+    "textAr": "غيّر متغيرًا واحدًا في كل مرة. إن غيّرت الضوء والمغذيات معًا فلن تتعلم شيئًا.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.agri.stress": {
+    "file": "talk-agri-stress.mp3",
+    "text": "Curling leaves are a symptom. Check water, then light, then temperature, and write down the order.",
+    "textAr": "تجعّد الأوراق عَرَض. افحص الماء، ثم الضوء، ثم الحرارة، واكتب الترتيب.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.agri.harvest": {
+    "file": "talk-agri-harvest.mp3",
+    "text": "Harvest what is ready, not what you hope will be ready. Fresh food is morale you can weigh.",
+    "textAr": "احصد ما هو جاهز، لا ما تأمل أن يكون جاهزًا. الغذاء الطازج روح معنوية يمكن وزنها.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.agri.variety": {
+    "file": "talk-agri-variety.mp3",
+    "text": "Yield is not the only goal. People eat with their eyes, and a varied plate keeps the crew working.",
+    "textAr": "المحصول ليس الهدف الوحيد. الناس يأكلون بعيونهم، والطبق المتنوّع يُبقي الطاقم يعمل.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "talk.aziz.reserve": {
+    "file": "talk-aziz-reserve.mp3",
+    "text": "Reserve is not spare power. Below the line, every kilowatt is a choice.",
+    "textAr": "الاحتياطي ليس طاقة فائضة. تحت الحد، كل كيلوواط خيار.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.aziz.solar": {
+    "file": "talk-aziz-solar.mp3",
+    "text": "At the pole the Sun grazes the horizon. The array tracks it, but dust steals the edge.",
+    "textAr": "عند القطب تلامس الشمس الأفق. الألواح تتعقبها، لكن الغبار يسرق الحافة.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.aziz.dust": {
+    "file": "talk-aziz-dust.mp3",
+    "text": "A dirty array is a pay cut for the whole colony. Clean it before you add load.",
+    "textAr": "اللوح المغبر خفض في دخل المستعمرة كلها. نظفه قبل أن تضيف حملًا.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.aziz.shedding": {
+    "file": "talk-aziz-shedding.mp3",
+    "text": "Shed the greenhouse and the lab first. Heat and life support keep priority.",
+    "textAr": "افصل البيت الزجاجي والمختبر أولًا. الحرارة ودعم الحياة لهما الأولوية.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.aziz.night": {
+    "file": "talk-aziz-night.mp3",
+    "text": "The battery carries the night. If the night is longer than the reserve, we reduce the load before we gamble.",
+    "textAr": "البطارية تحمل الليل. إن كان الليل أطول من الاحتياطي، نقلّل الحمل قبل أن نقامر.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.aziz.cost": {
+    "file": "talk-aziz-cost.mp3",
+    "text": "Every kilowatt is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
+    "textAr": "كل كيلوواط مُستعار من الشمس ويُسدَّد ليلًا. أنفقه مرتين ونخسرهما معًا.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "talk.ahmed.signal": {
+    "file": "talk-ahmed-signal.mp3",
+    "text": "The rover did not vanish. It stopped reporting. Those are different problems.",
+    "textAr": "الروفر لم يختفِ. توقف عن الإبلاغ. هاتان مشكلتان مختلفتان.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.ahmed.power": {
+    "file": "talk-ahmed-power.mp3",
+    "text": "Check the battery before the motor. A dead cell looks like a seized wheel from a distance.",
+    "textAr": "افحص البطارية قبل المحرك. خلية ميتة تبدو من بعيد كعجلة متوقفة.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.ahmed.wheels": {
+    "file": "talk-ahmed-wheels.mp3",
+    "text": "A wheel that spins is not always a wheel that grips. Read the slope and the tread.",
+    "textAr": "العجلة التي تدور ليست دائمًا عجلة تثبت. اقرأ المنحدر ونقشة الإطار.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.ahmed.recovery": {
+    "file": "talk-ahmed-recovery.mp3",
+    "text": "Recovery starts with line of sight. If I cannot see it, I send a survey rover first.",
+    "textAr": "الاستعادة تبدأ بخط النظر. إن لم أره، أرسل روفر مسح أولًا.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.ahmed.eva": {
+    "file": "talk-ahmed-eva.mp3",
+    "text": "Dust in the airlock seal is a real hazard. Clean the floor before the next suit goes out.",
+    "textAr": "الغبار في ختم الأيرلوك خطر حقيقي. نظف الأرضية قبل خروج البدلة التالية.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.ahmed.limits": {
+    "file": "talk-ahmed-limits.mp3",
+    "text": "The rover is not a hero. It has a power budget, a thermal limit and a driver who needs sleep.",
+    "textAr": "الروفر ليس بطلًا. لديه ميزانية طاقة وحد حراري وسائق يحتاج إلى النوم.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "talk.comms.link": {
+    "file": "talk-comms-link.mp3",
+    "text": "The link can be quiet without being dead. Check the antenna, then the relay, then the path.",
+    "textAr": "الرابط قد يكون هادئًا دون أن يكون ميتًا. افحص الهوائي، ثم المرحل، ثم المسار.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.comms.antenna": {
+    "file": "talk-comms-antenna.mp3",
+    "text": "Dust on the antenna looks like a software fault from the console. Clean it and compare.",
+    "textAr": "غبار الهوائي يبدو من الكونسول كعطل برمجي. نظفه وقارن.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.comms.relay": {
+    "file": "talk-comms-relay.mp3",
+    "text": "A relay that drifts is worse than one that fails. It gives you numbers that almost agree.",
+    "textAr": "المرحل الذي ينحرف أسوأ من الذي يفشل. يعطيك أرقامًا تتفق تقريبًا.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.comms.data": {
+    "file": "talk-comms-data.mp3",
+    "text": "Where did the data come from? That is the first question. A sensor fault can look exactly like a power fault.",
+    "textAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول. عطل الحساس قد يبدو تمامًا كعطل الطاقة.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.comms.calibration": {
+    "file": "talk-comms-calibration.mp3",
+    "text": "If two systems disagree, calibrate the one you did not touch. It is usually the one that is lying.",
+    "textAr": "إن اختلف نظامان، عاير الذي لم تلمسه. غالبًا هو الذي يكذب.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.comms.earth": {
+    "file": "talk-comms-earth.mp3",
+    "text": "The delay is part of the conversation. We send the whole picture, not a guess, and we wait.",
+    "textAr": "التأخير جزء من المحادثة. نرسل الصورة كاملة، لا تخمينًا، ثم ننتظر.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "talk.mostafa.material": {
+    "file": "talk-mostafa-material.mp3",
+    "text": "Regolith is cheap. A bad seal is not. We test the mix before we trust the wall.",
+    "textAr": "الثرى رخيص. الختم السيئ ليس كذلك. نختبر الخليط قبل أن نثق بالجدار.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "talk.mostafa.printing": {
+    "file": "talk-mostafa-printing.mp3",
+    "text": "A printed wall is layers with a plan. Mass, strength and insulation, then we build.",
+    "textAr": "الجدار المطبوع طبقات لها خطة. الكتلة والقوة والعزل، ثم نبني.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "talk.mostafa.seal": {
+    "file": "talk-mostafa-seal.mp3",
+    "text": "The seal is the part that keeps the pressure in. It gets the test, not the ribbon.",
+    "textAr": "الختم هو ما يحفظ الضغط. له يكون الاختبار، لا الشريط.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "talk.mostafa.survey": {
+    "file": "talk-mostafa-survey.mp3",
+    "text": "No survey, no print. A wall on a bad slope is a wall that fights the regolith.",
+    "textAr": "لا مسح، لا طباعة. الجدار على منحدر سيئ جدار يصارع الثرى.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "talk.mostafa.mockup": {
+    "file": "talk-mostafa-mockup.mp3",
+    "text": "Test the mock-up before you trust the wall. It is cheaper to break a model than a module.",
+    "textAr": "اختبر النموذج قبل أن تثق بالجدار. كسر نموذج أرخص من كسر وحدة.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "talk.mostafa.shielding": {
+    "file": "talk-mostafa-shielding.mp3",
+    "text": "Regolith shielding buys dose and thermal stability. It also buys mass, so we place it where it pays.",
+    "textAr": "تدريع الثرى يشتري خفض الجرعة والاستقرار الحراري. يشتري أيضًا كتلة، لذا نضعه حيث يفيد.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
   }
 }

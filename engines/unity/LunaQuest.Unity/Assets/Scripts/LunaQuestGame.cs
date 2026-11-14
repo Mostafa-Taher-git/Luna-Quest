@@ -196,17 +196,7 @@ namespace LunaQuest.Unity
             {
                 var crew = Player.FocusCrew;
                 var profile = Sim.Content.Npc(crew.NpcId);
-                if (profile != null)
-                {
-                    Sim.Npcs.AddTrust(profile.Id, 0.01);
-                    Voice.Speak(profile, true);
-                    string line = Sim.Arabic ? profile.GreetingAr : profile.GreetingEn;
-                    if (string.IsNullOrEmpty(line)) line = Sim.Arabic ? profile.StorySeedAr : profile.StorySeedEn;
-                    string speaker = L.T(profile.DisplayNameEn, profile.DisplayNameAr);
-                    Hud.ShowSubtitle($"{speaker}: {line}", 7f);
-                    Hud.ShowToast(L.T("Crew log: a short, in-scope line. No generated advice.",
-                        "سجل الطاقم: سطر قصير ضمن الاختصاص. لا نصائح مولدة."), 3f);
-                }
+                if (profile != null) OpenDialogue(profile);
                 return;
             }
 
@@ -232,6 +222,38 @@ namespace LunaQuest.Unity
             foreach (var p in Sim.Content.Npcs)
                 if (p.LocationId == buildingId) return p;
             return null;
+        }
+
+        public void OpenDialogue(NpcProfile profile)
+        {
+            if (!Started || profile == null) return;
+            Sim.Npcs.AddTrust(profile.Id, 0.01);
+            Hud.OpenDialogue(profile, Sim.Content.TopicsFor(profile.Id));
+            UnlockCursor();
+            Voice.Speak(profile, true);
+
+            string line = Sim.Arabic ? profile.GreetingAr : profile.GreetingEn;
+            if (string.IsNullOrEmpty(line)) line = Sim.Arabic ? profile.StorySeedAr : profile.StorySeedEn;
+            if (!string.IsNullOrEmpty(line))
+            {
+                string speaker = L.T(profile.DisplayNameEn, profile.DisplayNameAr);
+                Hud.ShowSubtitle($"{speaker}: {line}", 7f);
+            }
+        }
+
+        public void AskNpcTopic(DialogueTopic topic)
+        {
+            if (!Started || topic == null) return;
+            Voice.SpeakTopic(topic);
+            Hud.SetDialogueTopic(topic);
+            Sim.Npcs.AddTrust(topic.NpcId, 0.005);
+            Sim.Npcs.Remember(topic.NpcId, "talked_" + topic.Id);
+        }
+
+        public void CloseDialogue()
+        {
+            Hud.CloseDialogue();
+            if (Started && !Paused) LockCursor();
         }
 
         public void ToggleLanguage() => SetLanguage(!L.Arabic);

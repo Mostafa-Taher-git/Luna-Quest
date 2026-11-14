@@ -85,6 +85,7 @@ namespace LunaQuest.Godot
             bool firstPerson = false;
             bool voiceCheck = false;
             bool voiceDemo = false;
+            string? testDialogueNpc = null;
             Vector3? spawn = null;
             float? lookYaw = null, lookPitch = null;
             var args = new List<string>(OS.GetCmdlineArgs());
@@ -119,6 +120,8 @@ namespace LunaQuest.Godot
                     _screenshotPath = arg.Substring("--screenshot=".Length);
                     _screenshotTimer = 4.0;
                 }
+                else if (arg.StartsWith("--test-dialogue=", StringComparison.Ordinal))
+                    testDialogueNpc = arg.Substring("--test-dialogue=".Length);
                 else if (arg.StartsWith("--shot-delay=", StringComparison.Ordinal))
                 {
                     if (double.TryParse(arg.Substring("--shot-delay=".Length), out double d))
@@ -133,6 +136,14 @@ namespace LunaQuest.Godot
             if (portrait) CallDeferred(nameof(Portrait));
             if (voiceCheck) CallDeferred(nameof(VoicePackCheck));
             if (voiceDemo) CallDeferred(nameof(VoiceDemo));
+            if (!string.IsNullOrEmpty(testDialogueNpc)) CallDeferred(nameof(TestDialogue), testDialogueNpc);
+        }
+
+        private void TestDialogue(string npcId)
+        {
+            AutoStart();
+            var npc = Sim.Content.Npc(npcId) ?? Sim.Content.Npcs[0];
+            OpenDialogue(npc);
         }
 
         private void VoiceDemo()
@@ -144,7 +155,7 @@ namespace LunaQuest.Godot
 
         private void VoicePackCheck()
         {
-            var (total, problems) = Voice.VerifyPack();
+            var (total, problems) = Voice.VerifyPack(Sim.Content.Dialogue);
             GD.Print($"Voice pack: {total} lines, {problems.Count} problem(s).");
             foreach (string problem in problems) GD.Print($"  {problem}");
             GetTree().Quit(problems.Count == 0 ? 0 : 1);
@@ -240,6 +251,7 @@ namespace LunaQuest.Godot
         private void HandleCancel()
         {
             if (Hud.PauseVisible) { ResumeGame(); return; }
+            if (Hud.DialogueVisible) { CloseDialogue(); return; }
             if (Hud.AnyOverlayVisible)
             {
                 Hud.CloseOverlays();
@@ -294,15 +306,7 @@ namespace LunaQuest.Godot
             if (!string.IsNullOrEmpty(it.NpcId))
             {
                 var profile = Sim.Content.Npc(it.NpcId);
-                if (profile != null)
-                {
-                    Sim.Npcs.AddTrust(profile.Id, 0.01);
-                    Voice.Speak(profile, true);
-                    string line = L.Arabic ? profile.GreetingAr : profile.GreetingEn;
-                    if (string.IsNullOrEmpty(line))
-                        line = L.Arabic ? profile.StorySeedAr : profile.StorySeedEn;
-                    Hud.ShowSubtitle($"{profile.DisplayNameEn}: {line}", 7.0);
-                }
+                if (profile != null) OpenDialogue(profile);
                 return;
             }
 
@@ -324,6 +328,43 @@ namespace LunaQuest.Godot
                 // reading in the journal; the owner acknowledges it.
                 Voice.Speak(owner, false);
             }
+        }
+
+        /// <summary>
+        /// A conversation locks the suit, releases the mouse and opens the topic panel. The
+        /// colony keeps running: talking costs time, just like everything else.
+        /// </summary>
+        public void OpenDialogue(NpcProfile profile)
+        {
+            if (!Started || profile == null) return;
+            Sim.Npcs.AddTrust(profile.Id, 0.01);
+            Hud.OpenDialogue(profile, Sim.Content.TopicsFor(profile.Id));
+            Player.InputLocked = true;
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+            Voice.Speak(profile, true);
+
+            string line = L.Arabic ? profile.GreetingAr : profile.GreetingEn;
+            if (string.IsNullOrEmpty(line))
+                line = L.Arabic ? profile.StorySeedAr : profile.StorySeedEn;
+            if (!string.IsNullOrEmpty(line))
+                Hud.ShowSubtitle($"{L.T(profile.DisplayNameEn, profile.DisplayNameAr)}: {line}", 7.0);
+        }
+
+        public void AskNpcTopic(DialogueTopic topic)
+        {
+            if (!Started || topic == null) return;
+            Voice.SpeakTopic(topic);
+            Hud.SetDialogueTopic(topic);
+            Sim.Npcs.AddTrust(topic.NpcId, 0.005);
+            Sim.Npcs.Remember(topic.NpcId, "talked_" + topic.Id);
+        }
+
+        public void CloseDialogue()
+        {
+            Hud.CloseDialogue();
+            if (!Started) return;
+            Player.InputLocked = false;
+            Input.MouseMode = Input.MouseModeEnum.Captured;
         }
 
         private NpcProfile? FindOwnerAt(string buildingId)
@@ -513,7 +554,8 @@ namespace LunaQuest.Godot
                 Load("incidents.json"),
                 Load("crops.json"),
                 Load("learning.json"),
-                Load("research.json"));
+                Load("research.json"),
+                Load("dialogue.json"));
         }
     }
 }

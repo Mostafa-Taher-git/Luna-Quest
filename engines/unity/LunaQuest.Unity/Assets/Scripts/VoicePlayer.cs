@@ -72,6 +72,15 @@ namespace LunaQuest.Unity
             _nextBark = Time.unscaledTimeAsDouble + (greeting ? 6.0 : 9.0);
         }
 
+        public void SpeakTopic(DialogueTopic topic)
+        {
+            if (_game == null || topic == null) return;
+            string text = _game.Sim.Arabic ? topic.LineAr : topic.LineEn;
+            string file = _file.TryGetValue(topic.VoiceKey, out string f) ? f : $"{topic.VoiceKey}.mp3";
+            SpeakFile(file, text, 7f);
+            _nextBark = Time.unscaledTimeAsDouble + 6.0;
+        }
+
         public void SpeakEvent(SimEvent e, bool arabic)
         {
             if (e == null) return;
