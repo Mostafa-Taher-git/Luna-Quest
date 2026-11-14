@@ -53,7 +53,7 @@ engines/godot-gdscript/LunaQuest.GDScript
 | `V` | first / third person |
 | `J` | journal — every task you have finished, with the skill it credited |
 | `H` | controls |
-| `Tab` | hold to fast-forward the mission |
+| `Tab` or `T` | hold to fast-forward the mission |
 | `L` | English / العربية |
 | `F5` / `F9` | save / load (`user://lunaquest-save.json`) |
 | `F11` | fullscreen |

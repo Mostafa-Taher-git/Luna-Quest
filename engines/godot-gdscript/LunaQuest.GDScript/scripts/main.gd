@@ -31,6 +31,12 @@ var _subtitle_until := 0
 func _ready() -> void:
 	randomize()
 
+	# The browser build gets the same scene at 4× MSAA? No: software GPUs and integrated laptop
+	# chips both feel that, so the web export renders without it and lets the picture carry itself.
+	if OS.has_feature("web"):
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		Engine.max_fps = 60
+
 	# `godot --headless --path . -- --selftest` flies the whole mission and exits non-zero on any
 	# broken rule. CI runs it before every build, and so can anyone with Godot.
 	if OS.get_cmdline_user_args().has("--selftest"):
@@ -207,7 +213,8 @@ func _on_mission_complete() -> void:
 
 func _process(delta: float) -> void:
 	if playing and not paused:
-		var speed := 6.0 if Input.is_key_pressed(KEY_TAB) else 1.0
+		var fast := Input.is_key_pressed(KEY_TAB) or Input.is_key_pressed(KEY_T)
+		var speed := 6.0 if fast else 1.0
 		var raised: Array = sim.step(delta * speed)
 		for event in raised:
 			_on_event(event)

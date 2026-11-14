@@ -295,7 +295,7 @@ func _build_panels() -> void:
 	for line in [
 		"W A S D — walk · Shift — run · Space — hop",
 		"Mouse — look · E — use console / talk",
-		"V — first/third person · J — journal",
+		"V — first/third person · J — journal · Tab — fast-forward",
 		"F5 / F9 — save / load · L — language · Esc — pause",
 		"",
 		"Nothing here is a fail state. Read the gauge, change one variable, wait.",

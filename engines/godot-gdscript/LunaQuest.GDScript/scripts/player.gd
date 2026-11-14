@@ -66,7 +66,10 @@ func set_third_person(on: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and can_move:
+	# Captured pointer on desktop, click-and-drag in a browser tab where pointer lock was refused.
+	var locked := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var dragging: bool = event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0
+	if event is InputEventMouseMotion and (locked or dragging) and can_move:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		_pitch = clampf(_pitch - event.relative.y * MOUSE_SENSITIVITY, -1.2, 1.0)
 		_head.rotation.x = _pitch
