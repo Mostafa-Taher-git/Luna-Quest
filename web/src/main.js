@@ -129,11 +129,14 @@ class Game {
       scene: this.scene,
       terrain: this.env.terrain,
       colliders: this.allColliders,
-      spawn: new THREE.Vector3(0, 0, 21),
+      // Off the centre line and seven metres down the plaza: the walk back to the airlock is
+      // clear, the camera has room for its boom, and the first frame is the colony rather than
+      // the inside of a supply crate.
+      spawn: new THREE.Vector3(-6, 0, 20),
       astronaut: commanderSuit,
     });
     this.player.sensitivity = 0.0021;
-    this.player.yaw = 0; // look at the habitat hatch, not back at the storage shed
+    this.player.yaw = 0.6; // down the plaza towards the airlock, not into a wall
 
     this.crew = new Crew({
       content: this.content,
