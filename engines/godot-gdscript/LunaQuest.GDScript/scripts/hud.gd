@@ -222,7 +222,7 @@ func _gauge_name(key: String) -> String:
 func refresh(sim: LQSim) -> void:
 	if top_values.is_empty():
 		return
-	top_values["day"].text = sim.clock.stamp(sim.arabic)
+	top_values["day"].text = sim.clock.stamp(arabic)
 	top_values["power"].text = "%d%%" % int(round(sim.battery_percent() * 100.0))
 	top_values["o2"].text = "%d%%" % int(round(sim.o2_percent() * 100.0))
 	top_values["water"].text = "%d%%" % int(round(sim.water_percent() * 100.0))
@@ -244,7 +244,7 @@ func refresh(sim: LQSim) -> void:
 
 	var tasks := sim.journal.size()
 	var total := Content.objectives.size()
-	if sim.arabic:
+	if arabic:
 		mission_label.text = "المهام: %d من %d   ·   العينات: %d   ·   الروح المعنوية: %d%%" % [
 			tasks, total, int(sim.state["samplesCollected"]), int(round(sim.state["averageMorale"] * 100.0))]
 	else:
