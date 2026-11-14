@@ -109,6 +109,7 @@ jobs:
             import.log
             run.log
             selftest.log
+            export.log
           if-no-files-found: warn
 
   export:
@@ -136,19 +137,33 @@ jobs:
         run: ./godot --headless --path "$PROJECT_DIR" --import || true
       - name: Export
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p out
-          ./godot --headless --path "$PROJECT_DIR" --export-release "Web" build/web/index.html
-          ./godot --headless --path "$PROJECT_DIR" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64
-          ./godot --headless --path "$PROJECT_DIR" --export-release "Windows" build/windows/luna-quest-gdscript.exe
-          chmod +x "$PROJECT_DIR/build/linux/luna-quest-gdscript.x86_64"
-          test -f "$PROJECT_DIR/build/web/index.html"
-          test -f "$PROJECT_DIR/build/web/index.wasm"
-          test -f "$PROJECT_DIR/build/web/index.pck"
-          cp "$PROJECT_DIR/build/web/"* out/ 2>/dev/null || true
-          ( cd "$PROJECT_DIR/build/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
-          ( cd "$PROJECT_DIR/build/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
-          ( cd "$PROJECT_DIR/build/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
+          P="engines/godot-gdscript/LunaQuest.GDScript"
+          ./godot --headless --path "$P" --export-release "Web" build/web/index.html > export.log 2>&1; web=$?
+          ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 >> export.log 2>&1; linux=$?
+          ./godot --headless --path "$P" --export-release "Windows" build/windows/luna-quest-gdscript.exe >> export.log 2>&1; windows=$?
+          echo "export exit codes — web=$web linux=$linux windows=$windows"
+          tail -c 6000 export.log
+          status=0
+          for f in "$P/build/web/index.html" "$P/build/web/index.wasm" "$P/build/web/index.pck" \
+                   "$P/build/linux/luna-quest-gdscript.x86_64" "$P/build/windows/luna-quest-gdscript.exe"; do
+            if [ ! -s "$f" ]; then
+              echo "::error::missing or empty export output: $f"
+              status=1
+            fi
+          done
+          if [ $status -ne 0 ]; then
+            while IFS= read -r line; do
+              echo "::error::export: $line"
+            done < <(grep -Ei "error|failed|cannot|missing|not found" export.log | head -20)
+            exit 1
+          fi
+          chmod +x "$P/build/linux/luna-quest-gdscript.x86_64"
+          cp "$P/build/web/"* out/ 2>/dev/null || true
+          ( cd "$P/build/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
+          ( cd "$P/build/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
+          ( cd "$P/build/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
           ls -lh out
       - name: Upload the three builds
         uses: actions/upload-artifact@v4
