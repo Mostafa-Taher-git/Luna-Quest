@@ -4,6 +4,7 @@ using Godot;
 using LunaQuest.Core.Content;
 using LunaQuest.Core.Domain;
 using LunaQuest.Core.Sim;
+using LunaQuest.Core.Terrain;
 
 namespace LunaQuest.Godot
 {
@@ -28,6 +29,9 @@ namespace LunaQuest.Godot
         private Label3D _habitatLive = null!;
         private OmniLight3D _beacon = null!;
         private Node3D _npcRoot = null!;
+        private Node3D _sky = null!;
+        public TerrainStreamer Streamer = null!;
+        public LunarTerrain Terrain = null!;
         private double _t;
         private double _liveTimer;
         private readonly Dictionary<string, StandardMaterial3D> _mats = new Dictionary<string, StandardMaterial3D>();
@@ -38,21 +42,20 @@ namespace LunaQuest.Godot
             _main = main;
             _sim = sim;
             Name = "Colony";
+            _sky = new Node3D { Name = "Sky" };
+            AddChild(_sky);
             BuildEnvironment();
             BuildTerrain();
             BuildStars();
             BuildEarth();
             BuildLandingPad();
             BuildPlaza();
-            BuildHorizon();
 
             foreach (var b in sim.Content.Buildings) BuildBuilding(b);
 
             BuildSolarFarm(sim.Content.Building("power_farm"));
             BuildCommsMast(sim.Content.Building("comms_tower"));
             BuildRover(sim.Content.Building("garage"));
-            BuildCraters();
-            BuildRocks();
             SpawnNpcs(sim);
         }
 
@@ -119,7 +122,7 @@ namespace LunaQuest.Godot
                 MaterialOverride = sunMat,
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             };
-            AddChild(_sunDisc);
+            _sky.AddChild(_sunDisc);
         }
 
         /// <summary>
@@ -269,22 +272,28 @@ namespace LunaQuest.Godot
 
         private void BuildTerrain()
         {
-            var ground = new StaticBody3D { Name = "Regolith", CollisionLayer = 1, CollisionMask = 0 };
-            AddChild(ground);
-            var col = new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3(800, 1, 800) } };
-            col.Position = new Vector3(0, -0.5f, 0);
-            ground.AddChild(col);
-
-            var plane = new PlaneMesh { Size = new Vector2(800, 800), SubdivideWidth = 24, SubdivideDepth = 24 };
+            // The same procedural ground is drawn by Unity; the colony sits on a flat pad that
+            // fades into craters, highland swells and boulder fields in every direction.
+            Terrain = new LunarTerrain(2026, 0, 8, 88, 90, 1.0);
             Material groundMaterial;
             if (ResourceLoader.Exists("res://shaders/regolith.gdshader"))
                 groundMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/regolith.gdshader") };
             else
                 groundMaterial = Mat(new Color(0.36f, 0.35f, 0.33f), 0f, 0.98f);
-            var mesh = new MeshInstance3D { Mesh = plane, MaterialOverride = groundMaterial };
-            mesh.Position = new Vector3(0, 0.01f, 0);
-            mesh.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-            AddChild(mesh);
+            Streamer = new TerrainStreamer
+            {
+                Name = "Regolith",
+                Terrain = Terrain,
+                GroundMaterial = groundMaterial,
+                RockMaterial = Mat(new Color(0.30f, 0.29f, 0.28f), 0f, 0.98f),
+                RockMesh = new SphereMesh { Radius = 0.5f, Height = 1.0f, RadialSegments = 7, Rings = 4 },
+            };
+            AddChild(Streamer);
+            Streamer.Prime(new Vector3(0, 0, 23));
+            // A safety floor far below the deepest crater, so a bug can never drop the player forever.
+            var floor = new StaticBody3D { Name = "SafetyFloor", CollisionLayer = 1, CollisionMask = 0 };
+            floor.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3(20000, 1, 20000) }, Position = new Vector3(0, -140, 0) });
+            AddChild(floor);
         }
 
         private void BuildStars()
@@ -326,7 +335,7 @@ namespace LunaQuest.Godot
             }
             var mmi = new MultiMeshInstance3D { Multimesh = mm, Name = "Stars" };
             mmi.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-            AddChild(mmi);
+            _sky.AddChild(mmi);
         }
 
         private void BuildEarth()
@@ -355,7 +364,7 @@ namespace LunaQuest.Godot
                 Name = "Earth",
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             };
-            AddChild(_earth);
+            _sky.AddChild(_earth);
         }
 
         private void BuildLandingPad()
@@ -862,6 +871,12 @@ namespace LunaQuest.Godot
         {
             if (_sim == null) return;
             _t += delta;
+            var cam = GetViewport().GetCamera3D();
+            if (cam != null)
+            {
+                _sky.GlobalPosition = cam.GlobalPosition;
+                Streamer.SetFocus(cam.GlobalPosition);
+            }
             UpdateSun((float)_sim.Clock.LunarPhase);
             if (_beacon != null) _beacon.LightEnergy = (Math.Sin(_t * 2.2) > 0.4) ? 1.4f : 0.05f;
             if (_earth != null) _earth.RotateY((float)delta * 0.01f);
@@ -886,7 +901,9 @@ namespace LunaQuest.Godot
             if (_sunDisc != null)
             {
                 var rot = new Basis(Vector3.Up, Mathf.DegToRad(az)) * new Basis(Vector3.Right, Mathf.DegToRad(-el));
-                _sunDisc.Position = rot * new Vector3(0, 0, -420);
+                // The visible disc sits at the opposite end of the light ray, so shadows always
+                // point away from the Sun you can see.
+                _sunDisc.Position = -(rot * new Vector3(0, 0, -1)) * 420f;
             }
         }
 

@@ -34,6 +34,7 @@ namespace LunaQuest.Tests
             SaveTests();
             DeterminismTests();
             MissionRunTests();
+            TerrainTests();
 
             Console.WriteLine(new string('-', 64));
             Console.WriteLine($"passed {_passed}, failed {_failed}");
@@ -47,6 +48,37 @@ namespace LunaQuest.Tests
         }
 
         // ---- tests -----------------------------------------------------------
+
+        private static void TerrainTests()
+        {
+            var t = new LunaQuest.Core.Terrain.LunarTerrain(7);
+            var t2 = new LunaQuest.Core.Terrain.LunarTerrain(7);
+            bool same = true, flat = true, bounded = true;
+            double maxH = double.MinValue, minH = double.MaxValue, maxStep = 0;
+            var slopes = new List<double>();
+            for (int i = -400; i <= 400; i += 7)
+            for (int j = -400; j <= 400; j += 7)
+            {
+                double h = t.Height(i, j);
+                if (h != t2.Height(i, j)) same = false;
+                double d = Math.Sqrt(i * (double)i + (j - 8.0) * (j - 8.0));
+                if (d < 88 && Math.Abs(h) > 1e-9) flat = false;
+                if (double.IsNaN(h) || Math.Abs(h) > 80) bounded = false;
+                maxH = Math.Max(maxH, h); minH = Math.Min(minH, h);
+                maxStep = Math.Max(maxStep, Math.Abs(t.Height(i + 0.5, j) - h));
+                if (d > 100) slopes.Add(t.SlopeDegrees(i, j));
+            }
+            Check("terrain is deterministic for a seed", same);
+            Check("terrain is exactly flat under the colony", flat);
+            Check("terrain stays finite and inside +/-80 m", bounded, $"range {minH:0.0}..{maxH:0.0}");
+            Check("terrain has real relief outside the pad", maxH - minH > 10.0, $"range {maxH - minH:0.0} m");
+            Check("terrain is continuous at 0.5 m", maxStep < 3.0, $"max step {maxStep:0.00} m");
+            slopes.Sort();
+            double p99 = slopes[(int)(slopes.Count * 0.99)];
+            Check("99% of terrain is walkable (slope < 32 deg)", p99 < 32.0, $"p99 {p99:0.0} deg");
+            var other = new LunaQuest.Core.Terrain.LunarTerrain(99);
+            Check("different sites have different ground", Math.Abs(other.Height(300, 300) - t.Height(300, 300)) > 1e-6);
+        }
 
         private static void ContentTests()
         {

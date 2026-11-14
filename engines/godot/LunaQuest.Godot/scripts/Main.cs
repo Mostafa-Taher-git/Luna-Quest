@@ -85,6 +85,7 @@ namespace LunaQuest.Godot
             bool firstPerson = false;
             bool voiceCheck = false;
             bool voiceDemo = false;
+            bool cinematic = false;
             string? testDialogueNpc = null;
             Vector3? spawn = null;
             float? lookYaw = null, lookPitch = null;
@@ -97,6 +98,7 @@ namespace LunaQuest.Godot
                 else if (arg == "--first-person") firstPerson = true;
                 else if (arg == "--voice-check") voiceCheck = true;
                 else if (arg == "--voice-demo") voiceDemo = true;
+                else if (arg == "--cinematic") cinematic = true;
                 else if (arg.StartsWith("--spawn=", StringComparison.Ordinal))
                 {
                     var parts = arg.Substring("--spawn=".Length).Split(',');
@@ -136,7 +138,15 @@ namespace LunaQuest.Godot
             if (portrait) CallDeferred(nameof(Portrait));
             if (voiceCheck) CallDeferred(nameof(VoicePackCheck));
             if (voiceDemo) CallDeferred(nameof(VoiceDemo));
+            if (cinematic) CallDeferred(nameof(StartCinematic));
             if (!string.IsNullOrEmpty(testDialogueNpc)) CallDeferred(nameof(TestDialogue), testDialogueNpc);
+        }
+
+        private void StartCinematic()
+        {
+            var cine = new Cinematic { Name = "Cinematic" };
+            AddChild(cine);
+            cine.Begin(this);
         }
 
         private void TestDialogue(string npcId)
