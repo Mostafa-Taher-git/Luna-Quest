@@ -2,7 +2,11 @@ name: Deploy web build
 
 # Publishes both editions to GitHub Pages: the Three.js build at the root, and the Godot
 # GDScript web export at /godot/. One link, two engines, no download and no install.
-# Requires Settings → Pages → Source: "GitHub Actions".
+#
+# Pages has to be switched on once, by the repository owner: Settings → Pages → Source:
+# "GitHub Actions". Until then this workflow builds and checks everything and then stops with a
+# notice, instead of failing in configure-pages and painting main red for a setting nobody has
+# touched yet. The moment Pages is on, the same run publishes with no other change.
 
 on:
   push:
@@ -21,6 +25,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages: ${{ steps.pages.outputs.enabled }}
     defaults:
       run:
         working-directory: web
@@ -74,13 +80,30 @@ jobs:
               fs.writeFileSync(file, html);
             }
           '
+      - name: Is Pages enabled for this repository?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Pages is on: this run will publish."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Pages is not enabled::The site was built and is in the run artifact, but nothing was published. Turn it on with Settings → Pages → Source: GitHub Actions."
+          fi
+
       - uses: actions/configure-pages@v5
+        if: steps.pages.outputs.enabled == 'true'
+
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outputs.enabled == 'true'
         with:
           path: web/dist
 
   deploy:
     needs: build
+    if: needs.build.outputs.pages == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
