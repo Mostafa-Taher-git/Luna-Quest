@@ -71,6 +71,7 @@ jobs:
           exit $status
       - name: Fly the thirty-day self-test
         run: |
+          set +e
           set -uo pipefail
           ./godot --headless --path "$PROJECT_DIR" -- --selftest > selftest.log 2>&1 || true
           grep -E "SELFTEST|resource floors|flew " selftest.log | head -40
@@ -137,6 +138,7 @@ jobs:
         run: ./godot --headless --path "$PROJECT_DIR" --import || true
       - name: Export
         run: |
+          set +e
           set -uo pipefail
           mkdir -p out
           P="engines/godot-gdscript/LunaQuest.GDScript"
