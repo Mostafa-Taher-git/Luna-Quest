@@ -146,7 +146,7 @@ namespace LunaQuest.Godot
             var spacer = new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
             row.AddChild(spacer);
 
-            _sector = Txt(new Label(), "SHACKLETON RIM · 89.9° S · 9 CREW", "حافة شاكلتون · ٨٩.٩° ج · ٩ أفراد");
+            _sector = Txt(new Label(), "SHACKLETON RIM · 89.9° S · 7 CREW + NEXO", "حافة شاكلتون · ٨٩.٩° ج · ٧ أفراد + نيكسو");
             _sector.AddThemeFontSizeOverride("font_size", 12);
             _sector.Modulate = new Color(0.5f, 0.66f, 0.8f);
             row.AddChild(_sector);
@@ -631,8 +631,8 @@ namespace LunaQuest.Godot
                 HorizontalAlignment = HorizontalAlignment.Center,
                 AutowrapMode = TextServer.AutowrapMode.WordSmart,
             },
-                "The Living Moon Colony · Shackleton Rim\n30 Earth days · nine crew · every kilogram counted",
-                "المستعمرة القمرية الحية · حافة شاكلتون\n30 يومًا أرضيًا · تسعة أفراد · كل كيلوغرام محسوب");
+                "The Living Moon Colony · Shackleton Rim\n30 Earth days · six crew, a commander and NEXO · every kilogram counted",
+                "المستعمرة القمرية الحية · حافة شاكلتون\n30 يومًا أرضيًا · ستة أفراد وقائد ونيكسو · كل كيلوغرام محسوب");
             _startSub.AddThemeFontSizeOverride("font_size", 15);
             _startSub.Modulate = new Color(0.6f, 0.75f, 0.9f);
             col.AddChild(_startSub);

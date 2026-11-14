@@ -33,8 +33,8 @@
       "id": "obj_water_filter",
       "titleEn": "Recycling is a rate, not a tank",
       "titleAr": "التدوير معدل، لا خزان",
-      "bodyEn": "At 93% recovery, nine crew still lose water every day. Watch filter health, because that is where the loss hides.",
-      "bodyAr": "عند استعادة 93%، يفقد تسعة أفراد ماءً كل يوم. راقب صحة الفلتر، فهناك يختفي الفقد.",
+      "bodyEn": "At 93% recovery, seven people still lose water every day. Watch filter health, because that is where the loss hides.",
+      "bodyAr": "عند استعادة 93%، يفقد سبعة أفراد ماءً كل يوم. راقب صحة الفلتر، فهناك يختفي الفقد.",
       "skill": "chemistry", "evidenceClass": "B",
       "source": "CSA — living in space, ISS water recovery; NASA OSDR life-support context"
     },

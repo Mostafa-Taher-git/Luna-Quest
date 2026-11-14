@@ -60,6 +60,10 @@ namespace LunaQuest.Core.Sim
         {
             Content = content;
             Npcs = new NpcDirector(content);
+            // The commander plus every human crew member breathes and eats; NEXO does not.
+            int humans = 0;
+            foreach (var n in content.Npcs) if (!n.IsRobot) humans++;
+            if (content.Npcs.Count > 0) State.CrewCount = 1 + humans;
             Incidents = new IncidentDirector(content.Incidents);
             Learning = new LearningDirector(content);
         }
@@ -129,7 +133,12 @@ namespace LunaQuest.Core.Sim
         {
             double fatigue = 0.0;
             int n = 0;
-            foreach (var st in Npcs.States.Values) { fatigue += st.Fatigue; n++; }
+            foreach (var st in Npcs.States.Values)
+            {
+                var prof = Content.Npc(st.Id);
+                if (prof != null && prof.IsRobot) continue;
+                fatigue += st.Fatigue; n++;
+            }
             if (n > 0) State.AverageFatigue = fatigue / n;
 
             // Cold and stale air wear the crew down; this is how a failing system becomes a
@@ -189,7 +198,7 @@ namespace LunaQuest.Core.Sim
                     "رابط الأرض يفقد الحزم",
                     "The antenna is fine. The relay alignment drifted. Fix it before the next data window.",
                     "الهوائي سليم. محاذاة المرحل انحرفت. أصلحها قبل نافذة البيانات التالية.",
-                    Clock.TotalMinutes, "npc_comms_software_engineer", "comms_tower"));
+                    Clock.TotalMinutes, "npc_nexo", "comms_tower"));
             });
 
             Beat("dust_storm", 18, 5.0, events, () =>
@@ -212,7 +221,7 @@ namespace LunaQuest.Core.Sim
                     "دفعة محاصيل تحت ضغط",
                     "Change one variable, then wait. Do not chase the reading.",
                     "غيّر متغيرًا واحدًا ثم انتظر. لا تطارد القراءة.",
-                    Clock.TotalMinutes, "npc_agriculture_engineer", "greenhouse"));
+                    Clock.TotalMinutes, "npc_nexo", "greenhouse"));
             });
 
             Beat("filter_clog", 24, 7.0, events, () =>
@@ -334,13 +343,13 @@ namespace LunaQuest.Core.Sim
                 "Greenhouse crop ready", "المحصول جاهز",
                 "Harvest it in the grow pod; fresh food restores morale and kcal.",
                 "احصدها في وحدة النمو؛ الغذاء الطازج يعيد الروح المعنوية والسعرات.",
-                "npc_agriculture_engineer", "greenhouse");
+                "npc_nexo", "greenhouse");
 
             Notice(events, "signal_weak", State.SignalQuality < 0.45, 360, SimEventKind.Info,
                 "Earth link degraded", "رابط الأرض ضعيف",
                 "Dust on the antenna or relay wear. Clean the sensors and check the relay.",
                 "غبار على الهوائي أو تآكل المرحل. نظّف الحساسات وافحص المرحل.",
-                "npc_comms_software_engineer", "communications_tower");
+                "npc_nexo", "communications_tower");
 
             Notice(events, "airlock_dust", State.AirlockDust > 0.5, 480, SimEventKind.Info,
                 "Airlock dust is high", "غبار الأيرلوك مرتفع",

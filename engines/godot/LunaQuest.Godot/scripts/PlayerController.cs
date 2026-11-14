@@ -65,7 +65,7 @@ namespace LunaQuest.Godot
                 Name = "CameraArm",
                 SpringLength = 3.9f,
                 Margin = 0.25f,
-                CollisionMask = 1 | 4 | 8,
+                CollisionMask = 1 | 4,
                 Position = new Vector3(0, 1.45f, 0),
             };
             _arm.AddToGroup("camera_arm");

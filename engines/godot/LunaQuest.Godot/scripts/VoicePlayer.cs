@@ -27,10 +27,9 @@ namespace LunaQuest.Godot
             ["npc_safaa"] = "safaa",
             ["npc_nour"] = "noor",
             ["npc_alaa"] = "alaa",
-            ["npc_agriculture_engineer"] = "agri",
             ["npc_abdelaziz"] = "aziz",
             ["npc_ahmed"] = "ahmed",
-            ["npc_comms_software_engineer"] = "comms",
+            ["npc_nexo"] = "nexo",
             ["npc_mostafa"] = "mostafa",
         };
 
@@ -64,7 +63,7 @@ namespace LunaQuest.Godot
             // A greeting is a direct answer to the player and always plays. Ambient barks
             // keep their cooldown so the colony does not chatter over itself.
             if (_barkCooldown > 0 && !greeting) return;
-            string prefix = PrefixOf.TryGetValue(profile.Id, out var p) ? p : "agri";
+            string prefix = PrefixOf.TryGetValue(profile.Id, out var p) ? p : "nexo";
             int idx = (int)(GD.Randi() % 4u);
             string key = greeting ? $"crew.{prefix}.greet" : $"bark.{prefix}.{idx}";
             string fallback = FallbackLine(profile);

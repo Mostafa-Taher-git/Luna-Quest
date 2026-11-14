@@ -20,10 +20,9 @@ namespace LunaQuest.Unity
             ["npc_safaa"] = "safaa",
             ["npc_nour"] = "noor",
             ["npc_alaa"] = "alaa",
-            ["npc_agriculture_engineer"] = "agri",
             ["npc_abdelaziz"] = "aziz",
             ["npc_ahmed"] = "ahmed",
-            ["npc_comms_software_engineer"] = "comms",
+            ["npc_nexo"] = "nexo",
             ["npc_mostafa"] = "mostafa",
         };
 
@@ -54,7 +53,7 @@ namespace LunaQuest.Unity
         public void Speak(NpcProfile profile, bool greeting)
         {
             if (_game == null || profile == null || Time.unscaledTimeAsDouble < _nextBark) return;
-            string prefix = PrefixOf.TryGetValue(profile.Id, out string p) ? p : "agri";
+            string prefix = PrefixOf.TryGetValue(profile.Id, out string p) ? p : "nexo";
             int index = UnityEngine.Random.Range(0, 4);
             string key = greeting ? $"crew.{prefix}.greet" : $"bark.{prefix}.{index}";
             string fallback = _game.Sim.Arabic

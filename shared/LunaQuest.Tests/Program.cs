@@ -85,7 +85,11 @@ namespace LunaQuest.Tests
             var db = ContentDatabase.LoadFromDirectory(_contentDir);
 
             Check("16 buildings load", db.Buildings.Count == 16, $"got {db.Buildings.Count}");
-            Check("8 NPCs load", db.Npcs.Count == 8, $"got {db.Npcs.Count}");
+            Check("6 crew + NEXO load", db.Npcs.Count == 7, $"got {db.Npcs.Count}");
+            Check("exactly one robot", db.Npcs.FindAll(n => n.IsRobot).Count == 1);
+            foreach (var want in new[] { "Dr. Safaa", "Noor", "Dr. Alaa", "Abdulaziz", "Ahmed", "Mostafa", "NEXO" })
+                Check("crew member " + want, db.Npcs.Exists(n => n.NameEn == want));
+            Check("no unnamed crew", !db.Npcs.Exists(n => n.NamePending));
             Check("15 incidents load", db.Incidents.Count == 15, $"got {db.Incidents.Count}");
             Check("9 crops load", db.Crops.Count == 9, $"got {db.Crops.Count}");
             Check("11 learning objectives load", db.Learning.Count == 11, $"got {db.Learning.Count}");
@@ -146,7 +150,7 @@ namespace LunaQuest.Tests
         {
             var sim = NewSim();
             Check("mission starts at day 1", sim.Clock.Day == 1, $"{sim.Clock.Day}");
-            Check("nine crew", sim.State.CrewCount == 9, $"{sim.State.CrewCount}");
+            Check("seven people breathe", sim.State.CrewCount == 7, $"{sim.State.CrewCount}");
             Check("starting battery inside bounds", InRange(sim.State.BatteryKwh, 0, sim.State.BatteryCapacityKwh));
 
             double water0 = sim.State.WaterL;

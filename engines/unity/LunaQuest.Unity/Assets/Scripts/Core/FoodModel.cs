@@ -4,7 +4,7 @@ using LunaQuest.Core.Time;
 namespace LunaQuest.Core.Sim
 {
     /// <summary>
-    /// Food is a consumable, not a score. Nine crew at roughly 2,800 kcal each need about
+    /// Food is a consumable, not a score. Seven people at roughly 2,800 kcal each need about
     /// 25,200 kcal per Earth day, which is why stored food carries the mission and the
     /// greenhouse is a fresh-food supplement rather than a full diet.
     /// </summary>

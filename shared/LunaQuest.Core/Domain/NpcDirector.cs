@@ -5,7 +5,7 @@ using LunaQuest.Core.Time;
 namespace LunaQuest.Core.Domain
 {
     /// <summary>
-    /// Drives the eight human crew members from data, not scripts. They follow schedules whether
+    /// Drives the six human crew members and NEXO, the colony robot, from data, not scripts. They follow schedules whether
     /// or not the player is watching, and they only know their own professional scope.
     /// </summary>
     public sealed class NpcDirector
@@ -59,7 +59,7 @@ namespace LunaQuest.Core.Domain
                             || entry.ActivityEn.IndexOf("sleep", StringComparison.OrdinalIgnoreCase) >= 0;
                 double dtHours = GameClock.MinutesPerSecond / 60.0;
                 double ratePerHour = resting ? -0.035 : 0.030;
-                st.Fatigue = Clamp(st.Fatigue + ratePerHour * dtHours, 0.0, 1.0);
+                st.Fatigue = profile.IsRobot ? 0.0 : Clamp(st.Fatigue + ratePerHour * dtHours, 0.0, 1.0);
             }
         }
 
@@ -86,7 +86,7 @@ namespace LunaQuest.Core.Domain
                     ? "القراءة غير طبيعية. لا تصلحها قبل أن تعرف سببها."
                     : "That reading is off. Don't fix it before you know why.";
 
-            if (st.Fatigue > 0.7)
+            if (st.Fatigue > 0.7 && !p.IsRobot)
                 return arabic
                     ? "أنا متعب. هل يمكننا إعادة ترتيب المناوبة؟"
                     : "I'm running tired. Can we rebalance the shift?";

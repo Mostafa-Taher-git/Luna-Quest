@@ -104,41 +104,6 @@
     "speaker": "npc_alaa",
     "model": "en_US-norman-medium"
   },
-  "crew.agri.greet": {
-    "file": "crew-agri-greet.mp3",
-    "text": "The leaves were fine yesterday. What did we change since yesterday?",
-    "textAr": "كانت الأوراق بخير أمس. ما الذي غيّرناه منذ أمس؟",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "bark.agri.0": {
-    "file": "bark-agri-0.mp3",
-    "text": "Light, water, nutrients. Change one, then wait.",
-    "textAr": "ضوء، ماء، مغذيات. غيّر واحدًا ثم انتظر.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "bark.agri.1": {
-    "file": "bark-agri-1.mp3",
-    "text": "The leaves are the honest instrument.",
-    "textAr": "الأوراق هي المقياس الصادق.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "bark.agri.2": {
-    "file": "bark-agri-2.mp3",
-    "text": "A sealed pod still needs a power budget.",
-    "textAr": "الوحدة المغلقة تحتاج أيضًا ميزانية طاقة.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "bark.agri.3": {
-    "file": "bark-agri-3.mp3",
-    "text": "Fresh food is morale you can weigh.",
-    "textAr": "الغذاء الطازج روح معنوية يمكن وزنها.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
   "crew.aziz.greet": {
     "file": "crew-aziz-greet.mp3",
     "text": "Every kilowatt here is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
@@ -209,41 +174,6 @@
     "speaker": "npc_ahmed",
     "model": "en_US-bryce-medium"
   },
-  "crew.comms.greet": {
-    "file": "crew-comms-greet.mp3",
-    "text": "Two systems disagree. One of them is lying, and it is usually the one we did not calibrate.",
-    "textAr": "نظامان يتناقضان. أحدهما يكذب، وغالبًا هو الذي لم نعايره.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "bark.comms.0": {
-    "file": "bark-comms-0.mp3",
-    "text": "Where did the data come from? That is the first question.",
-    "textAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "bark.comms.1": {
-    "file": "bark-comms-1.mp3",
-    "text": "A sensor fault can look exactly like a power fault.",
-    "textAr": "عطل الحساس قد يبدو تمامًا كعطل الطاقة.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "bark.comms.2": {
-    "file": "bark-comms-2.mp3",
-    "text": "Antenna dust, relay alignment, network path. In that order.",
-    "textAr": "غبار الهوائي، محاذاة المرحل، مسار الشبكة. بهذا الترتيب.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "bark.comms.3": {
-    "file": "bark-comms-3.mp3",
-    "text": "The link is quiet, not dead. Keep listening.",
-    "textAr": "الرابط هادئ، ليس ميتًا. واصل الاستماع.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
   "crew.mostafa.greet": {
     "file": "crew-mostafa-greet.mp3",
     "text": "A wall is a promise. First we weigh it, then we trust it.",
@@ -290,8 +220,7 @@
     "file": "inc-sensor-dust.mp3",
     "text": "One sensor disagrees with the others. Clean it, then we compare.",
     "textAr": "حساس واحد يخالف البقية. نظفه، ثم نقارن.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
+    "speaker": "npc_nexo"
   },
   "inc.inc_airlock_dust": {
     "file": "inc-airlock-dust.mp3",
@@ -339,15 +268,13 @@
     "file": "inc-crop-stress.mp3",
     "text": "The leaves are curling. Change one variable, log it, then wait one cycle.",
     "textAr": "الأوراق تتجعد. غيّر متغيرًا واحدًا، سجله، ثم انتظر دورة.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
+    "speaker": "npc_nexo"
   },
   "inc.inc_food_low": {
     "file": "inc-food-low.mp3",
     "text": "Food reserve is thin. Harvest what is ready and count the days.",
     "textAr": "احتياطي الغذاء ضعيف. احصد الجاهز وأحصِ الأيام.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
+    "speaker": "npc_nexo"
   },
   "inc.inc_radiation": {
     "file": "inc-radiation.mp3",
@@ -360,8 +287,7 @@
     "file": "inc-comms.mp3",
     "text": "Earth link is degraded. Check antenna dust, then relay alignment.",
     "textAr": "رابط الأرض ضعيف. افحص غبار الهوائي، ثم محاذاة المرحل.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
+    "speaker": "npc_nexo"
   },
   "inc.inc_fatigue": {
     "file": "inc-fatigue.mp3",
@@ -510,48 +436,6 @@
     "speaker": "npc_alaa",
     "model": "en_US-norman-medium"
   },
-  "talk.agri.light": {
-    "file": "talk-agri-light.mp3",
-    "text": "The pod is sealed, so the light comes from the colony bus. Two kilowatts is a real budget, not a free Sun.",
-    "textAr": "الوحدة مغلقة، لذا يأتي الضوء من شبكة المستعمرة. كيلوواطان ميزانية حقيقية، وليست شمسًا مجانية.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "talk.agri.crop_water": {
-    "file": "talk-agri-crop_water.mp3",
-    "text": "The plants drink from the same tank as the crew. Their condensate comes back, but not all of it.",
-    "textAr": "النباتات تشرب من الخزان نفسه الذي يشرب منه الطاقم. يتكثف بعض الماء ويعود، لكن ليس كله.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "talk.agri.nutrients": {
-    "file": "talk-agri-nutrients.mp3",
-    "text": "Change one variable at a time. If you change light and nutrients together, you learn nothing.",
-    "textAr": "غيّر متغيرًا واحدًا في كل مرة. إن غيّرت الضوء والمغذيات معًا فلن تتعلم شيئًا.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "talk.agri.stress": {
-    "file": "talk-agri-stress.mp3",
-    "text": "Curling leaves are a symptom. Check water, then light, then temperature, and write down the order.",
-    "textAr": "تجعّد الأوراق عَرَض. افحص الماء، ثم الضوء، ثم الحرارة، واكتب الترتيب.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "talk.agri.harvest": {
-    "file": "talk-agri-harvest.mp3",
-    "text": "Harvest what is ready, not what you hope will be ready. Fresh food is morale you can weigh.",
-    "textAr": "احصد ما هو جاهز، لا ما تأمل أن يكون جاهزًا. الغذاء الطازج روح معنوية يمكن وزنها.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
-  "talk.agri.variety": {
-    "file": "talk-agri-variety.mp3",
-    "text": "Yield is not the only goal. People eat with their eyes, and a varied plate keeps the crew working.",
-    "textAr": "المحصول ليس الهدف الوحيد. الناس يأكلون بعيونهم، والطبق المتنوّع يُبقي الطاقم يعمل.",
-    "speaker": "npc_agriculture_engineer",
-    "model": "en_US-kathleen-medium"
-  },
   "talk.aziz.reserve": {
     "file": "talk-aziz-reserve.mp3",
     "text": "Reserve is not spare power. Below the line, every kilowatt is a choice.",
@@ -636,48 +520,6 @@
     "speaker": "npc_ahmed",
     "model": "en_US-bryce-medium"
   },
-  "talk.comms.link": {
-    "file": "talk-comms-link.mp3",
-    "text": "The link can be quiet without being dead. Check the antenna, then the relay, then the path.",
-    "textAr": "الرابط قد يكون هادئًا دون أن يكون ميتًا. افحص الهوائي، ثم المرحل، ثم المسار.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "talk.comms.antenna": {
-    "file": "talk-comms-antenna.mp3",
-    "text": "Dust on the antenna looks like a software fault from the console. Clean it and compare.",
-    "textAr": "غبار الهوائي يبدو من الكونسول كعطل برمجي. نظفه وقارن.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "talk.comms.relay": {
-    "file": "talk-comms-relay.mp3",
-    "text": "A relay that drifts is worse than one that fails. It gives you numbers that almost agree.",
-    "textAr": "المرحل الذي ينحرف أسوأ من الذي يفشل. يعطيك أرقامًا تتفق تقريبًا.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "talk.comms.data": {
-    "file": "talk-comms-data.mp3",
-    "text": "Where did the data come from? That is the first question. A sensor fault can look exactly like a power fault.",
-    "textAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول. عطل الحساس قد يبدو تمامًا كعطل الطاقة.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "talk.comms.calibration": {
-    "file": "talk-comms-calibration.mp3",
-    "text": "If two systems disagree, calibrate the one you did not touch. It is usually the one that is lying.",
-    "textAr": "إن اختلف نظامان، عاير الذي لم تلمسه. غالبًا هو الذي يكذب.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
-  "talk.comms.earth": {
-    "file": "talk-comms-earth.mp3",
-    "text": "The delay is part of the conversation. We send the whole picture, not a guess, and we wait.",
-    "textAr": "التأخير جزء من المحادثة. نرسل الصورة كاملة، لا تخمينًا، ثم ننتظر.",
-    "speaker": "npc_comms_software_engineer",
-    "model": "en_GB-alba-medium"
-  },
   "talk.mostafa.material": {
     "file": "talk-mostafa-material.mp3",
     "text": "Regolith is cheap. A bad seal is not. We test the mix before we trust the wall.",
@@ -719,5 +561,83 @@
     "textAr": "تدريع الثرى يشتري خفض الجرعة والاستقرار الحراري. يشتري أيضًا كتلة، لذا نضعه حيث يفيد.",
     "speaker": "npc_mostafa",
     "model": "en_US-mike-medium"
+  },
+  "crew.nexo.greet": {
+    "file": "crew-nexo-greet.mp3",
+    "text": "Commander! Greenhouse nominal, relay nominal. I measured both. I did not guess.",
+    "textAr": "أيها القائد! الدفيئة سليمة والمرحل سليم. قستُ الاثنين ولم أخمّن.",
+    "speaker": "npc_nexo"
+  },
+  "bark.nexo.0": {
+    "file": "bark-nexo-0.mp3",
+    "text": "Greenhouse humidity sixty-two percent. Leaves are happy. I asked them.",
+    "textAr": "رطوبة الدفيئة اثنان وستون بالمئة. الأوراق سعيدة. سألتُها.",
+    "speaker": "npc_nexo"
+  },
+  "bark.nexo.1": {
+    "file": "bark-nexo-1.mp3",
+    "text": "Relay drift is zero point two degrees. Small numbers become big problems.",
+    "textAr": "انحراف المرحل اثنتان من عشرة درجة. الأرقام الصغيرة تصبح مشكلات كبيرة.",
+    "speaker": "npc_nexo"
+  },
+  "bark.nexo.2": {
+    "file": "bark-nexo-2.mp3",
+    "text": "Oxygen stays on. Science can wait. That is rule number one.",
+    "textAr": "الأكسجين يبقى يعمل. العلم يمكنه الانتظار. هذه القاعدة الأولى.",
+    "speaker": "npc_nexo"
+  },
+  "bark.nexo.3": {
+    "file": "bark-nexo-3.mp3",
+    "text": "Plan your power, Commander. Then face the day.",
+    "textAr": "خطّط لطاقتك أيها القائد. ثم واجه اليوم.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.light": {
+    "file": "talk-nexo-light.mp3",
+    "text": "The pod is sealed, so the light comes from the colony bus. Two kilowatts is a real budget, not a free Sun.",
+    "textAr": "الوحدة مغلقة، لذا يأتي الضوء من شبكة المستعمرة. كيلوواطان ميزانية حقيقية، وليست شمسًا مجانية.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.crop_water": {
+    "file": "talk-nexo-crop_water.mp3",
+    "text": "The plants drink from the same tank as the crew. Their condensate comes back, but not all of it.",
+    "textAr": "النباتات تشرب من الخزان نفسه الذي يشرب منه الطاقم. يتكثف بعض الماء ويعود، لكن ليس كله.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.stress": {
+    "file": "talk-nexo-stress.mp3",
+    "text": "Curling leaves are a symptom. Check water, then light, then temperature, and write down the order.",
+    "textAr": "تجعّد الأوراق عَرَض. افحص الماء، ثم الضوء، ثم الحرارة، واكتب الترتيب.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.harvest": {
+    "file": "talk-nexo-harvest.mp3",
+    "text": "Harvest what is ready, not what you hope will be ready. Fresh food is morale you can weigh.",
+    "textAr": "احصد ما هو جاهز، لا ما تأمل أن يكون جاهزًا. الغذاء الطازج روح معنوية يمكن وزنها.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.link": {
+    "file": "talk-nexo-link.mp3",
+    "text": "The link can be quiet without being dead. Check the antenna, then the relay, then the path.",
+    "textAr": "الرابط قد يكون هادئًا دون أن يكون ميتًا. افحص الهوائي، ثم المرحل، ثم المسار.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.antenna": {
+    "file": "talk-nexo-antenna.mp3",
+    "text": "Dust on the antenna looks like a software fault from the console. Clean it and compare.",
+    "textAr": "غبار الهوائي يبدو من الكونسول كعطل برمجي. نظفه وقارن.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.data": {
+    "file": "talk-nexo-data.mp3",
+    "text": "Where did the data come from? That is the first question. A sensor fault can look exactly like a power fault.",
+    "textAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول. عطل الحساس قد يبدو تمامًا كعطل الطاقة.",
+    "speaker": "npc_nexo"
+  },
+  "talk.nexo.earth": {
+    "file": "talk-nexo-earth.mp3",
+    "text": "The delay is part of the conversation. We send the whole picture, not a guess, and we wait.",
+    "textAr": "التأخير جزء من المحادثة. نرسل الصورة كاملة، لا تخمينًا، ثم ننتظر.",
+    "speaker": "npc_nexo"
   }
 }

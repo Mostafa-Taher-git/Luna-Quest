@@ -47,8 +47,8 @@ namespace LunaQuest.Core.Sim
         public double AirlockDust = 0.05;
 
         // ---- Food (kcal, kg) -------------------------------------------------
-        public double FoodKcal = 620000.0;        // ~30 crew-days of stored food (9 crew)
-        public double FoodCapacityKcal = 780000.0;
+        public double FoodKcal = 482000.0;        // ~24.6 days of stored food for 7 people
+        public double FoodCapacityKcal = 607000.0;
         public double FoodShortageDays;
         public bool FoodShortage;
         public double CropWaterStress;
@@ -72,7 +72,7 @@ namespace LunaQuest.Core.Sim
         public double RelayHealth = 1.0;
 
         // ---- Crew ------------------------------------------------------------
-        public int CrewCount = 9;                 // player + 8 NPCs
+        public int CrewCount = 7;                 // commander + 6 crew (NEXO does not breathe)
         public double AverageFatigue;             // 0..1
         public double AverageMorale = 0.8;        // 0..1
         public double SuitEnergy = 1.0;           // player suit, 0..1

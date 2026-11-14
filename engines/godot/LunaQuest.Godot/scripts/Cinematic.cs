@@ -151,12 +151,12 @@ namespace LunaQuest.Godot
             root.AddChild(shade);
             Add(root, 1.2, 7.0, Caption("SHACKLETON RIM  ·  89.9° S", "Lunar south pole  ·  the Sun never rises more than 2° above the horizon"));
             Add(root, 7.6, 14.2, Caption("LOW SUN. LONG SHADOWS.", "No atmosphere  ·  no weather  ·  no second chances"));
-            Add(root, 16.0, 24.4, Big("9 CREW", "ONE SHARED COLONY", false));
+            Add(root, 16.0, 24.4, Big("7 PEOPLE  ·  1 ROBOT", "ONE SHARED COLONY", false));
             Add(root, 26.0, 30.0, Stat("0.84 kg", "oxygen per person, per day"));
             Add(root, 30.4, 33.0, Stat("11 L", "water per person, per day"));
             Add(root, 33.6, 37.4, Stat("2,800 kcal", "food per person, per day"));
             Add(root, 37.8, 41.0, Stat("30 kW", "peak solar power  ·  the Sun sets the budget"));
-            Add(root, 42.0, 50.0, Big("30 EARTH DAYS", "EIGHT CREW  ·  ONE COMMANDER", false));
+            Add(root, 42.0, 50.0, Big("30 EARTH DAYS", "SIX CREW  ·  ONE COMMANDER", false));
             Add(root, 51.0, 54.3, Stat("DUST", "on the arrays: output falls, the battery pays"));
             Add(root, 54.7, 57.8, Stat("DRIFT", "in the sensors: the reading lies"));
             Add(root, 58.2, 61.6, Stat("STORM", "solar particles: shelter, or take the dose"));

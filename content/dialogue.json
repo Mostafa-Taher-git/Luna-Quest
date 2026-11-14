@@ -56,7 +56,6 @@
       "lineEn": "I can explain spaceflight health, but this is not medical advice for you or a real crew. A real symptom belongs with a real clinician.",
       "lineAr": "أستطيع شرح صحة الطيران الفضائي، لكن هذه ليست نصيحة طبية لك أو لطاقم حقيقي. العَرَض الحقيقي مكانه عند طبيب حقيقي."
     },
-
     {
       "npcId": "npc_nour",
       "id": "airflow",
@@ -111,7 +110,6 @@
       "lineEn": "Life support never sheds. The greenhouse and the lab go first; the air and water stay on.",
       "lineAr": "دعم الحياة لا يُفصل أبدًا. البيت الزجاجي والمختبر أولًا؛ الهواء والماء يبقيان."
     },
-
     {
       "npcId": "npc_alaa",
       "id": "ice",
@@ -166,62 +164,42 @@
       "lineEn": "We call it a resource only when the volume, the access and the processing cost all make sense.",
       "lineAr": "نسميه موردًا فقط عندما يكون الحجم والوصول وتكلفة المعالجة كلها منطقية."
     },
-
     {
-      "npcId": "npc_agriculture_engineer",
+      "npcId": "npc_nexo",
       "id": "light",
-      "voiceKey": "talk.agri.light",
+      "voiceKey": "talk.nexo.light",
       "labelEn": "Grow lights",
       "labelAr": "أضواء النمو",
       "lineEn": "The pod is sealed, so the light comes from the colony bus. Two kilowatts is a real budget, not a free Sun.",
       "lineAr": "الوحدة مغلقة، لذا يأتي الضوء من شبكة المستعمرة. كيلوواطان ميزانية حقيقية، وليست شمسًا مجانية."
     },
     {
-      "npcId": "npc_agriculture_engineer",
+      "npcId": "npc_nexo",
       "id": "crop_water",
-      "voiceKey": "talk.agri.crop_water",
+      "voiceKey": "talk.nexo.crop_water",
       "labelEn": "Crop water",
       "labelAr": "ماء المحصول",
       "lineEn": "The plants drink from the same tank as the crew. Their condensate comes back, but not all of it.",
       "lineAr": "النباتات تشرب من الخزان نفسه الذي يشرب منه الطاقم. يتكثف بعض الماء ويعود، لكن ليس كله."
     },
     {
-      "npcId": "npc_agriculture_engineer",
-      "id": "nutrients",
-      "voiceKey": "talk.agri.nutrients",
-      "labelEn": "Nutrients",
-      "labelAr": "المغذيات",
-      "lineEn": "Change one variable at a time. If you change light and nutrients together, you learn nothing.",
-      "lineAr": "غيّر متغيرًا واحدًا في كل مرة. إن غيّرت الضوء والمغذيات معًا فلن تتعلم شيئًا."
-    },
-    {
-      "npcId": "npc_agriculture_engineer",
+      "npcId": "npc_nexo",
       "id": "stress",
-      "voiceKey": "talk.agri.stress",
+      "voiceKey": "talk.nexo.stress",
       "labelEn": "Stressed leaves",
       "labelAr": "الأوراق المتجعدة",
       "lineEn": "Curling leaves are a symptom. Check water, then light, then temperature, and write down the order.",
       "lineAr": "تجعّد الأوراق عَرَض. افحص الماء، ثم الضوء، ثم الحرارة، واكتب الترتيب."
     },
     {
-      "npcId": "npc_agriculture_engineer",
+      "npcId": "npc_nexo",
       "id": "harvest",
-      "voiceKey": "talk.agri.harvest",
+      "voiceKey": "talk.nexo.harvest",
       "labelEn": "Harvest",
       "labelAr": "الحصاد",
       "lineEn": "Harvest what is ready, not what you hope will be ready. Fresh food is morale you can weigh.",
       "lineAr": "احصد ما هو جاهز، لا ما تأمل أن يكون جاهزًا. الغذاء الطازج روح معنوية يمكن وزنها."
     },
-    {
-      "npcId": "npc_agriculture_engineer",
-      "id": "variety",
-      "voiceKey": "talk.agri.variety",
-      "labelEn": "Dietary variety",
-      "labelAr": "تنوّع الغذاء",
-      "lineEn": "Yield is not the only goal. People eat with their eyes, and a varied plate keeps the crew working.",
-      "lineAr": "المحصول ليس الهدف الوحيد. الناس يأكلون بعيونهم، والطبق المتنوّع يُبقي الطاقم يعمل."
-    },
-
     {
       "npcId": "npc_abdelaziz",
       "id": "reserve",
@@ -276,7 +254,6 @@
       "lineEn": "Every kilowatt is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
       "lineAr": "كل كيلوواط مُستعار من الشمس ويُسدَّد ليلًا. أنفقه مرتين ونخسرهما معًا."
     },
-
     {
       "npcId": "npc_ahmed",
       "id": "signal",
@@ -331,62 +308,42 @@
       "lineEn": "The rover is not a hero. It has a power budget, a thermal limit and a driver who needs sleep.",
       "lineAr": "الروفر ليس بطلًا. لديه ميزانية طاقة وحد حراري وسائق يحتاج إلى النوم."
     },
-
     {
-      "npcId": "npc_comms_software_engineer",
+      "npcId": "npc_nexo",
       "id": "link",
-      "voiceKey": "talk.comms.link",
+      "voiceKey": "talk.nexo.link",
       "labelEn": "Earth link",
       "labelAr": "رابط الأرض",
       "lineEn": "The link can be quiet without being dead. Check the antenna, then the relay, then the path.",
       "lineAr": "الرابط قد يكون هادئًا دون أن يكون ميتًا. افحص الهوائي، ثم المرحل، ثم المسار."
     },
     {
-      "npcId": "npc_comms_software_engineer",
+      "npcId": "npc_nexo",
       "id": "antenna",
-      "voiceKey": "talk.comms.antenna",
+      "voiceKey": "talk.nexo.antenna",
       "labelEn": "Antenna dust",
       "labelAr": "غبار الهوائي",
       "lineEn": "Dust on the antenna looks like a software fault from the console. Clean it and compare.",
       "lineAr": "غبار الهوائي يبدو من الكونسول كعطل برمجي. نظفه وقارن."
     },
     {
-      "npcId": "npc_comms_software_engineer",
-      "id": "relay",
-      "voiceKey": "talk.comms.relay",
-      "labelEn": "Relay health",
-      "labelAr": "صحة المرحل",
-      "lineEn": "A relay that drifts is worse than one that fails. It gives you numbers that almost agree.",
-      "lineAr": "المرحل الذي ينحرف أسوأ من الذي يفشل. يعطيك أرقامًا تتفق تقريبًا."
-    },
-    {
-      "npcId": "npc_comms_software_engineer",
+      "npcId": "npc_nexo",
       "id": "data",
-      "voiceKey": "talk.comms.data",
+      "voiceKey": "talk.nexo.data",
       "labelEn": "Where the data came from",
       "labelAr": "من أين جاءت البيانات",
       "lineEn": "Where did the data come from? That is the first question. A sensor fault can look exactly like a power fault.",
       "lineAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول. عطل الحساس قد يبدو تمامًا كعطل الطاقة."
     },
     {
-      "npcId": "npc_comms_software_engineer",
-      "id": "calibration",
-      "voiceKey": "talk.comms.calibration",
-      "labelEn": "Calibration",
-      "labelAr": "المعايرة",
-      "lineEn": "If two systems disagree, calibrate the one you did not touch. It is usually the one that is lying.",
-      "lineAr": "إن اختلف نظامان، عاير الذي لم تلمسه. غالبًا هو الذي يكذب."
-    },
-    {
-      "npcId": "npc_comms_software_engineer",
+      "npcId": "npc_nexo",
       "id": "earth",
-      "voiceKey": "talk.comms.earth",
+      "voiceKey": "talk.nexo.earth",
       "labelEn": "Talking to Earth",
       "labelAr": "التحدث إلى الأرض",
       "lineEn": "The delay is part of the conversation. We send the whole picture, not a guess, and we wait.",
       "lineAr": "التأخير جزء من المحادثة. نرسل الصورة كاملة، لا تخمينًا، ثم ننتظر."
     },
-
     {
       "npcId": "npc_mostafa",
       "id": "material",

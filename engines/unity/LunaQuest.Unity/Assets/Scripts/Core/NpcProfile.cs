@@ -26,6 +26,8 @@ namespace LunaQuest.Core.Domain
         public string ResponsibilitiesAr = "";
         public string LocationId = "";
         public string NameStatus = "approved";
+        /// <summary>NEXO, the colony robot: no air, food, water or fatigue.</summary>
+        public bool IsRobot;
         public List<string> Skills = new List<string>();
         public List<string> Traits = new List<string>();
         public List<ScheduleEntry> Schedule = new List<ScheduleEntry>();

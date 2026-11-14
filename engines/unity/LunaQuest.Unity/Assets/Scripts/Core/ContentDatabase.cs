@@ -182,6 +182,7 @@ namespace LunaQuest.Core.Content
                     ResponsibilitiesAr = Json.Str(o["responsibilitiesAr"]),
                     LocationId = Json.Str(o["locationId"]),
                     NameStatus = Json.Str(o["nameStatus"], "approved"),
+                    IsRobot = o.ContainsKey("isRobot") && Json.Bool(o["isRobot"]),
                     StorySeedEn = Json.Str(o["storySeedEn"]),
                     StorySeedAr = Json.Str(o["storySeedAr"]),
                     BoundaryEn = Json.Str(o["boundaryEn"]),

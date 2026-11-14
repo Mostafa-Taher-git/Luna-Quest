@@ -18,6 +18,7 @@ namespace LunaQuest.Godot
         public readonly Dictionary<string, Vector3> DoorWorld = new Dictionary<string, Vector3>();
         public readonly Dictionary<string, Vector3> InsideWorld = new Dictionary<string, Vector3>();
         public readonly List<NpcAgent> Npcs = new List<NpcAgent>();
+        public RobotCompanion? Robot { get; private set; }
 
         private Main _main = null!;
         private ColonySimulation _sim = null!;
@@ -57,6 +58,7 @@ namespace LunaQuest.Godot
             BuildCommsMast(sim.Content.Building("comms_tower"));
             BuildRover(sim.Content.Building("garage"));
             BuildKitDressing();
+            BuildNavigation();
             SpawnNpcs(sim);
         }
 
@@ -859,6 +861,12 @@ namespace LunaQuest.Godot
             AddChild(_npcRoot);
             foreach (var profile in sim.Content.Npcs)
             {
+                if (profile.IsRobot)
+                {
+                    Robot = new RobotCompanion { Profile = profile, World = this };
+                    _npcRoot.AddChild(Robot);
+                    continue;
+                }
                 var agent = new NpcAgent { Profile = profile, World = this };
                 _npcRoot.AddChild(agent);
                 Npcs.Add(agent);

@@ -14,6 +14,8 @@ namespace LunaQuest.Godot
         public string PromptAr = "";
         public string Kind = "read";
         public string NpcId = "";
+        /// <summary>Focus sphere radius; small for NEXO so it does not steal the crosshair.</summary>
+        public float Radius = 1.7f;
         public Label3D? Label;
         public MeshInstance3D? Screen;
 
@@ -28,7 +30,7 @@ namespace LunaQuest.Godot
             AddToGroup("interactable");
 
             var shape = new CollisionShape3D();
-            shape.Shape = new SphereShape3D { Radius = 1.7f };
+            shape.Shape = new SphereShape3D { Radius = Radius };
             AddChild(shape);
         }
 
