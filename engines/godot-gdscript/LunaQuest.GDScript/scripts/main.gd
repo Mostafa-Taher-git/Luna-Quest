@@ -86,7 +86,7 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--audit"):
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-		var passed := LQAudit.new().run(get_tree(), world, player, crew)
+		var passed := LQAudit.new().run(get_tree(), world, player, crew, hud, sim)
 		get_tree().quit(0 if passed else 1)
 		return
 

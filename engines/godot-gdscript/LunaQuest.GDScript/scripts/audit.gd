@@ -29,10 +29,13 @@ func ray(from: Vector3, to: Vector3, exclude: Array = []) -> Dictionary:
 	return space.intersect_ray(query)
 
 
-func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew) -> bool:
+func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew,
+		hud: LunaHud, sim: LQSim) -> bool:
 	space = world.get_world_3d().direct_space_state
 	print("Luna-Quest (GDScript) scene audit")
 	_check_spawn(player)
+	_check_view(player, world)
+	_check_interface(hud, sim)
 	_check_doors(world)
 	_check_consoles(world)
 	_check_crew(world, crew)
@@ -65,6 +68,63 @@ func _check_spawn(player: ColonyPlayer) -> void:
 	params.exclude = [player.get_rid()]
 	var overlap := space.intersect_shape(params, 4)
 	expect(overlap.is_empty(), "spawn: the commander starts inside %d colliders" % overlap.size())
+
+
+## The opening frame: standing at the spawn, looking where the commander faces, there has to be
+## colony in front of you rather than a wall half a metre away.
+func _check_view(player: ColonyPlayer, world: ColonyWorld) -> void:
+	var eye: Vector3 = player.global_position + Vector3(0, 1.66, 0)
+	var forward: Vector3 = -player.global_transform.basis.z.normalized()
+	var ahead := ray(eye, eye + forward * 14.0, [player.get_rid()])
+	var distance := 14.0
+	if not ahead.is_empty():
+		distance = eye.distance_to(ahead["position"])
+	expect(distance > 8.0, "view: the spawn looks into something %.1f m away" % distance)
+
+	# And the light is where the clock says it should be: a Sun above the horizon, not below it.
+	if world.sun != null:
+		var travel: Vector3 = -world.sun.global_transform.basis.z.normalized()
+		expect(travel.y < -0.05, "light: the Sun is not shining down onto the colony")
+		expect(world.sun.light_energy > 0.5, "light: the Sun is too dim to see by")
+
+
+## The interface has to exist and survive the two screens a whole session passes through.
+func _check_interface(hud: LunaHud, sim: LQSim) -> void:
+	expect(hud != null, "hud: no interface")
+	if hud == null:
+		return
+	expect(hud.top_values.size() == 9, "hud: expected 9 gauges, found %d" % hud.top_values.size())
+	expect(hud.crosshair != null, "hud: no crosshair")
+	expect(hud.prompt_label != null and hud.subtitle_label != null, "hud: no prompt or subtitle line")
+	hud.refresh(sim)
+	expect(hud.top_values["day"].text.begins_with("Day"),
+		"hud: the mission stamp reads '%s'" % hud.top_values["day"].text)
+	expect(hud.top_values["power"].text.ends_with("%"), "hud: the battery gauge has no value")
+
+	hud.set_language(true)
+	expect(hud.arabic, "hud: the language toggle did not stick")
+	hud.refresh(sim)
+	expect(hud.top_values["day"].text.begins_with("اليوم"), "hud: the stamp did not change language")
+	hud.set_language(false)
+
+	hud.open_journal(sim)
+	expect(hud.journal_panel.visible and hud.journal_body.get_child_count() > 0,
+		"hud: the journal did not open")
+	hud.toggle_journal(sim)
+	expect(not hud.journal_panel.visible, "hud: the journal did not close")
+
+	hud.show_event({"kind": "warning", "titleEn": "Audit", "titleAr": "تدقيق",
+		"bodyEn": "Event card smoke test.", "bodyAr": "اختبار."}, false)
+	expect(hud.toast_box.get_child_count() == 1, "hud: the event card did not appear")
+
+	# The mission report: the screen a player sees after thirty days.
+	var finished := LQSim.new()
+	finished.clock.total_minutes = LQClock.MISSION_DAYS * LQClock.MINUTES_PER_DAY + 60.0
+	hud.show_end_screen(finished)
+	expect(hud.end_screen.visible, "hud: the mission report did not open")
+	expect(hud.end_body.get_child_count() >= 8,
+		"hud: the mission report has only %d lines" % hud.end_body.get_child_count())
+	hud.end_screen.visible = false
 
 
 func _check_doors(world: ColonyWorld) -> void:
