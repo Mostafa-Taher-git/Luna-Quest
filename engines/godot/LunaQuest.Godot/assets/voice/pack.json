@@ -1,222 +1,387 @@
 {
- "crew.maya.greet": {
-  "file": "crew-maya-greet.mp3",
-  "text": "You must be the new cadet. I keep the plan honest. Ask me anything, and I will tell you what I actually know."
- },
- "bark.maya.0": {
-  "file": "bark-maya-0.mp3",
-  "text": "Board is clear for now. Enjoy the quiet."
- },
- "bark.maya.1": {
-  "file": "bark-maya-1.mp3",
-  "text": "Earth rises in about an hour. Worth a look."
- },
- "bark.maya.2": {
-  "file": "bark-maya-2.mp3",
-  "text": "If you see Leo, tell him the drill is at six."
- },
- "talk.maya.plan": {
-  "file": "talk-maya-plan.mp3",
-  "text": "Keep the air and water safe, log the samples, and leave room for an early night. Plans change; that is what the table is for."
- },
- "talk.maya.day": {
-  "file": "talk-maya-day.mp3",
-  "text": "We keep a 24-hour clock even though the lunar day is 29.5 Earth days. Sleep at ten, wake at six-ish."
- },
- "talk.maya.storm": {
-  "file": "talk-maya-storm.mp3",
-  "text": "Storm drill: inside, seal, count everyone, wait for the all-clear. We practise when nothing is wrong."
- },
- "talk.maya.help": {
-  "file": "talk-maya-help.mp3",
-  "text": "Inspect anything, open a report, or take the rover. No order, no timer. Stuck? Every task has a hint."
- },
- "inc.dust.npc": {
-  "file": "inc-dust-npc.mp3",
-  "text": "That dust is sharp as glass. Put the steps in order so none of it gets inside."
- },
- "inc.budget.npc": {
-  "file": "inc-budget-npc.mp3",
-  "text": "Needs before wants. The filter, the seal, the bearing and the nutrients keep us alive and moving."
- },
- "inc.schedule.npc": {
-  "file": "inc-schedule-npc.mp3",
-  "text": "Sleep eight, work six to eight, exercise two, eat, and leave room to breathe. It has to add up to 24 exactly."
- },
- "inc.storm.npc": {
-  "file": "inc-storm-npc.mp3",
-  "text": "No air to slow the particles and no magnetic field to stop them. Shelter, count everyone, then wait."
- },
- "crew.omar.greet": {
-  "file": "crew-omar-greet.mp3",
-  "text": "Careful on the steps, they are slick with dust. I look after the air and the water. Both are loops, not supplies."
- },
- "bark.omar.0": {
-  "file": "bark-omar-0.mp3",
-  "text": "Water tastes fine today. I checked twice."
- },
- "bark.omar.1": {
-  "file": "bark-omar-1.mp3",
-  "text": "Filters do not clean themselves, sadly."
- },
- "bark.omar.2": {
-  "file": "bark-omar-2.mp3",
-  "text": "Mind the wet patch. It is wet because it is dust-free."
- },
- "talk.omar.water": {
-  "file": "talk-omar-water.mp3",
-  "text": "Water is a loop. Breath, sweat and washing come back to me, and I filter and test it before it goes out again."
- },
- "talk.omar.air": {
-  "file": "talk-omar-air.mp3",
-  "text": "Air is a loop too. We pull carbon dioxide out, split water for oxygen, and let the plants help."
- },
- "talk.omar.fix": {
-  "file": "talk-omar-fix.mp3",
-  "text": "Check the sensor before the machine. A dirty sensor has fooled better engineers than me."
- },
- "talk.omar.help": {
-  "file": "talk-omar-help.mp3",
-  "text": "Ask what must happen before the next step is safe. That question usually finds the order."
- },
- "inc.water.npc": {
-  "file": "inc-water-npc.mp3",
-  "text": "The recycler runs, but the last test was not clean enough to drink. Put the steps in the order you would really do them."
- },
- "crew.amina.greet": {
-  "file": "crew-amina-greet.mp3",
-  "text": "Come and see the trays. Everything green here is part of life support, not decoration."
- },
- "bark.amina.0": {
-  "file": "bark-amina-0.mp3",
-  "text": "The trays are perking up. Come and look."
- },
- "bark.amina.1": {
-  "file": "bark-amina-1.mp3",
-  "text": "Plants do not argue. They just grow or they do not."
- },
- "bark.amina.2": {
-  "file": "bark-amina-2.mp3",
-  "text": "That greenhouse is the best air on the ridge."
- },
- "talk.amina.plants": {
-  "file": "talk-amina-plants.mp3",
-  "text": "Lettuce, tomatoes, herbs: water, nutrients, red and blue light. No soil, a fraction of the water."
- },
- "talk.amina.ice": {
-  "file": "talk-amina-ice.mp3",
-  "text": "Ice sits in craters that never see the Sun. Heat it to vapour, pipe it in, and the loop does the rest."
- },
- "talk.amina.science": {
-  "file": "talk-amina-science.mp3",
-  "text": "Observation first. Grey with holes is not the same sentence as cooled from lava."
- },
- "talk.amina.help": {
-  "file": "talk-amina-help.mp3",
-  "text": "One variable at a time. Change two things and you learn nothing."
- },
- "inc.green.npc": {
-  "file": "inc-green-npc.mp3",
-  "text": "Three trays, one problem. Before we change anything: which two can honestly be compared? A fair test changes one thing."
- },
- "inc.sample.npc": {
-  "file": "inc-sample-npc.mp3",
-  "text": "Describe what you see, then match it. Do not guess the name before the description."
- },
- "crew.leo.greet": {
-  "file": "crew-leo-greet.mp3",
-  "text": "That rover outside is older than both of us, and it still works. I keep it that way."
- },
- "bark.leo.0": {
-  "file": "bark-leo-0.mp3",
-  "text": "I heard the rover before I saw it. Bearings again."
- },
- "bark.leo.1": {
-  "file": "bark-leo-1.mp3",
-  "text": "Dust on panels is money on the floor."
- },
- "bark.leo.2": {
-  "file": "bark-leo-2.mp3",
-  "text": "Do not drive past sixteen degrees. I will know."
- },
- "talk.leo.rover": {
-  "file": "talk-leo-rover.mp3",
-  "text": "Four wheels, 210 kg, 18 km/h, 36 km of careful driving. Slope under 16 degrees, quarter pack in reserve."
- },
- "talk.leo.power": {
-  "file": "talk-leo-power.mp3",
-  "text": "Panels make what the light gives them. Dust steals a slice and there is no rain to wash it off."
- },
- "talk.leo.comms": {
-  "file": "talk-leo-comms.mp3",
-  "text": "Radio goes straight. A ridge makes a shadow, so we relay from high ground instead of shouting louder."
- },
- "talk.leo.help": {
-  "file": "talk-leo-help.mp3",
-  "text": "Send the machines first. A stuck wheel is a repair job, not a rescue."
- },
- "inc.solar.npc": {
-  "file": "inc-solar-npc.mp3",
-  "text": "Look at the numbers, cadet. Three arrays agree. One does not. Find it, then keep us inside our power budget."
- },
- "inc.rover.npc": {
-  "file": "inc-rover-npc.mp3",
-  "text": "The rover does not care that a route is short. Two rules: stay under 16 degrees, and arrive with a quarter of the battery in hand."
- },
- "inc.comms.npc": {
-  "file": "inc-comms-npc.mp3",
-  "text": "Radio goes in straight lines, like light. A ridge does not weaken the signal, it shadows it."
- },
- "crew.sofia.greet": {
-  "file": "crew-sofia-greet.mp3",
-  "text": "Sit down if you feel light-headed. One-sixth gravity is kind to your knees and hard on your bones."
- },
- "bark.sofia.0": {
-  "file": "bark-sofia-0.mp3",
-  "text": "Stand up slowly; the first minute is the strange one."
- },
- "bark.sofia.1": {
-  "file": "bark-sofia-1.mp3",
-  "text": "Sleep is not a reward. It is equipment."
- },
- "bark.sofia.2": {
-  "file": "bark-sofia-2.mp3",
-  "text": "Drink something. Yes, now."
- },
- "talk.sofia.health": {
-  "file": "talk-sofia-health.mp3",
-  "text": "One-sixth gravity feels lovely and quietly costs bone. Two hours of exercise a day is the treatment."
- },
- "talk.sofia.sleep": {
-  "file": "talk-sofia-sleep.mp3",
-  "text": "Fourteen hours on and five asleep is a warning light, not a badge."
- },
- "talk.sofia.dust": {
-  "file": "talk-sofia-dust.mp3",
-  "text": "That dust is sharp as glass and does not belong in your lungs. Brush it off outside, every time."
- },
- "talk.sofia.help": {
-  "file": "talk-sofia-help.mp3",
-  "text": "If someone goes quiet, ask. A bad mood in a small crew is system information."
- },
- "inc.fatigue.npc": {
-  "file": "inc-fatigue-npc.mp3",
-  "text": "Look at the week, not the face. Who is carrying the warning signs, and what actually fixes it?"
- },
- "player.copy": {
-  "file": "player-copy.mp3",
-  "text": "Copy that."
- },
- "player.omw": {
-  "file": "player-omw.mp3",
-  "text": "On my way."
- },
- "player.sample": {
-  "file": "player-sample.mp3",
-  "text": "Sample logged."
- },
- "player.letsgo": {
-  "file": "player-letsgo.mp3",
-  "text": "Let's go."
- }
+  "crew.safaa.greet": {
+    "file": "crew-safaa-greet.mp3",
+    "text": "Sit. Tell me what changed since your last shift, not what you think I want to hear.",
+    "textAr": "اجلس. أخبرني بما تغيّر منذ مناوبتك الأخيرة، لا بما تظن أنني أريد سماعه.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "bark.safaa.0": {
+    "file": "bark-safaa-0.mp3",
+    "text": "Hydration and sleep. Everything else is a symptom.",
+    "textAr": "الترطيب والنوم. كل ما عدا ذلك عَرَض.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "bark.safaa.1": {
+    "file": "bark-safaa-1.mp3",
+    "text": "I will not clear a tired crew member just because the schedule is loud.",
+    "textAr": "لن أسمح لعضو متعب بالعمل لمجرد أن الجدول صاخب.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "bark.safaa.2": {
+    "file": "bark-safaa-2.mp3",
+    "text": "The dose log is clean today. Keep it that way.",
+    "textAr": "سجل الجرعة نظيف اليوم. أبقِه كذلك.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "bark.safaa.3": {
+    "file": "bark-safaa-3.mp3",
+    "text": "If your hands are shaking, put the tool down and sit.",
+    "textAr": "إن كانت يداك ترتجفان، ضع الأداة واجلس.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "crew.noor.greet": {
+    "file": "crew-noor-greet.mp3",
+    "text": "Water in, water out, air in, air out. Show me the number you don't believe.",
+    "textAr": "ماء يدخل، ماء يخرج، هواء يدخل، هواء يخرج. أرني الرقم الذي لا تصدقه.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "bark.noor.0": {
+    "file": "bark-noor-0.mp3",
+    "text": "Air and water are one system. Do not treat them like two.",
+    "textAr": "الهواء والماء نظام واحد. لا تتعامل معهما كنظامين.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "bark.noor.1": {
+    "file": "bark-noor-1.mp3",
+    "text": "The filter is fine. The sensor is lying to you.",
+    "textAr": "الفلتر سليم. الحساس يكذب عليك.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "bark.noor.2": {
+    "file": "bark-noor-2.mp3",
+    "text": "Small leak, long shift. Find it now.",
+    "textAr": "تسريب صغير، مناوبة طويلة. اعثر عليه الآن.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "bark.noor.3": {
+    "file": "bark-noor-3.mp3",
+    "text": "Pressure first, then the repair.",
+    "textAr": "الضغط أولًا، ثم الإصلاح.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "crew.alaa.greet": {
+    "file": "crew-alaa-greet.mp3",
+    "text": "One reading is a rumour. Two readings on the same sample are a measurement.",
+    "textAr": "قراءة واحدة إشاعة. قراءتان على العينة نفسها قياس.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "bark.alaa.0": {
+    "file": "bark-alaa-0.mp3",
+    "text": "A reading is not a resource until we repeat it.",
+    "textAr": "القراءة ليست موردًا حتى نكررها.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "bark.alaa.1": {
+    "file": "bark-alaa-1.mp3",
+    "text": "Bag the sample, photograph the site, write the coordinates.",
+    "textAr": "احفظ العينة، صوّر الموقع، واكتب الإحداثيات.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "bark.alaa.2": {
+    "file": "bark-alaa-2.mp3",
+    "text": "That ice signature could be a shadow. Check the angle.",
+    "textAr": "قد تكون بصمة الجليد ظلًا. تحقق من الزاوية.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "bark.alaa.3": {
+    "file": "bark-alaa-3.mp3",
+    "text": "The regolith remembers every impact. Read it slowly.",
+    "textAr": "الثرى يتذكر كل اصطدام. اقرأه ببطء.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  },
+  "crew.agri.greet": {
+    "file": "crew-agri-greet.mp3",
+    "text": "The leaves were fine yesterday. What did we change since yesterday?",
+    "textAr": "كانت الأوراق بخير أمس. ما الذي غيّرناه منذ أمس؟",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "bark.agri.0": {
+    "file": "bark-agri-0.mp3",
+    "text": "Light, water, nutrients. Change one, then wait.",
+    "textAr": "ضوء، ماء، مغذيات. غيّر واحدًا ثم انتظر.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "bark.agri.1": {
+    "file": "bark-agri-1.mp3",
+    "text": "The leaves are the honest instrument.",
+    "textAr": "الأوراق هي المقياس الصادق.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "bark.agri.2": {
+    "file": "bark-agri-2.mp3",
+    "text": "A sealed pod still needs a power budget.",
+    "textAr": "الوحدة المغلقة تحتاج أيضًا ميزانية طاقة.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "bark.agri.3": {
+    "file": "bark-agri-3.mp3",
+    "text": "Fresh food is morale you can weigh.",
+    "textAr": "الغذاء الطازج روح معنوية يمكن وزنها.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "crew.aziz.greet": {
+    "file": "crew-aziz-greet.mp3",
+    "text": "Every kilowatt here is borrowed from the Sun and paid back at night. Spend it twice and we lose both.",
+    "textAr": "كل كيلوواط هنا مُستعار من الشمس ويُسدَّد ليلًا. أنفقه مرتين ونخسرهما معًا.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "bark.aziz.0": {
+    "file": "bark-aziz-0.mp3",
+    "text": "Every kilowatt has a price. Read the bus before you add load.",
+    "textAr": "لكل كيلوواط ثمن. اقرأ الشبكة قبل أن تضيف حملًا.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "bark.aziz.1": {
+    "file": "bark-aziz-1.mp3",
+    "text": "Battery reserve is not spare power.",
+    "textAr": "احتياطي البطارية ليس طاقة فائضة.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "bark.aziz.2": {
+    "file": "bark-aziz-2.mp3",
+    "text": "Shed the greenhouse first. Life support never sheds.",
+    "textAr": "افصل البيت الزجاجي أولًا. دعم الحياة لا يُفصل.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "bark.aziz.3": {
+    "file": "bark-aziz-3.mp3",
+    "text": "A dirty array is a pay cut for the whole colony.",
+    "textAr": "الألواح المغبرة تخفض دخل المستعمرة كلها.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "crew.ahmed.greet": {
+    "file": "crew-ahmed-greet.mp3",
+    "text": "The rover is not lost. It is exactly where we left it, minus the signal.",
+    "textAr": "الروفر ليس مفقودًا. إنه تمامًا حيث تركناه، ناقصًا الإشارة.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "bark.ahmed.0": {
+    "file": "bark-ahmed-0.mp3",
+    "text": "The rover did not vanish. It stopped reporting.",
+    "textAr": "الروفر لم يختفِ. توقف عن الإبلاغ.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "bark.ahmed.1": {
+    "file": "bark-ahmed-1.mp3",
+    "text": "Check the wheel, then the battery, then the antenna.",
+    "textAr": "افحص العجلة، ثم البطارية، ثم الهوائي.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "bark.ahmed.2": {
+    "file": "bark-ahmed-2.mp3",
+    "text": "A machine that guesses will strand you.",
+    "textAr": "الآلة التي تخمّن ستتركك عالقًا.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "bark.ahmed.3": {
+    "file": "bark-ahmed-3.mp3",
+    "text": "Recovery starts with line of sight.",
+    "textAr": "الاستعادة تبدأ بخط النظر.",
+    "speaker": "npc_ahmed",
+    "model": "en_US-bryce-medium"
+  },
+  "crew.comms.greet": {
+    "file": "crew-comms-greet.mp3",
+    "text": "Two systems disagree. One of them is lying, and it is usually the one we did not calibrate.",
+    "textAr": "نظامان يتناقضان. أحدهما يكذب، وغالبًا هو الذي لم نعايره.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "bark.comms.0": {
+    "file": "bark-comms-0.mp3",
+    "text": "Where did the data come from? That is the first question.",
+    "textAr": "من أين جاءت البيانات؟ هذا هو السؤال الأول.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "bark.comms.1": {
+    "file": "bark-comms-1.mp3",
+    "text": "A sensor fault can look exactly like a power fault.",
+    "textAr": "عطل الحساس قد يبدو تمامًا كعطل الطاقة.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "bark.comms.2": {
+    "file": "bark-comms-2.mp3",
+    "text": "Antenna dust, relay alignment, network path. In that order.",
+    "textAr": "غبار الهوائي، محاذاة المرحل، مسار الشبكة. بهذا الترتيب.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "bark.comms.3": {
+    "file": "bark-comms-3.mp3",
+    "text": "The link is quiet, not dead. Keep listening.",
+    "textAr": "الرابط هادئ، ليس ميتًا. واصل الاستماع.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "crew.mostafa.greet": {
+    "file": "crew-mostafa-greet.mp3",
+    "text": "A wall is a promise. First we weigh it, then we trust it.",
+    "textAr": "الجدار وعد. نزنه أولًا، ثم نثق به.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "bark.mostafa.0": {
+    "file": "bark-mostafa-0.mp3",
+    "text": "No survey, no print. That is the rule.",
+    "textAr": "لا مسح، لا طباعة. هذه القاعدة.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "bark.mostafa.1": {
+    "file": "bark-mostafa-1.mp3",
+    "text": "Test the mock-up before you trust the wall.",
+    "textAr": "اختبر النموذج قبل أن تثق بالجدار.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "bark.mostafa.2": {
+    "file": "bark-mostafa-2.mp3",
+    "text": "Regolith is cheap. A bad seal is not.",
+    "textAr": "الثرى رخيص. الختم السيئ ليس كذلك.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "bark.mostafa.3": {
+    "file": "bark-mostafa-3.mp3",
+    "text": "Mass, strength, insulation. Then we build.",
+    "textAr": "الكتلة، القوة، العزل. ثم نبني.",
+    "speaker": "npc_mostafa",
+    "model": "en_US-mike-medium"
+  },
+  "inc.inc_array_dust": {
+    "file": "inc-array-dust.mp3",
+    "text": "Array output is down. Before you touch the connectors, read the dust number.",
+    "textAr": "إنتاج الألواح منخفض. قبل لمس الموصلات، اقرأ رقم الغبار.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "inc.inc_sensor_dust": {
+    "file": "inc-sensor-dust.mp3",
+    "text": "One sensor disagrees with the others. Clean it, then we compare.",
+    "textAr": "حساس واحد يخالف البقية. نظفه، ثم نقارن.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "inc.inc_airlock_dust": {
+    "file": "inc-airlock-dust.mp3",
+    "text": "The airlock seal is carrying dust. Clean it before the next E V A.",
+    "textAr": "ختم الأيرلوك يحمل غبارًا. نظفه قبل السير الفضائي التالي.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_water_filter": {
+    "file": "inc-water-filter.mp3",
+    "text": "Recovery rate is falling. Back-flush the filter and watch the quality.",
+    "textAr": "معدل الاستعادة ينخفض. اغسل الفلتر عكسيًا وراقب الجودة.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_water_low": {
+    "file": "inc-water-low.mp3",
+    "text": "Water reserve is low. Find the loss before you open a valve.",
+    "textAr": "احتياطي الماء منخفض. اعثر على الفقد قبل فتح أي صمام.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_scrubber": {
+    "file": "inc-scrubber.mp3",
+    "text": "Carbon dioxide is climbing. Check flow first; do not swap the scrubber on a guess.",
+    "textAr": "ثاني أكسيد الكربون يرتفع. افحص التدفق أولًا؛ لا تبدّل المرشح بالتخمين.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_co2_high": {
+    "file": "inc-co2-high.mp3",
+    "text": "Carbon dioxide is above the line. Airflow, then scrubber, then the reserve.",
+    "textAr": "ثاني أكسيد الكربون فوق الحد. التدفق، ثم المرشح، ثم الاحتياطي.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_o2_low": {
+    "file": "inc-o2-low.mp3",
+    "text": "Oxygen is low. Restart the plant, but shed the grow lights first.",
+    "textAr": "الأكسجين منخفض. أعد تشغيل المصنع، لكن افصل أضواء النمو أولًا.",
+    "speaker": "npc_nour",
+    "model": "en_US-john-medium"
+  },
+  "inc.inc_crop_stress": {
+    "file": "inc-crop-stress.mp3",
+    "text": "The leaves are curling. Change one variable, log it, then wait one cycle.",
+    "textAr": "الأوراق تتجعد. غيّر متغيرًا واحدًا، سجله، ثم انتظر دورة.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "inc.inc_food_low": {
+    "file": "inc-food-low.mp3",
+    "text": "Food reserve is thin. Harvest what is ready and count the days.",
+    "textAr": "احتياطي الغذاء ضعيف. احصد الجاهز وأحصِ الأيام.",
+    "speaker": "npc_agriculture_engineer",
+    "model": "en_US-kathleen-medium"
+  },
+  "inc.inc_radiation": {
+    "file": "inc-radiation.mp3",
+    "text": "Dose rate is up. Move the crew to the shielded section now.",
+    "textAr": "معدل الجرعة مرتفع. انقل الطاقم إلى القسم المحمي الآن.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "inc.inc_comms": {
+    "file": "inc-comms.mp3",
+    "text": "Earth link is degraded. Check antenna dust, then relay alignment.",
+    "textAr": "رابط الأرض ضعيف. افحص غبار الهوائي، ثم محاذاة المرحل.",
+    "speaker": "npc_comms_software_engineer",
+    "model": "en_GB-alba-medium"
+  },
+  "inc.inc_fatigue": {
+    "file": "inc-fatigue.mp3",
+    "text": "The crew is tired. Rest is a system, not a reward.",
+    "textAr": "الطاقم متعب. الراحة نظام، وليست مكافأة.",
+    "speaker": "npc_safaa",
+    "model": "en_GB-cori-high"
+  },
+  "inc.inc_power_low": {
+    "file": "inc-power-low.mp3",
+    "text": "Battery is below reserve. Shed the grow lights; life support keeps priority.",
+    "textAr": "البطارية تحت الاحتياطي. افصل أضواء النمو؛ دعم الحياة له الأولوية.",
+    "speaker": "npc_abdelaziz",
+    "model": "en_US-joe-medium"
+  },
+  "inc.inc_ice_discovery": {
+    "file": "inc-ice-discovery.mp3",
+    "text": "We have a volatile reading. Repeat it and bag a sample before we call it ice.",
+    "textAr": "لدينا قراءة مواد متطايرة. كررها واحفظ عينة قبل أن نسميها جليدًا.",
+    "speaker": "npc_alaa",
+    "model": "en_US-norman-medium"
+  }
 }

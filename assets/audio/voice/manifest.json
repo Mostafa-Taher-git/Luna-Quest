@@ -1,0 +1,64 @@
+{
+  "provider": "piper",
+  "comment": "Authoring manifest for the Luna-Quest voice pack. Generate audio with tools/generate_voice_pack.py; the game reads the generated pack.json and MP3 files, never this file.",
+  "sourceManifest": "content/voices.json",
+  "cast": {
+    "npc_safaa": {
+      "prefix": "safaa",
+      "model": "en_GB-cori-high",
+      "lengthScale": 1.03,
+      "noiseScale": 0.62
+    },
+    "npc_nour": {
+      "prefix": "noor",
+      "model": "en_US-john-medium",
+      "lengthScale": 0.98,
+      "noiseScale": 0.7
+    },
+    "npc_alaa": {
+      "prefix": "alaa",
+      "model": "en_US-norman-medium",
+      "lengthScale": 1.06,
+      "noiseScale": 0.6
+    },
+    "npc_agriculture_engineer": {
+      "prefix": "agri",
+      "model": "en_US-kathleen-medium",
+      "lengthScale": 1.02,
+      "noiseScale": 0.67
+    },
+    "npc_abdelaziz": {
+      "prefix": "aziz",
+      "model": "en_US-joe-medium",
+      "lengthScale": 1.0,
+      "noiseScale": 0.65
+    },
+    "npc_ahmed": {
+      "prefix": "ahmed",
+      "model": "en_US-bryce-medium",
+      "lengthScale": 0.96,
+      "noiseScale": 0.68
+    },
+    "npc_comms_software_engineer": {
+      "prefix": "comms",
+      "model": "en_GB-alba-medium",
+      "lengthScale": 0.97,
+      "noiseScale": 0.64
+    },
+    "npc_mostafa": {
+      "prefix": "mostafa",
+      "model": "en_US-mike-medium",
+      "lengthScale": 1.04,
+      "noiseScale": 0.62
+    }
+  },
+  "lineCount": 55,
+  "generatedThisRun": 55,
+  "reusedThisRun": 0,
+  "runtimeCloudTts": false,
+  "language": "en",
+  "subtitles": [
+    "en",
+    "ar"
+  ]
+}

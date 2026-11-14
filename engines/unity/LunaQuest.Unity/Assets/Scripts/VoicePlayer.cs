@@ -9,44 +9,27 @@ using UnityEngine;
 namespace LunaQuest.Unity
 {
     /// <summary>
-    /// Short recorded crew barks and incident lines — no dialogue trees, no generated
-    /// speech. The pack is the same one the Godot adapter plays, and every line has a
-    /// matching subtitle so the game stays readable with the sound off.
+    /// Short recorded crew barks and incident lines — no dialogue trees, no runtime cloud
+    /// speech. The pack is generated offline with Piper and shared byte-for-byte with the
+    /// Godot adapter; every line carries English and Arabic subtitles.
     /// </summary>
     public sealed class VoicePlayer : MonoBehaviour
     {
-        private static readonly Dictionary<string, string> VoiceOf = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> PrefixOf = new Dictionary<string, string>
         {
-            ["npc_safaa"] = "sofia",
-            ["npc_nour"] = "omar",
-            ["npc_alaa"] = "amina",
-            ["npc_agriculture_engineer"] = "maya",
-            ["npc_abdelaziz"] = "leo",
-            ["npc_ahmed"] = "leo",
-            ["npc_comms_software_engineer"] = "leo",
-            ["npc_mostafa"] = "omar",
-        };
-
-        private static readonly Dictionary<string, string> IncidentVoice = new Dictionary<string, string>
-        {
-            ["inc_array_dust"] = "dust",
-            ["inc_sensor_dust"] = "dust",
-            ["inc_airlock_dust"] = "dust",
-            ["inc_water_filter"] = "water",
-            ["inc_water_low"] = "water",
-            ["inc_scrubber"] = "water",
-            ["inc_co2_high"] = "water",
-            ["inc_o2_low"] = "water",
-            ["inc_crop_stress"] = "green",
-            ["inc_food_low"] = "green",
-            ["inc_radiation"] = "storm",
-            ["inc_comms"] = "comms",
-            ["inc_fatigue"] = "fatigue",
-            ["inc_power_low"] = "budget",
-            ["inc_ice_discovery"] = "sample",
+            ["npc_safaa"] = "safaa",
+            ["npc_nour"] = "noor",
+            ["npc_alaa"] = "alaa",
+            ["npc_agriculture_engineer"] = "agri",
+            ["npc_abdelaziz"] = "aziz",
+            ["npc_ahmed"] = "ahmed",
+            ["npc_comms_software_engineer"] = "comms",
+            ["npc_mostafa"] = "mostafa",
         };
 
         private readonly Dictionary<string, string> _subtitle = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _subtitleAr = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _file = new Dictionary<string, string>();
         private readonly Dictionary<string, AudioClip> _clips = new Dictionary<string, AudioClip>();
         private LunaQuestGame _game;
         private AudioSource _source;
@@ -71,23 +54,32 @@ namespace LunaQuest.Unity
         public void Speak(NpcProfile profile, bool greeting)
         {
             if (_game == null || profile == null || Time.unscaledTimeAsDouble < _nextBark) return;
-            string voice = VoiceOf.TryGetValue(profile.Id, out string v) ? v : "maya";
-            int index = UnityEngine.Random.Range(0, 3);
-            string key = greeting ? $"crew.{voice}.greet" : $"bark.{voice}.{index}";
-            string file = greeting ? $"crew-{voice}-greet" : $"bark-{voice}-{index}";
+            string prefix = PrefixOf.TryGetValue(profile.Id, out string p) ? p : "agri";
+            int index = UnityEngine.Random.Range(0, 4);
+            string key = greeting ? $"crew.{prefix}.greet" : $"bark.{prefix}.{index}";
             string fallback = _game.Sim.Arabic
                 ? $"{profile.DisplayNameAr} — {profile.RoleAr}"
                 : $"{profile.DisplayNameEn} — {profile.RoleEn}";
-            SpeakFile(file, _subtitle.TryGetValue(key, out string text) ? text : fallback);
-            _nextBark = Time.unscaledTimeAsDouble + 9.0;
+            string file = _file.TryGetValue(key, out string f)
+                ? f
+                : (greeting ? $"crew-{prefix}-greet" : $"bark-{prefix}-{index}");
+            string text;
+            if (_game.Sim.Arabic)
+                text = _subtitleAr.TryGetValue(key, out string ar) ? ar : fallback;
+            else
+                text = _subtitle.TryGetValue(key, out string en) ? en : fallback;
+            SpeakFile(file, text);
+            _nextBark = Time.unscaledTimeAsDouble + (greeting ? 6.0 : 9.0);
         }
 
         public void SpeakEvent(SimEvent e, bool arabic)
         {
-            if (e == null || !IncidentVoice.TryGetValue(e.Id, out string kind)) return;
-            string file = $"inc-{kind}-npc";
-            string key = $"inc.{kind}.npc";
-            string text = arabic ? e.BodyAr : (_subtitle.TryGetValue(key, out string t) ? t : e.BodyEn);
+            if (e == null) return;
+            string key = $"inc.{e.Id}";
+            if (!_file.TryGetValue(key, out string file)) return;
+            string text = arabic
+                ? (_subtitleAr.TryGetValue(key, out string ar) ? ar : e.BodyAr)
+                : (_subtitle.TryGetValue(key, out string en) ? en : e.BodyEn);
             SpeakFile(file, text, 6f);
         }
 
@@ -124,6 +116,10 @@ namespace LunaQuest.Unity
                     var entry = Json.Obj(pair.Value);
                     if (entry == null || !entry.TryGetValue("text", out object text)) continue;
                     _subtitle[pair.Key] = Json.Str(text);
+                    _subtitleAr[pair.Key] = entry.TryGetValue("textAr", out object textAr)
+                        ? Json.Str(textAr)
+                        : Json.Str(text);
+                    _file[pair.Key] = entry.TryGetValue("file", out object file) ? Json.Str(file) : "";
                 }
             }
             catch (Exception ex)

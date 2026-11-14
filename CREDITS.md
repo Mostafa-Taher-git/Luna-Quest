@@ -67,15 +67,35 @@ font licenses.
 ## Crew voice pack
 
 - **Files:** `assets/audio/voice/*.mp3`, `assets/audio/voice/pack.json`,
-  and the copies under both engine projects.
-- **Status:** inherited from the team’s Luna-Quest V1 prototype.
-- **Rights:** the performance and redistribution rights have **not been confirmed**.
+  `assets/audio/voice/manifest.json`, and the copies under both engine projects.
+- **Authoring manifest:** `content/voices.json`.
+- **Generator:** `tools/generate_voice_pack.py` (development-time only).
+- **Engine:** [Piper](https://github.com/rhasspy/piper), MIT license, running locally.
+- **Runtime:** the game plays committed MP3 files. It does **not** call a cloud TTS service
+  and does not synthesise speech while running.
 
-The voice pack is included so the team can evaluate the game with its intended audio. The
-repository is public at the team's request, but the performance and distribution rights are
-still unconfirmed: clear them before shipping a public build or redistributing the MP3 files
-elsewhere. The game is fully playable with the sound off: every line also appears as a short
-subtitle.
+The 55 lines were generated for this build from open voice models. Every line is English
+speech with an English and Arabic subtitle in `pack.json`. The voice-model licenses are:
+
+| Crew member | Piper model | Dataset / model license |
+|---|---|---|
+| Dr. Safaa | `en_GB-cori-high` | Public domain (LibriVox) |
+| Noor | `en_US-john-medium` | Public domain (LibriVox) |
+| Dr. Alaa | `en_US-norman-medium` | Public domain (LibriVox) |
+| Agriculture and Food Engineer | `en_US-kathleen-medium` | CC0 (OHF-Voice voice datasets) |
+| Abdel Aziz | `en_US-joe-medium` | CC0 (OHF-Voice voice datasets) |
+| Ahmed | `en_US-bryce-medium` | Public domain (upstream model card) |
+| Communications and Software Engineer | `en_GB-alba-medium` | CC BY 4.0 (Edinburgh DataShare) |
+| Mostafa | `en_US-mike-medium` | CC0 (OHF-Voice voice datasets) |
+
+Model cards and downloads: <https://huggingface.co/rhasspy/piper-voices>. Full notices:
+[`docs/licenses/piper-voices.md`](docs/licenses/piper-voices.md).
+
+The generated performances are synthetic. They are not recordings of the named crew, and
+the speaker names in `content/npcs.json` are fictional colony characters. Keep the
+attribution above if you redistribute the MP3 files, especially the CC BY 4.0 voice.
+
+The game is fully playable with the sound off: every line also appears as a short subtitle.
 
 ---
 
@@ -116,6 +136,8 @@ The simulation is an educational approximation, not a flight-certified life-supp
 If you publish a build or a derivative, keep the credits above and include:
 
 > Astronaut “Cute Astronaut” by haefu, CC BY 4.0, via Sketchfab. Earth texture by Solar
-> System Scope, CC BY 4.0. Luna-Quest design and code by the Luna-Quest team.
+> System Scope, CC BY 4.0. Crew voice models from the Piper project and the upstream
+> datasets listed above. Luna-Quest design and code by the Luna-Quest team.
 
-If the voice pack is still present, do not publish the build until its rights are confirmed.
+If you reuse the voice pack, keep the licensing table and the CC BY 4.0 attribution for the
+`en_GB-alba-medium` voice. The other seven models used here are public domain or CC0.
