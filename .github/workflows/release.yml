@@ -143,7 +143,12 @@ jobs:
           unzip -q templates.tpz -d templates
           mv templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
       - name: Import the project
-        run: ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --import || true
+        run: |
+          set -euo pipefail
+          mkdir -p engines/godot-gdscript/LunaQuest.GDScript/build/web \
+                   engines/godot-gdscript/LunaQuest.GDScript/build/linux \
+                   engines/godot-gdscript/LunaQuest.GDScript/build/windows
+          ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --import || true
       - name: Export the browser build (the one the .NET project cannot make)
         run: |
           set -euo pipefail

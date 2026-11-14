@@ -142,6 +142,8 @@ jobs:
           set -uo pipefail
           mkdir -p out
           P="engines/godot-gdscript/LunaQuest.GDScript"
+          # Godot writes into an existing folder; it will not create one for you.
+          mkdir -p "$P/build/web" "$P/build/linux" "$P/build/windows"
           ./godot --headless --path "$P" --export-release "Web" build/web/index.html > export.log 2>&1; web=$?
           ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 >> export.log 2>&1; linux=$?
           ./godot --headless --path "$P" --export-release "Windows" build/windows/luna-quest-gdscript.exe >> export.log 2>&1; windows=$?
