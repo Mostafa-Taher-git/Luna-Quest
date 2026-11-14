@@ -15,6 +15,10 @@ on:
         description: 'Only capture frames whose name contains this text (blank = all)'
         required: false
         default: ''
+  # TEMPORARY: workflow_dispatch only works once this file is on the default branch, so the first
+  # runs are triggered by pushing to the working branch. Removed before the pull request.
+  push:
+    branches: [arena/7c35ed25-luna-quest]
 
 permissions:
   contents: read
