@@ -60,24 +60,30 @@ jobs:
           ./godot --version
       - name: Import the project (parses every script, imports every asset)
         run: |
-          set -euo pipefail
-          ./godot --headless --path "$PROJECT_DIR" --import 2>&1 | tee import.log
-          if grep -Eq "Parse Error|SCRIPT ERROR|Failed to load script" import.log; then
-            echo "::error::GDScript failed to parse — see the log above."
-            exit 1
-          fi
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --import > import.log 2>&1 || true
+          tail -c 8000 import.log
+          status=0
+          while IFS= read -r line; do
+            echo "::error::import: $line"
+            status=1
+          done < <(grep -Ei "Parse Error|SCRIPT ERROR|Failed to load script|Compile error" import.log | head -20)
+          exit $status
       - name: Run the game headlessly for 400 frames
         run: |
-          set -euo pipefail
-          ./godot --headless --path "$PROJECT_DIR" --quit-after 400 2>&1 | tee run.log
-          if grep -Eq "SCRIPT ERROR|Invalid call|Cannot call method|Nonexistent function" run.log; then
-            echo "::error::A script failed at runtime — see the log above."
-            exit 1
-          fi
-          grep -q "Luna-Quest (GDScript): ready" run.log || {
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --quit-after 400 > run.log 2>&1 || true
+          tail -c 8000 run.log
+          status=0
+          while IFS= read -r line; do
+            echo "::error::boot: $line"
+            status=1
+          done < <(grep -Ei "SCRIPT ERROR|Invalid call|Cannot call method|Nonexistent function|Invalid access" run.log | head -20)
+          if ! grep -q "Luna-Quest (GDScript): ready" run.log; then
             echo "::error::The game did not report a successful boot."
-            exit 1
-          }
+            status=1
+          fi
+          exit $status
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v4
