@@ -730,7 +730,8 @@ namespace LunaQuest.Unity
                 var agent = go.AddComponent<CrewAgent>();
                 agent.Init(_game, p.Id, p.DisplayNameEn, p.DisplayNameAr, start);
 
-                var visual = CreateAstronaut(1.72f, crewColours[index % crewColours.Length], false);
+                var visual = p.IsRobot ? CreateRobot()
+                                       : CreateAstronaut(1.72f, crewColours[index % crewColours.Length], false);
                 visual.transform.SetParent(go.transform, false);
                 visual.transform.localPosition = Vector3.zero;
                 visual.transform.localRotation = Quaternion.identity;
@@ -743,6 +744,30 @@ namespace LunaQuest.Unity
             }
         }
 
+        /// <summary>NEXO: a hovering white sphere robot with a blue band and a dark screen face.</summary>
+        private GameObject CreateRobot()
+        {
+            var root = new GameObject("NEXO");
+            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(body.GetComponent<Collider>());
+            body.transform.SetParent(root.transform, false);
+            body.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            body.transform.localScale = new Vector3(0.52f, 0.46f, 0.52f);
+            body.GetComponent<Renderer>().material.color = new Color(0.95f, 0.96f, 0.98f);
+            var face = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(face.GetComponent<Collider>());
+            face.transform.SetParent(body.transform, false);
+            face.transform.localPosition = new Vector3(0f, 0.06f, 0.22f);
+            face.transform.localScale = new Vector3(0.75f, 0.55f, 0.6f);
+            face.GetComponent<Renderer>().material.color = new Color(0.03f, 0.06f, 0.1f);
+            var band = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(band.GetComponent<Collider>());
+            band.transform.SetParent(body.transform, false);
+            band.transform.localPosition = new Vector3(0f, -0.15f, 0f);
+            band.transform.localScale = new Vector3(1.04f, 0.06f, 1.04f);
+            band.GetComponent<Renderer>().material.color = new Color(0.16f, 0.45f, 0.86f);
+            return root;
+        }
         public bool DoorPoint(string buildingId, out Vector3 point)
         {
             if (_buildings.TryGetValue(buildingId, out Transform root))

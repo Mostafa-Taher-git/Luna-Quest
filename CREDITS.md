@@ -82,10 +82,9 @@ speech with an English and Arabic subtitle in `pack.json`. The voice-model licen
 | Dr. Safaa | `en_GB-cori-high` | Public domain (LibriVox) |
 | Noor | `en_US-john-medium` | Public domain (LibriVox) |
 | Dr. Alaa | `en_US-norman-medium` | Public domain (LibriVox) |
-| Agriculture and Food Engineer | `en_US-kathleen-medium` | CC0 (OHF-Voice voice datasets) |
 | Abdel Aziz | `en_US-joe-medium` | CC0 (OHF-Voice voice datasets) |
 | Ahmed | `en_US-bryce-medium` | Public domain (upstream model card) |
-| Communications and Software Engineer | `en_GB-alba-medium` | CC BY 4.0 (Edinburgh DataShare) |
+| NEXO (robot) | AI studio voice "Puck" + robot filter (ffmpeg) | Generated for this project |
 | Mostafa | `en_US-mike-medium` | CC0 (OHF-Voice voice datasets) |
 
 Model cards and downloads: <https://huggingface.co/rhasspy/piper-voices>. Full notices:
@@ -130,6 +129,15 @@ The simulation is an educational approximation, not a flight-certified life-supp
 - **.NET** — © .NET Foundation and contributors, MIT license.
 
 ---
+
+## Real-world 3D assets and textures (v3)
+| Asset | Source | License |
+|---|---|---|
+| Moon Rock 01-07 photoscanned boulders (`assets/real/rocks`) | [Poly Haven](https://polyhaven.com/models/rocks) | CC0 |
+| Moon Dusted 03 regolith PBR set (`assets/real/regolith`) | [Poly Haven](https://polyhaven.com/a/moon_dusted_03) | CC0 |
+| Blue Marble Earth (`assets/real/earth`) | NASA Earth Observatory, via Wikimedia Commons | Public domain |
+
+Re-download with `python3 tools/fetch_real_assets.py`.
 
 ## How to attribute this project
 

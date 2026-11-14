@@ -174,7 +174,7 @@ namespace LunaQuest.Godot
         {
             if (RockMesh == null) return;
             var rng = new Random(unchecked(cx * 73856093) ^ unchecked(cz * 19349663) ^ Terrain.Seed);
-            int count = 5 + rng.Next(0, 9);
+            int count = (5 + rng.Next(0, 9)) * (WorldBuilder.RealRocks.Count > 0 ? 3 : 1);
             var xf = new List<Transform3D>();
             for (int i = 0; i < count; i++)
             {
@@ -189,9 +189,56 @@ namespace LunaQuest.Godot
                 xf.Add(new Transform3D(basis, new Vector3(x - ox, y + sc * 0.12f, z - oz)));
             }
             if (xf.Count == 0) return;
+            if (WorldBuilder.RealRocks.Count > 0)
+            {
+                ScatterRealRocks(root, rng, xf, ox, oz);
+                return;
+            }
             var mm = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, Mesh = RockMesh, InstanceCount = xf.Count };
             for (int i = 0; i < xf.Count; i++) mm.SetInstanceTransform(i, xf[i]);
             root.AddChild(new MultiMeshInstance3D { Multimesh = mm, MaterialOverride = RockMaterial });
+        }
+
+        /// <summary>
+        /// The photoscanned boulders: each placement picks a variant, is scaled from the scan's
+        /// real size to a target diameter, sunk slightly into the regolith and, above 1.1 m,
+        /// given a cylinder collider so the commander walks around it instead of through it.
+        /// </summary>
+        private void ScatterRealRocks(Node3D root, Random rng, List<Transform3D> spots, float ox, float oz)
+        {
+            var rocks = WorldBuilder.RealRocks;
+            var buckets = new List<Transform3D>[rocks.Count];
+            for (int i = 0; i < rocks.Count; i++) buckets[i] = new List<Transform3D>();
+            StaticBody3D? body = null;
+            foreach (var spot in spots)
+            {
+                int vi = rng.Next(rocks.Count);
+                var v = rocks[vi];
+                // Target diameter: mostly cobbles, a few big boulders (heavy-tailed).
+                float diameter = 0.35f + (float)Math.Pow(rng.NextDouble(), 2.6) * 3.6f;
+                float k = diameter / Mathf.Max(0.01f, v.Extent);
+                float yaw = (float)(rng.NextDouble() * Math.PI * 2.0);
+                var basis = new Basis(Vector3.Up, yaw).Scaled(new Vector3(k, k * (0.85f + (float)rng.NextDouble() * 0.3f), k));
+                Vector3 p = spot.Origin;
+                float groundY = (float)Terrain.Height(p.X + ox, p.Z + oz);
+                // Scan pivot is at its base centre; sink 18 % so it sits in the dust.
+                Vector3 origin = new Vector3(p.X, groundY - v.Height * k * 0.18f - (v.Center.Y - v.Height * 0.5f) * k, p.Z);
+                buckets[vi].Add(new Transform3D(basis, origin) * v.Local);
+                if (diameter > 1.1f)
+                {
+                    body ??= new StaticBody3D { Name = "RockColliders", CollisionLayer = 1, CollisionMask = 0 };
+                    var shape = new CylinderShape3D { Radius = diameter * 0.42f, Height = Mathf.Max(0.6f, v.Height * k * 0.8f) };
+                    body.AddChild(new CollisionShape3D { Shape = shape, Position = new Vector3(p.X, groundY + shape.Height * 0.3f, p.Z) });
+                }
+            }
+            for (int i = 0; i < rocks.Count; i++)
+            {
+                if (buckets[i].Count == 0) continue;
+                var mm = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, Mesh = rocks[i].Mesh, InstanceCount = buckets[i].Count };
+                for (int j = 0; j < buckets[i].Count; j++) mm.SetInstanceTransform(j, buckets[i][j]);
+                root.AddChild(new MultiMeshInstance3D { Multimesh = mm, CastShadow = GeometryInstance3D.ShadowCastingSetting.On });
+            }
+            if (body != null) root.AddChild(body);
         }
     }
 }

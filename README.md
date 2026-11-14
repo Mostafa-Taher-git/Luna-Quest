@@ -1,6 +1,6 @@
 # Luna-Quest — The Living Moon Colony
 
-> **30 Earth days. Nine crew. One shared simulation. Every kilogram and every second counted.**
+> **30 Earth days. Six crew, one commander and NEXO the robot. One shared simulation. Every kilogram and every second counted.**
 
 ![Luna-Quest colony at Shackleton rim](docs/screenshots/colony.png)
 
@@ -198,7 +198,7 @@ water stress and light hours.
 
 | Value | Number |
 |---|---|
-| Crew | 9 (player + 8 NPCs) |
+| Crew | 7 people (commander + 6 crew: Dr. Safaa, Noor, Dr. Alaa, Abdulaziz, Ahmed, Mostafa) + NEXO, the colony robot (no air, food or fatigue) |
 | Cabin target | `21 °C` |
 | External design temperature | `−55 °C` |
 | Surface dose | `13.2 µGy/h` (Chang'e-4 LND median) |
@@ -310,7 +310,7 @@ The seven JSON files in `content/` are the source of truth for both engines:
 | File | Contents |
 |---|---|
 | `buildings.json` | 16 buildings, footprints, rooms and interaction points |
-| `npcs.json` | 8 crew profiles, schedules, skills, trust and story seeds |
+| `npcs.json` | 6 crew profiles + NEXO (`isRobot`), schedules, skills, trust and story seeds |
 | `incidents.json` | 15 threshold-driven incidents with safe next steps |
 | `crops.json` | 9 crop references and cycle data |
 | `learning.json` | 11 objectives and evidence classes |
@@ -397,9 +397,10 @@ one adapter can be loaded by the other after copying the file to the other engin
 - **Dialogue is bark-based.** Each crew member has a greeting and four ambient lines rather
   than a branching conversation tree. The exposition lives on the consoles and in the
   journal, which keeps the HUD readable and the voices short.
-- **Two crew names are pending team approval** by design: the Agriculture and Food Engineer
-  and the Communications and Software Engineer. They display as “Name pending approval” and
-  are not invented.
+- **Crew v3:** the two unnamed engineer roles were retired. NEXO, the floating colony robot
+  from the AstroNexa intro, now owns the greenhouse and the comms tower: it follows the
+  commander, answers eight topics, speaks with a processed robot voice, and flags warnings
+  by turning its screen eyes orange.
 - **The Unity astronaut is static.** Godot uses the GLB frozen at 0.4 s; Unity uses a baked
   OBJ at the same pose. Re-run the baker after changing the GLB.
 - **The simulation is single-zone.** Air and thermal models are well-mixed cabin

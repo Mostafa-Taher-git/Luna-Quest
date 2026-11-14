@@ -87,10 +87,18 @@ namespace LunaQuest.Godot
                 LightColor = new Color(1f, 0.96f, 0.9f),
                 LightEnergy = 2.0f,
                 ShadowEnabled = true,
-                DirectionalShadowMaxDistance = 180f,
+                // A grazing polar Sun is the worst case for shadow acne: tighter cascades,
+                // more normal bias and a little blur keep the regolith clean.
+                DirectionalShadowMode = DirectionalLight3D.ShadowMode.Parallel4Splits,
+                DirectionalShadowMaxDistance = 140f,
+                DirectionalShadowSplit1 = 0.06f,
+                DirectionalShadowSplit2 = 0.18f,
+                DirectionalShadowSplit3 = 0.45f,
+                DirectionalShadowBlendSplits = true,
                 DirectionalShadowFadeStart = 0.8f,
-                ShadowBias = 0.04f,
-                ShadowNormalBias = 0.6f,
+                ShadowBias = 0.12f,
+                ShadowNormalBias = 2.2f,
+                ShadowBlur = 1.4f,
             };
             AddChild(_sun);
             UpdateSun(0);
@@ -277,9 +285,24 @@ namespace LunaQuest.Godot
             // The same procedural ground is drawn by Unity; the colony sits on a flat pad that
             // fades into craters, highland swells and boulder fields in every direction.
             Terrain = new LunarTerrain(2026, 0, 8, 88, 90, 1.0);
+            LoadRealRocks();
             Material groundMaterial;
             if (ResourceLoader.Exists("res://shaders/regolith.gdshader"))
-                groundMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/regolith.gdshader") };
+            {
+                var sm = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/regolith.gdshader") };
+                // Photoscanned regolith detail (Poly Haven Moon Dusted 03, CC0).
+                var alb = TryLoadTexture("res://assets/real/regolith/moon_dusted_03_albedo.jpg");
+                var nrm = TryLoadTexture("res://assets/real/regolith/moon_dusted_03_normal.jpg");
+                var rgh = TryLoadTexture("res://assets/real/regolith/moon_dusted_03_rough.jpg");
+                if (alb != null && nrm != null)
+                {
+                    sm.SetShaderParameter("use_detail", true);
+                    sm.SetShaderParameter("detail_albedo", alb);
+                    sm.SetShaderParameter("detail_normal", nrm);
+                    if (rgh != null) sm.SetShaderParameter("detail_rough", rgh);
+                }
+                groundMaterial = sm;
+            }
             else
                 groundMaterial = Mat(new Color(0.36f, 0.35f, 0.33f), 0f, 0.98f);
             Streamer = new TerrainStreamer
@@ -351,18 +374,24 @@ namespace LunaQuest.Godot
                 EmissionEnergyMultiplier = 0.6f,
                 AlbedoColor = new Color(0.25f, 0.48f, 0.9f),
             };
-            var tex = TryLoadTexture("res://assets/textures/earth.jpg");
-            if (tex != null)
+            Material earthMat = mat;
+            // NASA Blue Marble (public domain) with a lit day side and atmospheric limb.
+            var tex = TryLoadTexture("res://assets/real/earth/blue_marble_2048.jpg")
+                   ?? TryLoadTexture("res://assets/textures/earth.jpg");
+            if (tex != null && ResourceLoader.Exists("res://shaders/earth.gdshader"))
             {
-                mat.AlbedoTexture = tex;
-                mat.EmissionTexture = tex;
-                mat.EmissionEnergyMultiplier = 0.35f;
+                var em = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/earth.gdshader") };
+                em.SetShaderParameter("surface", tex);
+                em.SetShaderParameter("sun_dir", new Vector3(0.75f, 0.25f, 0.6f));
+                earthMat = em;
             }
             _earth = new MeshInstance3D
             {
                 Mesh = sphere,
-                MaterialOverride = mat,
+                MaterialOverride = earthMat,
                 Position = new Vector3(95, 118, -305),
+                // Tilt so Africa and the Atlantic face the Moon, like the cartoon intro.
+                Rotation = new Vector3(0.35f, -1.9f, 0.41f),
                 Name = "Earth",
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             };
