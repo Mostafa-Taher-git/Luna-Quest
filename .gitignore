@@ -2,7 +2,7 @@
 .godot/
 .mono/
 export.cfg
-export_presets.cfg
+# export_presets.cfg is committed on purpose: the release workflow exports headlessly.
 *.translation
 *.translation.import
 
@@ -56,3 +56,10 @@ __pycache__/
 *.pyc
 
 build/
+
+# ---- web build -------------------------------------------------------------
+web/node_modules/
+web/public/
+web/dist/
+web/.vite/
+out/

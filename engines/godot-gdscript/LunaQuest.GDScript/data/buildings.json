@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "comment": "Every functional building has a real interior. GDD v2.2 §21: no gameplay building may be exterior-only.",
+  "buildings": [
+    {
+      "id": "habitat", "nameEn": "Central Habitat", "nameAr": "الموئل المركزي", "category": "functional",
+      "position": [0, 0], "footprint": [16, 12], "height": 6.2, "color": "#d8dde2",
+      "powerKw": 3.2, "waterLPerDay": 30, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "common", "nameEn": "Common Room", "nameAr": "الغرفة المشتركة", "purpose": "Meals, meetings, the colony board", "size": [9, 7], "offset": [0, 0] },
+        { "id": "quarters", "nameEn": "Crew Quarters", "nameAr": "غرف الطاقم", "purpose": "Sleep and privacy", "size": [6, 5], "offset": [-5, 0] },
+        { "id": "kitchen", "nameEn": "Kitchen", "nameAr": "المطبخ", "purpose": "Food storage and preparation", "size": [5, 5], "offset": [6, 0] },
+        { "id": "medical_corner", "nameEn": "Medical Corner", "nameAr": "زاوية طبية", "purpose": "Check-ups and dose records", "size": [4, 4], "offset": [0, 5] }
+      ],
+      "interactions": [
+        { "id": "board", "roomId": "common", "nameEn": "Colony Board", "nameAr": "لوحة المستعمرة", "kind": "read", "learning": "obj_power_budget" },
+        { "id": "rest", "roomId": "quarters", "nameEn": "Crew Rest Plan", "nameAr": "خطة راحة الطاقم", "kind": "use", "learning": "obj_crew_rest" },
+        { "id": "shelter", "roomId": "medical_corner", "nameEn": "Shielded Section", "nameAr": "القسم المحمي", "kind": "use", "learning": "obj_radiation" }
+      ]
+    },
+    {
+      "id": "mission_control", "nameEn": "Mission Control", "nameAr": "مركز القيادة", "category": "functional",
+      "position": [0, -30], "footprint": [14, 10], "height": 5.6, "color": "#c9d2da",
+      "powerKw": 2.1, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "ops", "nameEn": "Operations Floor", "nameAr": "أرضية العمليات", "purpose": "Watch every colony system", "size": [9, 6], "offset": [0, 0] },
+        { "id": "map_wall", "nameEn": "Map Wall", "nameAr": "جدار الخرائط", "purpose": "Terrain, shadows and routes", "size": [6, 4], "offset": [-4, 0] },
+        { "id": "comms_desk", "nameEn": "Communications", "nameAr": "الاتصالات", "purpose": "Earth link and relay health", "size": [5, 4], "offset": [5, 0] }
+      ],
+      "interactions": [
+        { "id": "colony_board", "roomId": "ops", "nameEn": "Colony Board", "nameAr": "لوحة المستعمرة", "kind": "read", "learning": "obj_power_budget" },
+        { "id": "solar_weather", "roomId": "map_wall", "nameEn": "Solar Weather Console", "nameAr": "وحدة الطقس الشمسي", "kind": "read", "learning": "obj_radiation" },
+        { "id": "comms_desk", "roomId": "comms_desk", "nameEn": "Earth Link", "nameAr": "رابط الأرض", "kind": "repair", "learning": "obj_comms_relay" }
+      ]
+    },
+    {
+      "id": "greenhouse", "nameEn": "Greenhouse", "nameAr": "البيت الزجاجي", "category": "functional",
+      "position": [30, -14], "footprint": [14, 10], "height": 5.0, "color": "#9fd4b8",
+      "powerKw": 2.0, "waterLPerDay": 36, "o2KgPerDay": 0.6, "requiresComms": false,
+      "rooms": [
+        { "id": "grow", "nameEn": "Grow Pod", "nameAr": "وحدة النمو", "purpose": "Enclosed crops, no direct sunlight", "size": [10, 7], "offset": [0, 0] },
+        { "id": "seed_lab", "nameEn": "Seed Lab", "nameAr": "مختبر البذور", "purpose": "Cultivar records and germination", "size": [5, 4], "offset": [-4, 0] },
+        { "id": "harvest", "nameEn": "Harvest Station", "nameAr": "محطة الحصاد", "purpose": "Wash, weigh and store", "size": [5, 4], "offset": [4, 0] }
+      ],
+      "interactions": [
+        { "id": "crop_monitor", "roomId": "grow", "nameEn": "Crop Monitor", "nameAr": "مراقب المحصول", "kind": "inspect", "learning": "obj_plant_care" },
+        { "id": "harvest", "roomId": "harvest", "nameEn": "Harvest", "nameAr": "الحصاد", "kind": "harvest", "learning": "obj_plant_care" },
+        { "id": "grow_lights", "roomId": "grow", "nameEn": "Grow Light Budget", "nameAr": "ميزانية أضواء النمو", "kind": "use", "learning": "obj_power_budget" }
+      ]
+    },
+    {
+      "id": "workshop", "nameEn": "Engineering Workshop", "nameAr": "ورشة الهندسة", "category": "functional",
+      "position": [-30, -14], "footprint": [14, 10], "height": 5.4, "color": "#c9c2b4",
+      "powerKw": 1.6, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [
+        { "id": "repair", "nameEn": "Repair Benches", "nameAr": "طاولات الإصلاح", "purpose": "Fix what the colony breaks", "size": [8, 6], "offset": [0, 0] },
+        { "id": "parts", "nameEn": "Parts Storage", "nameAr": "مخزن القطع", "purpose": "Spares, fasteners and seals", "size": [5, 4], "offset": [-4, 0] },
+        { "id": "fabrication", "nameEn": "Fabrication Bay", "nameAr": "وحدة التصنيع", "purpose": "Print replacements", "size": [5, 4], "offset": [4, 0] }
+      ],
+      "interactions": [
+        { "id": "repair_array", "roomId": "repair", "nameEn": "Array Connector Bench", "nameAr": "طاولة موصل الألواح", "kind": "repair", "learning": "obj_solar_dust" },
+        { "id": "clean_sensors", "roomId": "repair", "nameEn": "Sensor Calibration", "nameAr": "معايرة الحساسات", "kind": "clean", "learning": "obj_sensor_dust" },
+        { "id": "parts", "roomId": "parts", "nameEn": "Spares Inventory", "nameAr": "جرد القطع", "kind": "read", "learning": "obj_power_budget" }
+      ]
+    },
+    {
+      "id": "life_support", "nameEn": "Life Support", "nameAr": "دعم الحياة", "category": "functional",
+      "position": [30, 16], "footprint": [12, 10], "height": 5.6, "color": "#b9c9d6",
+      "powerKw": 2.8, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "filtration", "nameEn": "Filtration", "nameAr": "الترشيح", "purpose": "Clean water and monitor recovery", "size": [7, 5], "offset": [0, 0] },
+        { "id": "recycle", "nameEn": "Recycle Tanks", "nameAr": "خزانات التدوير", "purpose": "Closed-loop storage", "size": [5, 4], "offset": [-3, 0] },
+        { "id": "air_quality", "nameEn": "Air Quality", "nameAr": "جودة الهواء", "purpose": "O2, CO2, pressure and scrubbers", "size": [5, 4], "offset": [4, 0] }
+      ],
+      "interactions": [
+        { "id": "clean_filter", "roomId": "filtration", "nameEn": "Water Filter", "nameAr": "فلتر الماء", "kind": "clean", "learning": "obj_water_filter" },
+        { "id": "replace_scrubber", "roomId": "air_quality", "nameEn": "CO2 Scrubber", "nameAr": "مرشح ثاني أكسيد الكربون", "kind": "repair", "learning": "obj_air_scrubber" },
+        { "id": "repair_o2", "roomId": "air_quality", "nameEn": "Electrolysis Stack", "nameAr": "وحدة التحليل الكهربائي", "kind": "repair", "learning": "obj_air_scrubber" }
+      ]
+    },
+    {
+      "id": "lab", "nameEn": "Science Laboratory", "nameAr": "المختبر العلمي", "category": "functional",
+      "position": [-30, 16], "footprint": [12, 10], "height": 5.4, "color": "#cfc9dd",
+      "powerKw": 1.4, "waterLPerDay": 4, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [
+        { "id": "sample_intake", "nameEn": "Sample Intake", "nameAr": "استلام العينات", "purpose": "Log provenance before anything else", "size": [5, 4], "offset": [0, 0] },
+        { "id": "clean_bench", "nameEn": "Clean Bench", "nameAr": "الطاولة النظيفة", "purpose": "Contamination control", "size": [6, 5], "offset": [-3, 0] },
+        { "id": "microscopy", "nameEn": "Microscopy", "nameAr": "المجهر", "purpose": "Observe before concluding", "size": [5, 4], "offset": [4, 0] }
+      ],
+      "interactions": [
+        { "id": "microscope", "roomId": "microscopy", "nameEn": "Microscope", "nameAr": "المجهر", "kind": "read", "learning": "obj_sample" },
+        { "id": "sample_intake", "roomId": "sample_intake", "nameEn": "Sample Log", "nameAr": "سجل العينات", "kind": "use", "learning": "obj_sample" },
+        { "id": "clean_bench", "roomId": "clean_bench", "nameEn": "Clean Bench", "nameAr": "الطاولة النظيفة", "kind": "read", "learning": "obj_sample" }
+      ]
+    },
+    {
+      "id": "medical", "nameEn": "Medical & Exercise", "nameAr": "الطب والتمارين", "category": "functional",
+      "position": [16, -40], "footprint": [10, 8], "height": 5.0, "color": "#e0d6d6",
+      "powerKw": 0.8, "waterLPerDay": 8, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "checkup", "nameEn": "Check-up Room", "nameAr": "غرفة الفحص", "purpose": "Private, respectful care", "size": [5, 4], "offset": [0, 0] },
+        { "id": "exercise", "nameEn": "Exercise Area", "nameAr": "منطقة التمارين", "purpose": "Bone and muscle health", "size": [5, 4], "offset": [-3, 0] },
+        { "id": "records", "nameEn": "Private Records", "nameAr": "السجلات الخاصة", "purpose": "Dose and health history", "size": [4, 3], "offset": [3, 0] }
+      ],
+      "interactions": [
+        { "id": "checkup", "roomId": "checkup", "nameEn": "Crew Check-up", "nameAr": "فحص الطاقم", "kind": "use", "learning": "obj_crew_rest" },
+        { "id": "dose_log", "roomId": "records", "nameEn": "Dose Log", "nameAr": "سجل الجرعة", "kind": "read", "learning": "obj_radiation" },
+        { "id": "exercise", "roomId": "exercise", "nameEn": "Exercise Bench", "nameAr": "جهاز التمارين", "kind": "use", "learning": "obj_crew_rest" }
+      ]
+    },
+    {
+      "id": "garage", "nameEn": "Rover Garage", "nameAr": "مرآب المركبات", "category": "functional",
+      "position": [-16, -40], "footprint": [12, 10], "height": 6.0, "color": "#bdb6a8",
+      "powerKw": 1.8, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "vehicle_bay", "nameEn": "Vehicle Bay", "nameAr": "حظيرة المركبات", "purpose": "Rover, drone and arm maintenance", "size": [8, 6], "offset": [0, 0] },
+        { "id": "charging", "nameEn": "Charging", "nameAr": "الشحن", "purpose": "Battery health and charge planning", "size": [4, 4], "offset": [-3, 0] },
+        { "id": "eva_prep", "nameEn": "EVA Prep", "nameAr": "تحضير السير الفضائي", "purpose": "Suits, dust and tool checks", "size": [4, 4], "offset": [3, 0] }
+      ],
+      "interactions": [
+        { "id": "rover_bay", "roomId": "vehicle_bay", "nameEn": "Rover Diagnostics", "nameAr": "تشخيص الروفر", "kind": "read", "learning": "obj_comms_relay" },
+        { "id": "charge", "roomId": "charging", "nameEn": "Charge Planner", "nameAr": "مخطط الشحن", "kind": "read", "learning": "obj_power_budget" },
+        { "id": "eva_prep", "roomId": "eva_prep", "nameEn": "Suit Dust Station", "nameAr": "محطة غبار البدلة", "kind": "clean", "learning": "obj_airlock_dust" }
+      ]
+    },
+    {
+      "id": "storage", "nameEn": "Storage & Logistics", "nameAr": "المخازن واللوجستيات", "category": "functional",
+      "position": [0, 30], "footprint": [12, 8], "height": 4.6, "color": "#c7c3b9",
+      "powerKw": 0.4, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [
+        { "id": "dry", "nameEn": "Dry Storage", "nameAr": "المخزن الجاف", "purpose": "Parts and materials", "size": [6, 4], "offset": [0, 0] },
+        { "id": "food", "nameEn": "Food Storage", "nameAr": "مخزن الغذاء", "purpose": "Shelf life and rotation", "size": [5, 4], "offset": [-3, 0] },
+        { "id": "spares", "nameEn": "Spare Parts", "nameAr": "قطع الغيار", "purpose": "What breaks, and how often", "size": [4, 3], "offset": [3, 0] }
+      ],
+      "interactions": [
+        { "id": "inventory", "roomId": "dry", "nameEn": "Inventory Console", "nameAr": "وحدة الجرد", "kind": "read", "learning": "obj_power_budget" },
+        { "id": "food_store", "roomId": "food", "nameEn": "Food Rotation", "nameAr": "تدوير الغذاء", "kind": "read", "learning": "obj_plant_care" },
+        { "id": "spares", "roomId": "spares", "nameEn": "Spares Bin", "nameAr": "صندوق القطع", "kind": "read", "learning": "obj_power_budget" }
+      ]
+    },
+    {
+      "id": "comms_tower", "nameEn": "Communications Tower", "nameAr": "برج الاتصالات", "category": "functional",
+      "position": [44, 6], "footprint": [8, 8], "height": 9.0, "color": "#aeb8c4",
+      "powerKw": 1.2, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "network", "nameEn": "Network Console", "nameAr": "وحدة الشبكة", "purpose": "Local network and base computers", "size": [5, 4], "offset": [0, 0] },
+        { "id": "relay", "nameEn": "Relay Diagnostics", "nameAr": "تشخيص المرحل", "purpose": "Line of sight and signal quality", "size": [4, 4], "offset": [-2, 0] },
+        { "id": "antenna", "nameEn": "Antenna Control", "nameAr": "التحكم بالهوائي", "purpose": "Pointing, dust and obstruction", "size": [4, 3], "offset": [2, 0] }
+      ],
+      "interactions": [
+        { "id": "relay", "roomId": "relay", "nameEn": "Relay Alignment", "nameAr": "محاذاة المرحل", "kind": "repair", "learning": "obj_comms_relay" },
+        { "id": "antenna", "roomId": "antenna", "nameEn": "Antenna Cleaning", "nameAr": "تنظيف الهوائي", "kind": "clean", "learning": "obj_sensor_dust" },
+        { "id": "network", "roomId": "network", "nameEn": "Telemetry Check", "nameAr": "فحص التليمترية", "kind": "read", "learning": "obj_comms_relay" }
+      ]
+    },
+    {
+      "id": "regolith_plant", "nameEn": "Regolith Processing", "nameAr": "معالجة الثرى", "category": "functional",
+      "position": [-44, 6], "footprint": [12, 10], "height": 6.0, "color": "#b0a89c",
+      "powerKw": 2.6, "waterLPerDay": 2, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [
+        { "id": "intake", "nameEn": "Material Intake", "nameAr": "استلام المواد", "purpose": "Raw regolith, logged by site", "size": [6, 5], "offset": [0, 0] },
+        { "id": "processing", "nameEn": "Processing Line", "nameAr": "خط المعالجة", "purpose": "Sort, crush and sinter", "size": [6, 4], "offset": [-3, 0] },
+        { "id": "output", "nameEn": "Output Storage", "nameAr": "مخزن الناتج", "purpose": "Bricks, shielding and feedstock", "size": [4, 3], "offset": [3, 0] }
+      ],
+      "interactions": [
+        { "id": "intake", "roomId": "intake", "nameEn": "Sample Provenance", "nameAr": "مصدر العينة", "kind": "use", "learning": "obj_sample" },
+        { "id": "printer", "roomId": "processing", "nameEn": "Regolith Printer", "nameAr": "طابعة الثرى", "kind": "read", "learning": "obj_power_budget" },
+        { "id": "output", "roomId": "output", "nameEn": "Output Quality", "nameAr": "جودة الناتج", "kind": "read", "learning": "obj_sample" }
+      ]
+    },
+    {
+      "id": "storm_shelter", "nameEn": "Storm Shelter", "nameAr": "ملجأ العاصفة", "category": "functional",
+      "position": [16, 38], "footprint": [10, 8], "height": 4.4, "color": "#9aa3a8",
+      "powerKw": 0.3, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "protected", "nameEn": "Protected Area", "nameAr": "المنطقة المحمية", "purpose": "Regolith-shielded space for the crew", "size": [6, 4], "offset": [0, 0] },
+        { "id": "supplies", "nameEn": "Supplies", "nameAr": "الإمدادات", "purpose": "Water, food and medical cache", "size": [4, 3], "offset": [-3, 0] },
+        { "id": "status", "nameEn": "Status Display", "nameAr": "شاشة الحالة", "purpose": "Dose rate and event countdown", "size": [3, 3], "offset": [3, 0] }
+      ],
+      "interactions": [
+        { "id": "shelter", "roomId": "protected", "nameEn": "Shelter the Crew", "nameAr": "احتماء الطاقم", "kind": "use", "learning": "obj_radiation" },
+        { "id": "supplies", "roomId": "supplies", "nameEn": "Emergency Cache", "nameAr": "مخزن الطوارئ", "kind": "read", "learning": "obj_crew_rest" },
+        { "id": "status", "roomId": "status", "nameEn": "Dose Display", "nameAr": "شاشة الجرعة", "kind": "read", "learning": "obj_radiation" }
+      ]
+    },
+    {
+      "id": "power_farm", "nameEn": "Power Farm", "nameAr": "مزرعة الطاقة", "category": "functional",
+      "position": [-62, -8], "footprint": [18, 14], "height": 4.2, "color": "#8b97a5",
+      "powerKw": 0.5, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "inverter", "nameEn": "Inverter Room", "nameAr": "غرفة العواكس", "purpose": "Convert and condition array power", "size": [6, 5], "offset": [0, 0] },
+        { "id": "battery_hall", "nameEn": "Battery Hall", "nameAr": "قاعة البطاريات", "purpose": "120 kWh storage and thermal control", "size": [6, 4], "offset": [-3, 0] },
+        { "id": "array_control", "nameEn": "Array Control", "nameAr": "التحكم بالألواح", "purpose": "Tracking, dust and shadow maps", "size": [5, 4], "offset": [4, 0] }
+      ],
+      "interactions": [
+        { "id": "balance_load", "roomId": "array_control", "nameEn": "Load Budget", "nameAr": "ميزانية الأحمال", "kind": "use", "learning": "obj_power_budget" },
+        { "id": "repair_array", "roomId": "inverter", "nameEn": "Array Connector Bench", "nameAr": "طاولة موصل الألواح", "kind": "repair", "learning": "obj_solar_dust" },
+        { "id": "clean_arrays", "roomId": "array_control", "nameEn": "Array Wash Robot", "nameAr": "روبوت غسل الألواح", "kind": "clean", "learning": "obj_solar_dust" }
+      ]
+    },
+    {
+      "id": "ice_site", "nameEn": "Ice Prospecting Site", "nameAr": "موقع استكشاف الجليد", "category": "functional",
+      "position": [52, -34], "footprint": [10, 8], "height": 3.8, "color": "#9fb3c8",
+      "powerKw": 1.1, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": true,
+      "rooms": [
+        { "id": "drill_shack", "nameEn": "Drill Shack", "nameAr": "كوخ الحفر", "purpose": "Sealed drilling and sample recovery", "size": [4, 4], "offset": [0, 0] },
+        { "id": "cold_lab", "nameEn": "Cold Lab", "nameAr": "المختبر البارد", "purpose": "Keep volatiles cold while measuring", "size": [4, 4], "offset": [-2, 0] },
+        { "id": "sample_cache", "nameEn": "Sample Cache", "nameAr": "مخزن العينات", "purpose": "Chain of custody, site coordinates", "size": [3, 3], "offset": [2, 0] }
+      ],
+      "interactions": [
+        { "id": "collect_sample", "roomId": "drill_shack", "nameEn": "Sample Recovery", "nameAr": "استعادة العينة", "kind": "use", "learning": "obj_sample" },
+        { "id": "ice_probe", "roomId": "cold_lab", "nameEn": "Volatile Probe", "nameAr": "مسبار المواد المتطايرة", "kind": "read", "learning": "obj_sample" },
+        { "id": "cache_log", "roomId": "sample_cache", "nameEn": "Sample Chain of Custody", "nameAr": "سلسلة حيازة العينة", "kind": "read", "learning": "obj_sample" }
+      ]
+    },
+    {
+      "id": "landing_pad", "nameEn": "Landing Pad", "nameAr": "منصة الهبوط", "category": "decorative",
+      "position": [0, 52], "footprint": [20, 20], "height": 1.0, "color": "#6f7378",
+      "powerKw": 0, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [], "interactions": []
+    },
+    {
+      "id": "airlock", "nameEn": "Airlock & Suit Facility", "nameAr": "الأيرلوك والبدلات", "category": "functional",
+      "position": [0, 13], "footprint": [6, 6], "height": 3.4, "color": "#d0d5da",
+      "powerKw": 0.6, "waterLPerDay": 0, "o2KgPerDay": 0, "requiresComms": false,
+      "rooms": [
+        { "id": "suit_rack", "nameEn": "Suit Rack", "nameAr": "حامل البدلات", "purpose": "Suit status and sizing", "size": [3, 3], "offset": [0, 0] },
+        { "id": "dust_removal", "nameEn": "Dust Removal", "nameAr": "إزالة الغبار", "purpose": "Keep regolith out of the seal", "size": [3, 3], "offset": [-2, 0] },
+        { "id": "pressure", "nameEn": "Pressure Transition", "nameAr": "انتقال الضغط", "purpose": "Safe entry and exit", "size": [3, 3], "offset": [2, 0] }
+      ],
+      "interactions": [
+        { "id": "dust_removal", "roomId": "dust_removal", "nameEn": "Dust Station", "nameAr": "محطة الغبار", "kind": "clean", "learning": "obj_airlock_dust" },
+        { "id": "suit_rack", "roomId": "suit_rack", "nameEn": "Suit Check", "nameAr": "فحص البدلة", "kind": "read", "learning": "obj_airlock_dust" },
+        { "id": "pressure", "roomId": "pressure", "nameEn": "Pressure Panel", "nameAr": "لوحة الضغط", "kind": "read", "learning": "obj_air_scrubber" }
+      ]
+    }
+  ]
+}

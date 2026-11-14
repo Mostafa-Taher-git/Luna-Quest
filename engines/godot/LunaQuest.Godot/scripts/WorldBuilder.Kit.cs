@@ -32,8 +32,8 @@ namespace LunaQuest.Godot
             ("propellant-tank-farm-3dcbfa21",  -30f, 50f,   90f, 1.0f),
             ("cryo-transfer-arm-5d350240",     -24f, 40f,    0f, 1.0f),
             // Power yard behind the solar farm.
-            ("battery-container-9755ed67",     -66f, -14f,  90f, 1.0f),
-            ("battery-container-9755ed67",     -66f, -20f,  90f, 1.0f),
+            ("battery-container-9755ed67",     -78f, -16f,  90f, 1.0f),
+            ("battery-container-9755ed67",     -78f, -22f,  90f, 1.0f),
             ("radiator-bank-0c1ce93e",         -52f,  16f,   0f, 1.0f),
             ("nuclear-power-unit-8239903e",    -72f, -32f,   0f, 1.0f),
             ("vertical-solar-tower-c58cca7d", -68f, 10f, 0f, 1.0f),

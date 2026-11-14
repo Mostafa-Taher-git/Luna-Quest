@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "comment": "Learning is recorded when the player completes a real action, never by quiz. evidenceClass: A = direct measurement or primary mission data, B = analogue or ground experiment, C = simplified game rule. Every entry names its source so the journal can be audited.",
+  "learning": [
+    {
+      "id": "obj_solar_dust",
+      "titleEn": "Dust steals power before anything breaks",
+      "titleAr": "الغبار يسرق الطاقة قبل أن يتعطل شيء",
+      "bodyEn": "A thin regolith film cuts array output long before hardware fails. Clean, measure, then decide whether to repair.",
+      "bodyAr": "طبقة رقيقة من الثرى تقلل إنتاج الألواح قبل أن يتعطل العتاد. نظّف، ثم قِس، ثم قرر هل تصلح.",
+      "skill": "cleaning", "evidenceClass": "B",
+      "source": "NASA — what hazards are caused by lunar regolith; LRO/LOLA illumination"
+    },
+    {
+      "id": "obj_sensor_dust",
+      "titleEn": "A dirty sensor lies with confidence",
+      "titleAr": "الحساس المتسخ يكذب بثقة",
+      "bodyEn": "When two instruments disagree, clean the optics and repeat the reading before you change a system.",
+      "bodyAr": "عندما يختلف جهازان، نظّف البصريات وأعد القراءة قبل تغيير أي نظام.",
+      "skill": "cleaning", "evidenceClass": "B",
+      "source": "NASA lunar regolith hazards; mission sensor calibration practice"
+    },
+    {
+      "id": "obj_airlock_dust",
+      "titleEn": "Keep the regolith outside the seal",
+      "titleAr": "أبقِ الثرى خارج الختم",
+      "bodyEn": "Lunar grains are sharp and cling to suits. Dust in the airlock is a seal failure waiting for a pressure cycle.",
+      "bodyAr": "حبيبات القمر حادة وتلتصق بالبدلات. الغبار في الأيرلوك عطل ختم ينتظر دورة ضغط.",
+      "skill": "cleaning", "evidenceClass": "A",
+      "source": "NASA — biological and physical hazards of lunar regolith"
+    },
+    {
+      "id": "obj_water_filter",
+      "titleEn": "Recycling is a rate, not a tank",
+      "titleAr": "التدوير معدل، لا خزان",
+      "bodyEn": "At 93% recovery, seven people still lose water every day. Watch filter health, because that is where the loss hides.",
+      "bodyAr": "عند استعادة 93%، يفقد سبعة أفراد ماءً كل يوم. راقب صحة الفلتر، فهناك يختفي الفقد.",
+      "skill": "chemistry", "evidenceClass": "B",
+      "source": "CSA — living in space, ISS water recovery; NASA OSDR life-support context"
+    },
+    {
+      "id": "obj_plant_care",
+      "titleEn": "One variable at a time",
+      "titleAr": "متغير واحد في كل مرة",
+      "bodyEn": "Plants here are enclosed. Light comes from colony power, CO2 from the cabin, water from the tank. Change one, log it, wait.",
+      "bodyAr": "النباتات هنا مغلقة. الضوء من طاقة المستعمرة، وثاني أكسيد الكربون من المقصورة، والماء من الخزان. غيّر واحدًا وسجّله وانتظر.",
+      "skill": "botany", "evidenceClass": "B",
+      "source": "CSA Interplanetary Farming; NASA Veggie, XROOTS and EDEN ISS"
+    },
+    {
+      "id": "obj_air_scrubber",
+      "titleEn": "CO2 is the quiet emergency",
+      "titleAr": "ثاني أكسيد الكربون طارئ صامت",
+      "bodyEn": "A worn scrubber still runs. Replace it on your schedule, and give electrolysis priority when oxygen falls.",
+      "bodyAr": "المرشح المتآكل لا يزال يعمل. استبدله وفق جدولك، وأعطِ التحليل الكهربائي أولوية عند انخفاض الأكسجين.",
+      "skill": "chemistry", "evidenceClass": "A",
+      "source": "Apollo 13 CO2 scrubber improvisation; ISS ECLSS practice"
+    },
+    {
+      "id": "obj_radiation",
+      "titleEn": "Shelter is a decision made early",
+      "titleAr": "الاحتماء قرار يُتخذ مبكرًا",
+      "bodyEn": "Surface dose is about 13.2 µGy/h in silicon. A solar particle event can raise it by two orders of magnitude; regolith shielding cuts it.",
+      "bodyAr": "الجرعة السطحية نحو 13.2 ميكروغراي/ساعة في السيليكون. حدث جسيمات شمسية قد يرفعها مئة ضعف؛ التدريع بالثرى يقللها.",
+      "skill": "health", "evidenceClass": "A",
+      "source": "Chang'e-4 LND surface dose; NASA radiation protection at the Moon; DONKI SEP"
+    },
+    {
+      "id": "obj_comms_relay",
+      "titleEn": "Line of sight is a resource",
+      "titleAr": "خط الرؤية مورد",
+      "bodyEn": "Earth is 1.3 light-seconds away. The antenna is rarely the problem; pointing, dust and relay alignment are.",
+      "bodyAr": "الأرض على بعد 1.3 ثانية ضوئية. الهوائي نادرًا ما يكون المشكلة؛ التوجيه والغبار ومحاذاة المرحل هي المشكلة.",
+      "skill": "engineering", "evidenceClass": "B",
+      "source": "NASA Near Space Network / DONKI communications context; Apollo 12 telemetry recovery"
+    },
+    {
+      "id": "obj_crew_rest",
+      "titleEn": "Fatigue is a system fault",
+      "titleAr": "الإجهاد عطل نظام",
+      "bodyEn": "Tired crews skip steps. Sleep, exercise and shift balance are part of life support, not a break from it.",
+      "bodyAr": "الطاقم المتعب يتخطى الخطوات. النوم والتمارين وتوازن المناوبات جزء من دعم الحياة، لا استراحة منه.",
+      "skill": "crew", "evidenceClass": "B",
+      "source": "NASA OSDR human health and performance; CSA physical activity in space"
+    },
+    {
+      "id": "obj_sample",
+      "titleEn": "Provenance before conclusion",
+      "titleAr": "المصدر قبل الاستنتاج",
+      "bodyEn": "One reading is a rumour. Log the site, repeat the measurement and keep the sample cold before calling it ice.",
+      "bodyAr": "قراءة واحدة إشاعة. سجّل الموقع، وكرر القياس، واحفظ العينة باردة قبل أن تسميها جليدًا.",
+      "skill": "geology", "evidenceClass": "A",
+      "source": "Apollo 17 field geology; NASA Moon water and ices; OSDR sample practice"
+    },
+    {
+      "id": "obj_power_budget",
+      "titleEn": "Every kilowatt has an owner",
+      "titleAr": "لكل كيلوواط صاحب",
+      "bodyEn": "Life support first, heat second, grow lights last. Shedding in that order keeps the crew alive while the battery recovers.",
+      "bodyAr": "دعم الحياة أولًا، ثم الحرارة، ثم أضواء النمو. الفصل بهذا الترتيب يبقي الطاقم حيًا حتى تتعافى البطارية.",
+      "skill": "engineering", "evidenceClass": "C",
+      "source": "ISS power architecture and load-priority practice; simplified colony rules"
+    }
+  ]
+}

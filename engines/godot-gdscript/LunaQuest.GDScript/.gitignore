@@ -1,0 +1,10 @@
+# Godot cache and exports
+.godot/
+build/
+export/
+*.translation
+
+# The shared assets (astronaut, kit models, intro film, voice pack, textures) live once, in the
+# .NET Godot project. Run `bash tools/sync-gdscript-assets.sh` from the repository root to copy
+# them in; CI does it before every build.
+assets/

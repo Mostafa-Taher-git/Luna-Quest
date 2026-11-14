@@ -563,7 +563,11 @@ namespace LunaQuest.Core.Sim
                 case "clean_filter": return TryAction(PlayerAction.CleanFilter, out messageEn, out messageAr);
                 case "replace_scrubber": return TryAction(PlayerAction.ReplaceScrubber, out messageEn, out messageAr);
                 case "repair_relay":
-                case "comms_desk": return TryAction(PlayerAction.RepairRelay, out messageEn, out messageAr);
+                case "comms_desk":
+                // The comms tower's console is called "relay" in content/buildings.json and the
+                // comms incident requires repair_relay. Without this alias that incident could
+                // never be resolved from the tower itself.
+                case "relay": return TryAction(PlayerAction.RepairRelay, out messageEn, out messageAr);
                 case "repair_array": return TryAction(PlayerAction.RepairArray, out messageEn, out messageAr);
                 case "antenna": return TryAction(PlayerAction.CleanSensors, out messageEn, out messageAr);
                 case "collect_sample":

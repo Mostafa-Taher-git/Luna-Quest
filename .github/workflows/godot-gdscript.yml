@@ -1,0 +1,231 @@
+name: GDScript build
+
+# The pure-GDScript edition of Luna-Quest, built with stock Godot 4.7.2 — no .NET, no Mono.
+#
+# Every push and pull request: import the project headlessly, run the main scene for a few
+# hundred frames, and fail the job if the engine printed a parse error or a script error. That is
+# the same check a developer runs locally, so a broken script cannot reach a tag.
+#
+# On main, tags and manual runs it also exports the three builds — including the web build, which
+# the .NET project cannot produce — and, when asked, publishes the web build to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      export:
+        description: 'Export the desktop and web builds'
+        type: boolean
+        default: true
+      deploy_web:
+        description: 'Publish the GDScript web build to GitHub Pages'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gdscript-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.7.2'
+  PROJECT_DIR: engines/godot-gdscript/LunaQuest.GDScript
+
+jobs:
+  validate:
+    name: Import and run headless
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate the content the game reads
+        run: node tools/check-content.mjs
+      - name: Sync the shared assets into the GDScript project
+        run: bash tools/sync-gdscript-assets.sh
+      - name: Fetch Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          ./godot --version
+      - name: Import the project (parses every script, imports every asset)
+        run: |
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --import > import.log 2>&1 || true
+          tail -c 8000 import.log
+          status=0
+          while IFS= read -r line; do
+            echo "::error::import: $line"
+            status=1
+          done < <(grep -Ei "Parse Error|SCRIPT ERROR|Failed to load script|Compile error" import.log | head -20)
+          exit $status
+      - name: Fly the thirty-day self-test
+        run: |
+          set +e
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" -- --selftest > selftest.log 2>&1 || true
+          grep -E "SELFTEST|resource floors|flew " selftest.log | head -40
+          while IFS= read -r line; do
+            echo "::notice::selftest: $line"
+          done < <(grep -E "SELFTEST OK|resource floors|flew " selftest.log | head -5)
+          if grep -q "SELFTEST OK" selftest.log; then
+            exit 0
+          fi
+          while IFS= read -r line; do
+            echo "::error::selftest: $line"
+          done < <(grep -E "SELFTEST FAILED|  · " selftest.log | head -20)
+          tail -c 4000 selftest.log
+          exit 1
+      - name: Audit the built colony (doorways, consoles, spawn, crew, perimeter)
+        run: |
+          set +e
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" -- --audit > audit.log 2>&1; code=$?
+          echo "audit exit code: $code"
+          grep -E "AUDIT|  · " audit.log | head -40
+          while IFS= read -r line; do
+            echo "::notice::audit: $line"
+          done < <(grep -E "AUDIT OK|AUDIT FAILED" audit.log | head -3)
+          if [ $code -ne 0 ] || ! grep -q "AUDIT OK" audit.log; then
+            echo "::error::audit: $(grep -E '  · ' audit.log | head -14 | tr '\n' '|')"
+            while IFS= read -r line; do
+              echo "::error::audit: $line"
+            done < <(grep -E "SCRIPT ERROR|Invalid" audit.log | head -6)
+            tail -c 4000 audit.log
+            exit 1
+          fi
+      - name: Run the game headlessly for 400 frames
+        run: |
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" --quit-after 400 > run.log 2>&1 || true
+          tail -c 8000 run.log
+          status=0
+          while IFS= read -r line; do
+            echo "::error::boot: $line"
+            status=1
+          done < <(grep -Ei "SCRIPT ERROR|Invalid call|Cannot call method|Nonexistent function|Invalid access" run.log | head -20)
+          if ! grep -q "Luna-Quest (GDScript): ready" run.log; then
+            echo "::error::The game did not report a successful boot."
+            status=1
+          fi
+          exit $status
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-logs
+          path: |
+            import.log
+            run.log
+            selftest.log
+            audit.log
+            export.log
+          if-no-files-found: warn
+
+  export:
+    name: Export web, Windows and Linux
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync the shared assets into the GDScript project
+        run: bash tools/sync-gdscript-assets.sh
+      - name: Fetch Godot and the export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          curl -fL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          unzip -q templates.tpz -d templates
+          mv templates/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+      - name: Import
+        run: ./godot --headless --path "$PROJECT_DIR" --import || true
+      - name: Export
+        run: |
+          set +e
+          set -uo pipefail
+          mkdir -p out
+          P="engines/godot-gdscript/LunaQuest.GDScript"
+          # Godot writes into an existing folder; it will not create one for you.
+          mkdir -p "$P/build/web" "$P/build/linux" "$P/build/windows"
+          ./godot --headless --path "$P" --export-release "Web" build/web/index.html > export.log 2>&1; web=$?
+          ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 >> export.log 2>&1; linux=$?
+          ./godot --headless --path "$P" --export-release "Windows" build/windows/luna-quest-gdscript.exe >> export.log 2>&1; windows=$?
+          echo "export exit codes — web=$web linux=$linux windows=$windows"
+          echo "::notice::export exit codes web=$web linux=$linux windows=$windows"
+          tail -c 6000 export.log
+          while IFS= read -r line; do
+            echo "::error::export: $line"
+          done < <(grep -Ei "error|failed|cannot|missing|not found|preset|template" export.log | head -12)
+          ls -R "$P/build" 2>&1 | head -40 || true
+          status=0
+          for f in "$P/build/web/index.html" "$P/build/web/index.wasm" "$P/build/web/index.pck" \
+                   "$P/build/linux/luna-quest-gdscript.x86_64" "$P/build/windows/luna-quest-gdscript.exe"; do
+            if [ ! -s "$f" ]; then
+              echo "::error::missing or empty export output: $f"
+              status=1
+            fi
+          done
+          if [ $status -ne 0 ]; then
+            while IFS= read -r line; do
+              echo "::error::export: $line"
+            done < <(grep -Ei "error|failed|cannot|missing|not found" export.log | head -20)
+            exit 1
+          fi
+          chmod +x "$P/build/linux/luna-quest-gdscript.x86_64"
+          cp "$P/build/web/"* out/ 2>/dev/null || true
+          ( cd "$P/build/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
+          ( cd "$P/build/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
+          ( cd "$P/build/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
+          ls -lh out
+      - name: Upload the three builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-builds
+          path: out/LunaQuest-GDScript-*.zip
+          if-no-files-found: error
+      - name: Keep the web build for Pages
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-web
+          path: ${{ env.PROJECT_DIR }}/build/web
+          if-no-files-found: error
+
+  pages:
+    name: Publish the GDScript web build
+    needs: export
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_web == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gdscript-web
+          path: site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
