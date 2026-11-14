@@ -93,7 +93,7 @@ func crew_astronaut() -> Node3D:
 			return holder
 	var fallback := ColonyCrew.new()
 	var suit := fallback._fallback_suit(Color(0.91, 0.58, 0.23))
-	fallback.queue_free()
+	fallback.free()
 	return suit
 
 

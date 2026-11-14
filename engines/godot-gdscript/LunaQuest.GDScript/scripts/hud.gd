@@ -44,6 +44,7 @@ var intro_skip: Button
 var name_edit: LineEdit
 var lang_button: Button
 var arabic := false
+var ui_theme := Theme.new()
 var _dialogue_npc := ""
 
 
@@ -59,8 +60,7 @@ func _ready() -> void:
 # ---- theme -----------------------------------------------------------------
 
 func _build_theme() -> void:
-	var theme := Theme.new()
-	theme.default_font_size = 16
+	ui_theme.default_font_size = 16
 	if ResourceLoader.exists(FONT_LATIN):
 		var latin = load(FONT_LATIN)
 		if latin is Font:
@@ -68,15 +68,15 @@ func _build_theme() -> void:
 				var arabic_font = load(FONT_ARABIC)
 				if arabic_font is Font:
 					latin.set_fallbacks([arabic_font])
-			theme.default_font = latin
-	theme.set_color("font_color", "Label", TEXT)
-	theme.set_color("font_color", "Button", TEXT)
-	theme.set_stylebox("panel", "PanelContainer", _panel_style())
-	theme.set_stylebox("normal", "Button", _button_style(false))
-	theme.set_stylebox("hover", "Button", _button_style(true))
-	theme.set_stylebox("pressed", "Button", _button_style(true))
-	theme.set_constant("margin_left", "MarginContainer", 18)
-	theme.set_constant("margin_right", "MarginContainer", 18)
+			ui_theme.default_font = latin
+	ui_theme.set_color("font_color", "Label", TEXT)
+	ui_theme.set_color("font_color", "Button", TEXT)
+	ui_theme.set_stylebox("panel", "PanelContainer", _panel_style())
+	ui_theme.set_stylebox("normal", "Button", _button_style(false))
+	ui_theme.set_stylebox("hover", "Button", _button_style(true))
+	ui_theme.set_stylebox("pressed", "Button", _button_style(true))
+	ui_theme.set_constant("margin_left", "MarginContainer", 18)
+	ui_theme.set_constant("margin_right", "MarginContainer", 18)
 
 
 func _panel_style() -> StyleBoxFlat:
@@ -110,7 +110,7 @@ func _label(text: String, size := 16, color := TEXT) -> Label:
 func _build_hud() -> void:
 	root = Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.theme = theme
+	root.theme = ui_theme
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
@@ -195,7 +195,7 @@ func _gauge_name(key: String) -> String:
 func refresh(sim: LQSim) -> void:
 	if top_values.is_empty():
 		return
-	top_values["day"].text = sim.clock.stamp()
+	top_values["day"].text = sim.clock.stamp(sim.arabic)
 	top_values["power"].text = "%d%%" % int(round(sim.battery_percent() * 100.0))
 	top_values["o2"].text = "%d%%" % int(round(sim.o2_percent() * 100.0))
 	top_values["water"].text = "%d%%" % int(round(sim.water_percent() * 100.0))
