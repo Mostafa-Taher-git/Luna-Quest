@@ -21,7 +21,7 @@ on:
     branches: [arena/7c35ed25-luna-quest]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   capture:
@@ -61,6 +61,17 @@ jobs:
           name: readme-shots
           path: shots
           retention-days: 14
+
+      - name: Commit the frames back to the branch
+        if: always()
+        run: |
+          test -d shots || exit 0
+          git config user.name "Luna-Quest capture"
+          git config user.email "capture@luna-quest.invalid"
+          git add -f shots
+          git diff --cached --quiet && exit 0
+          git commit -m "Capture README frames from ${GITHUB_SHA::7} [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Summarise
         if: always()
