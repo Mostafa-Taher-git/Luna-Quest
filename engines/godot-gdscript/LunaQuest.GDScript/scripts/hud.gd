@@ -26,6 +26,7 @@ var root: Control
 var hud_layer: Control
 var top_values: Dictionary = {}
 var mission_label: Label
+var crosshair: Control
 var prompt_label: Label
 var subtitle_label: Label
 var toast_box: VBoxContainer
@@ -146,6 +147,32 @@ func _build_hud() -> void:
 	mission_label.offset_top = 92
 	hud_layer.add_child(mission_label)
 
+	# Crosshair: a dot you can find on a bright module and lose against a black sky, with a thin
+	# ring so the eye reads it without hunting.
+	var aim := Control.new()
+	aim.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	aim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_layer.add_child(aim)
+	var ring := Panel.new()
+	ring.custom_minimum_size = Vector2(22, 22)
+	ring.size = Vector2(22, 22)
+	ring.position = Vector2(-11, -11)
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ring_style := StyleBoxFlat.new()
+	ring_style.bg_color = Color(1, 1, 1, 0.06)
+	ring_style.border_color = Color(1, 1, 1, 0.45)
+	ring_style.set_border_width_all(1)
+	ring_style.set_corner_radius_all(11)
+	ring.add_theme_stylebox_override("panel", ring_style)
+	aim.add_child(ring)
+	var dot := ColorRect.new()
+	dot.color = Color(1, 1, 1, 0.9)
+	dot.size = Vector2(4, 4)
+	dot.position = Vector2(-2, -2)
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	aim.add_child(dot)
+	crosshair = aim
+
 	# Prompt at the bottom centre.
 	prompt_label = _label("", 19, TEXT)
 	prompt_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -231,6 +258,11 @@ func _colour(label: Label, warn: bool) -> void:
 
 func show_hud(on: bool) -> void:
 	hud_layer.visible = on
+
+
+func set_crosshair(on: bool) -> void:
+	if crosshair != null:
+		crosshair.visible = on
 
 
 func set_prompt(text: String) -> void:
@@ -423,6 +455,7 @@ func open_dialogue(profile: Dictionary, line: String, sim: LQSim) -> void:
 		close_dialogue()
 		dialogue_closed.emit())
 	dialogue_body.add_child(close)
+	set_crosshair(false)
 	dialogue_panel.visible = true
 
 
@@ -432,6 +465,7 @@ func set_dialogue_line(text: String) -> void:
 
 func close_dialogue() -> void:
 	dialogue_panel.visible = false
+	set_crosshair(true)
 	_dialogue_npc = ""
 
 
@@ -452,6 +486,7 @@ func toggle_help() -> void:
 
 func set_paused(on: bool) -> void:
 	pause_panel.visible = on
+	set_crosshair(not on)
 
 
 func set_language(arabic_on: bool) -> void:
