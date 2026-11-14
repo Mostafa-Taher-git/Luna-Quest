@@ -133,8 +133,11 @@ func _check_consoles(world: ColonyWorld) -> void:
 		if toward.length() < 0.1:
 			toward = Vector3(0, 0, 1)
 		toward = toward.normalized()
-		var eye: Vector3 = point + toward * 1.7 + Vector3(0, 1.1, 0)
-		var hit := ray(eye, point + Vector3(0, 1.1, 0))
+		# Eye height 1.6 m, standing 1.7 m off the panel, aiming at the screen — exactly the shot a
+		# player takes when they walk up to a console.
+		var eye := Vector3(point.x, 1.6, point.z) + toward * 1.7
+		var aim := Vector3(point.x, 1.15, point.z)
+		var hit := ray(eye, aim)
 		var reachable := false
 		if not hit.is_empty():
 			var collider = hit["collider"]
