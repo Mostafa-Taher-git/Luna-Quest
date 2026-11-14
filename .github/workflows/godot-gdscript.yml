@@ -69,6 +69,19 @@ jobs:
             status=1
           done < <(grep -Ei "Parse Error|SCRIPT ERROR|Failed to load script|Compile error" import.log | head -20)
           exit $status
+      - name: Fly the thirty-day self-test
+        run: |
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" -- --selftest > selftest.log 2>&1 || true
+          grep -E "SELFTEST|resource floors|flew " selftest.log | head -40
+          if grep -q "SELFTEST OK" selftest.log; then
+            exit 0
+          fi
+          while IFS= read -r line; do
+            echo "::error::selftest: $line"
+          done < <(grep -E "SELFTEST FAILED|  · " selftest.log | head -20)
+          tail -c 4000 selftest.log
+          exit 1
       - name: Run the game headlessly for 400 frames
         run: |
           set -uo pipefail
@@ -92,6 +105,7 @@ jobs:
           path: |
             import.log
             run.log
+            selftest.log
           if-no-files-found: warn
 
   export:
