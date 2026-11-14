@@ -26,7 +26,7 @@ namespace LunaQuest.Godot
                 GeometryCollisionMask = 1 | 4,
                 CellSize = 0.25f,
                 CellHeight = 0.25f,
-                AgentRadius = 0.45f,
+                AgentRadius = 0.5f,
                 AgentHeight = 1.8f,
                 AgentMaxClimb = 0.4f,
                 AgentMaxSlope = 32f,
