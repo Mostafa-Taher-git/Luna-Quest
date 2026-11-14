@@ -144,7 +144,12 @@ jobs:
           ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 >> export.log 2>&1; linux=$?
           ./godot --headless --path "$P" --export-release "Windows" build/windows/luna-quest-gdscript.exe >> export.log 2>&1; windows=$?
           echo "export exit codes — web=$web linux=$linux windows=$windows"
+          echo "::notice::export exit codes web=$web linux=$linux windows=$windows"
           tail -c 6000 export.log
+          while IFS= read -r line; do
+            echo "::error::export: $line"
+          done < <(grep -Ei "error|failed|cannot|missing|not found|preset|template" export.log | head -12)
+          ls -R "$P/build" 2>&1 | head -40 || true
           status=0
           for f in "$P/build/web/index.html" "$P/build/web/index.wasm" "$P/build/web/index.pck" \
                    "$P/build/linux/luna-quest-gdscript.x86_64" "$P/build/windows/luna-quest-gdscript.exe"; do
