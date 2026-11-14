@@ -74,6 +74,15 @@ func _ready() -> void:
 	crew.build(world, sim)
 
 	world.point_sun(sim.clock)
+
+	# `--audit` walks the finished colony with physics queries: doorways, consoles, spawn, crew.
+	if OS.get_cmdline_user_args().has("--audit"):
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		var passed := LQAudit.new().run(get_tree(), world, player, crew)
+		get_tree().quit(0 if passed else 1)
+		return
+
 	hud.show_hud(false)
 	hud.set_language(arabic)
 	hud.refresh(sim)

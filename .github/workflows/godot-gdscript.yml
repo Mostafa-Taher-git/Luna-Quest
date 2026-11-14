@@ -86,6 +86,23 @@ jobs:
           done < <(grep -E "SELFTEST FAILED|  · " selftest.log | head -20)
           tail -c 4000 selftest.log
           exit 1
+      - name: Audit the built colony (doorways, consoles, spawn, crew, perimeter)
+        run: |
+          set +e
+          set -uo pipefail
+          ./godot --headless --path "$PROJECT_DIR" -- --audit > audit.log 2>&1; code=$?
+          echo "audit exit code: $code"
+          grep -E "AUDIT|  · " audit.log | head -40
+          while IFS= read -r line; do
+            echo "::notice::audit: $line"
+          done < <(grep -E "AUDIT OK|AUDIT FAILED" audit.log | head -3)
+          if [ $code -ne 0 ] || ! grep -q "AUDIT OK" audit.log; then
+            while IFS= read -r line; do
+              echo "::error::audit: $line"
+            done < <(grep -E "  · |SCRIPT ERROR|Invalid" audit.log | head -20)
+            tail -c 4000 audit.log
+            exit 1
+          fi
       - name: Run the game headlessly for 400 frames
         run: |
           set -uo pipefail
@@ -110,6 +127,7 @@ jobs:
             import.log
             run.log
             selftest.log
+            audit.log
             export.log
           if-no-files-found: warn
 
