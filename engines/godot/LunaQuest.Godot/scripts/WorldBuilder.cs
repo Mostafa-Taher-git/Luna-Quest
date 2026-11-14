@@ -56,6 +56,7 @@ namespace LunaQuest.Godot
             BuildSolarFarm(sim.Content.Building("power_farm"));
             BuildCommsMast(sim.Content.Building("comms_tower"));
             BuildRover(sim.Content.Building("garage"));
+            BuildKitDressing();
             SpawnNpcs(sim);
         }
 
@@ -106,19 +107,18 @@ namespace LunaQuest.Godot
 
             // The sun itself, a small unshaded disc near the horizon. At the lunar south
             // pole it never rises high, so it is a constant low glare rather than a noon sun.
-            var sunMat = new StandardMaterial3D
-            {
-                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                EmissionEnabled = true,
-                Emission = new Color(1f, 0.94f, 0.82f),
-                EmissionEnergyMultiplier = 5.0f,
-                BillboardMode = BaseMaterial3D.BillboardModeEnum.Enabled,
-                AlbedoColor = new Color(1f, 0.95f, 0.85f),
-            };
+            Material sunMat = ResourceLoader.Exists("res://shaders/sun.gdshader")
+                ? new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/sun.gdshader") }
+                : new StandardMaterial3D
+                {
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                    BillboardMode = BaseMaterial3D.BillboardModeEnum.Enabled,
+                    AlbedoColor = new Color(1f, 0.95f, 0.85f),
+                };
             _sunDisc = new MeshInstance3D
             {
                 Name = "SunDisc",
-                Mesh = new QuadMesh { Size = new Vector2(13f, 13f) },
+                Mesh = new QuadMesh { Size = new Vector2(70f, 70f) },
                 MaterialOverride = sunMat,
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             };

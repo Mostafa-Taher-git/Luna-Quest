@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c25018g8cxmri"
-valid=false
+uid="uid://l7a2rnk5gbvg"
+path="res://.godot/imported/regolith-excavator-64b4560f.glb-7cbc3889e11b59d362eceaf1af4af9b3.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/regolith-excavator-64b4560f.glb"
+dest_files=["res://.godot/imported/regolith-excavator-64b4560f.glb-7cbc3889e11b59d362eceaf1af4af9b3.scn"]
 
 [params]
 

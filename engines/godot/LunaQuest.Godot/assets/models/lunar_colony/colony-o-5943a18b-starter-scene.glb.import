@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d235olbktj6wb"
-valid=false
+uid="uid://bfo5qqkhjqjol"
+path="res://.godot/imported/colony-o-5943a18b-starter-scene.glb-47ce3e94a6e6b521d22f3ce483994906.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/colony-o-5943a18b-starter-scene.glb"
+dest_files=["res://.godot/imported/colony-o-5943a18b-starter-scene.glb-47ce3e94a6e6b521d22f3ce483994906.scn"]
 
 [params]
 

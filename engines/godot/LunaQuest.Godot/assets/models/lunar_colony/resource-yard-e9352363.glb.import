@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d3qcegrkfgkfj"
-valid=false
+uid="uid://c27nvq3v6eibi"
+path="res://.godot/imported/resource-yard-e9352363.glb-2fed6d7c4b4babc97d71bd98feba3057.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/resource-yard-e9352363.glb"
+dest_files=["res://.godot/imported/resource-yard-e9352363.glb-2fed6d7c4b4babc97d71bd98feba3057.scn"]
 
 [params]
 

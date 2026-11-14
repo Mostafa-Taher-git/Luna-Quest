@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bmqg8w2xrw0e0"
-valid=false
+uid="uid://dre0kjwissd7k"
+path="res://.godot/imported/sintering-print-gantry-64cc192a.glb-c6604d59dcab249d354a94ed474fb92e.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/sintering-print-gantry-64cc192a.glb"
+dest_files=["res://.godot/imported/sintering-print-gantry-64cc192a.glb-c6604d59dcab249d354a94ed474fb92e.scn"]
 
 [params]
 

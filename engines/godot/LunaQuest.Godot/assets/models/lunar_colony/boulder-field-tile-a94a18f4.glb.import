@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ddjdvwt2ccvrw"
-valid=false
+uid="uid://u8se1thosfjv"
+path="res://.godot/imported/boulder-field-tile-a94a18f4.glb-aeef6b8e418347c896180dd63de0035f.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/boulder-field-tile-a94a18f4.glb"
+dest_files=["res://.godot/imported/boulder-field-tile-a94a18f4.glb-aeef6b8e418347c896180dd63de0035f.scn"]
 
 [params]
 

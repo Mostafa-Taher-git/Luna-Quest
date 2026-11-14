@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://806me4jk7u0o"
-valid=false
+uid="uid://df8kc8t3fjmeh"
+path="res://.godot/imported/nuclear-power-unit-8239903e.glb-2064e09f7d5b398c0b34ae790fa477b9.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/nuclear-power-unit-8239903e.glb"
+dest_files=["res://.godot/imported/nuclear-power-unit-8239903e.glb-2064e09f7d5b398c0b34ae790fa477b9.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c21nl47ct7o2p"
-valid=false
+uid="uid://dip4a700ov2tm"
+path="res://.godot/imported/airlock-with-dust-lock-fe27e26c.glb-902aa84a32aab831d456f2afc3e0e76c.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/airlock-with-dust-lock-fe27e26c.glb"
+dest_files=["res://.godot/imported/airlock-with-dust-lock-fe27e26c.glb-902aa84a32aab831d456f2afc3e0e76c.scn"]
 
 [params]
 

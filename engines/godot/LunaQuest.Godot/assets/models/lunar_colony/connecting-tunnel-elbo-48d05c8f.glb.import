@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bic38xw5jgw7r"
-valid=false
+uid="uid://buqe8pewa0jkl"
+path="res://.godot/imported/connecting-tunnel-elbo-48d05c8f.glb-21f4a9d78b699872677d00794fff4f24.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/connecting-tunnel-elbo-48d05c8f.glb"
+dest_files=["res://.godot/imported/connecting-tunnel-elbo-48d05c8f.glb-21f4a9d78b699872677d00794fff4f24.scn"]
 
 [params]
 

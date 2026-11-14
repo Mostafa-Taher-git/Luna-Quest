@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://blxvj6kvbqdk"
-valid=false
+uid="uid://bnmqoyym0c3jw"
+path="res://.godot/imported/rigid-cylinder-habitat-2dec4448.glb-8514e217ba5ca49951af934077c50d3f.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/rigid-cylinder-habitat-2dec4448.glb"
+dest_files=["res://.godot/imported/rigid-cylinder-habitat-2dec4448.glb-8514e217ba5ca49951af934077c50d3f.scn"]
 
 [params]
 

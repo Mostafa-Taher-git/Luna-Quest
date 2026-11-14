@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c8op5lcqhgc6d"
-valid=false
+uid="uid://oujpndq5uwq0"
+path="res://.godot/imported/greenhouse-module-b35be615.glb-7f9e667af2634e7fe5cb49b95ee2e649.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/greenhouse-module-b35be615.glb"
+dest_files=["res://.godot/imported/greenhouse-module-b35be615.glb-7f9e667af2634e7fe5cb49b95ee2e649.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://gn2kv7cj4hn0"
-valid=false
+uid="uid://whu1e00g63aw"
+path="res://.godot/imported/oxygen-extraction-plan-002fb0ae.glb-fe5c15b3d0105f1494236ae2fd67b4b0.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/oxygen-extraction-plan-002fb0ae.glb"
+dest_files=["res://.godot/imported/oxygen-extraction-plan-002fb0ae.glb-fe5c15b3d0105f1494236ae2fd67b4b0.scn"]
 
 [params]
 

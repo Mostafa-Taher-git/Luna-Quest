@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cw2fs00mfnvbf"
-valid=false
+uid="uid://1vnpttxk57ju"
+path="res://.godot/imported/small-survey-rover-f1fa6584.glb-06c3bfb7e3e23cabe533090b6fbdd9e1.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/small-survey-rover-f1fa6584.glb"
+dest_files=["res://.godot/imported/small-survey-rover-f1fa6584.glb-06c3bfb7e3e23cabe533090b6fbdd9e1.scn"]
 
 [params]
 

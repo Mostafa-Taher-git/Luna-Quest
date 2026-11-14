@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://vjhggaosy4u4"
-valid=false
+uid="uid://c7ykeewy64lit"
+path="res://.godot/imported/water-processing-skid-27dcfe03.glb-ec07e9d5f52d2877a5b0578cfb9aa1f7.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/water-processing-skid-27dcfe03.glb"
+dest_files=["res://.godot/imported/water-processing-skid-27dcfe03.glb-ec07e9d5f52d2877a5b0578cfb9aa1f7.scn"]
 
 [params]
 

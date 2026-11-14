@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dxio73idrinkk"
-valid=false
+uid="uid://cnapi2utpxk72"
+path="res://.godot/imported/regolith-hopper-screen-148a2c37.glb-2f58b8709f9d09335d65cc9e226fb2e2.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/regolith-hopper-screen-148a2c37.glb"
+dest_files=["res://.godot/imported/regolith-hopper-screen-148a2c37.glb-2f58b8709f9d09335d65cc9e226fb2e2.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b5ajuqaltbds2"
-valid=false
+uid="uid://87hbl37rl2tv"
+path="res://.godot/imported/workshop-module-7729780d.glb-09d587d99b4504e0f0154be9ee85e6fd.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/workshop-module-7729780d.glb"
+dest_files=["res://.godot/imported/workshop-module-7729780d.glb-09d587d99b4504e0f0154be9ee85e6fd.scn"]
 
 [params]
 

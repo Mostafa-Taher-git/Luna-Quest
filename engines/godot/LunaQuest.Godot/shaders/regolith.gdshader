@@ -46,7 +46,9 @@ void fragment() {
 
     // Broad albedo provinces (anorthosite highlands versus darker basalt).
     vec3 base = mix(low_color, high_color, smoothstep(0.28, 0.78, broad));
-    base = mix(base, grain_color, grain * grain_strength);
+    // Pixel-level grain only close up: at distance it would shimmer, so it fades to its average.
+    float near = 1.0 - smoothstep(8.0, 48.0, length(VERTEX));
+    base = mix(base, grain_color, mix(0.25, grain, near) * grain_strength);
     base *= 0.92 + 0.16 * detail;
 
     // A shallow terrace reads as compacted regolith without pretending to be a dune.

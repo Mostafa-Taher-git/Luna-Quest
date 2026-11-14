@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bqthslt81f8lp"
-valid=false
+uid="uid://cbyxkal5he1wt"
+path="res://.godot/imported/pressurised-long-range-35466e96.glb-2499716c7a65ef90a4c9fffc8980fe89.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/pressurised-long-range-35466e96.glb"
+dest_files=["res://.godot/imported/pressurised-long-range-35466e96.glb-2499716c7a65ef90a4c9fffc8980fe89.scn"]
 
 [params]
 

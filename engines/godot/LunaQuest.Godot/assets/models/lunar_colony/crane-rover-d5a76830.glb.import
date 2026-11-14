@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://briaf5uj2d44c"
-valid=false
+uid="uid://doi5dnx6xu72u"
+path="res://.godot/imported/crane-rover-d5a76830.glb-368bd5dcbba5da73ce05be630ed88c40.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/crane-rover-d5a76830.glb"
+dest_files=["res://.godot/imported/crane-rover-d5a76830.glb-368bd5dcbba5da73ce05be630ed88c40.scn"]
 
 [params]
 

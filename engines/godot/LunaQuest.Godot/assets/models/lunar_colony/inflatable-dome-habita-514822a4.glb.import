@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cx3kwmrnevjxy"
-valid=false
+uid="uid://bpnmt10pkvlhc"
+path="res://.godot/imported/inflatable-dome-habita-514822a4.glb-9b5363252392980b686ff714ae047c04.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/inflatable-dome-habita-514822a4.glb"
+dest_files=["res://.godot/imported/inflatable-dome-habita-514822a4.glb-9b5363252392980b686ff714ae047c04.scn"]
 
 [params]
 

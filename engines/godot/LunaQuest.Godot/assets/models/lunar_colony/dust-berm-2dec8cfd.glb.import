@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cjy4uyc12jna7"
-valid=false
+uid="uid://d6kxhder6stn"
+path="res://.godot/imported/dust-berm-2dec8cfd.glb-16626590e10f05000371b7ce2fd0f953.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/dust-berm-2dec8cfd.glb"
+dest_files=["res://.godot/imported/dust-berm-2dec8cfd.glb-16626590e10f05000371b7ce2fd0f953.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bnbu8g5pikipv"
-valid=false
+uid="uid://c5f0thy8aqcj5"
+path="res://.godot/imported/cryo-transfer-arm-5d350240.glb-cb21cbc750f018c8948c24b6661e9739.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/cryo-transfer-arm-5d350240.glb"
+dest_files=["res://.godot/imported/cryo-transfer-arm-5d350240.glb-cb21cbc750f018c8948c24b6661e9739.scn"]
 
 [params]
 

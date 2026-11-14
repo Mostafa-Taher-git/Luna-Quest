@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cmhtacwcpb22t"
-valid=false
+uid="uid://dbhhok8ydfx3m"
+path="res://.godot/imported/cargo-hauler-flatbed-76ce4ade.glb-a2dd56a74ea24dbf043479b45413fe8e.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/cargo-hauler-flatbed-76ce4ade.glb"
+dest_files=["res://.godot/imported/cargo-hauler-flatbed-76ce4ade.glb-a2dd56a74ea24dbf043479b45413fe8e.scn"]
 
 [params]
 

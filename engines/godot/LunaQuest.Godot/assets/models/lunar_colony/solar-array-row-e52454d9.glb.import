@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c5wn20qdexra"
-valid=false
+uid="uid://eekth7h2ajfk"
+path="res://.godot/imported/solar-array-row-e52454d9.glb-02fb5f3e69f7fb3ca1dcce6177beb70b.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/solar-array-row-e52454d9.glb"
+dest_files=["res://.godot/imported/solar-array-row-e52454d9.glb-02fb5f3e69f7fb3ca1dcce6177beb70b.scn"]
 
 [params]
 

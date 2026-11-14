@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://xlciufa6g0ra"
-valid=false
+uid="uid://b7fb3hgrxtw3u"
+path="res://.godot/imported/survey-marker-array-99d264a2.glb-55491fa861e9ca2dec4a59523fab4e67.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/survey-marker-array-99d264a2.glb"
+dest_files=["res://.godot/imported/survey-marker-array-99d264a2.glb-55491fa861e9ca2dec4a59523fab4e67.scn"]
 
 [params]
 

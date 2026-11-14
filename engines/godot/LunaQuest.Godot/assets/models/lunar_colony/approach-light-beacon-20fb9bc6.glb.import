@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bmrywjaddfw07"
-valid=false
+uid="uid://dyqq2xiuyqgcy"
+path="res://.godot/imported/approach-light-beacon-20fb9bc6.glb-340b7f256dc35e49a46ae3c48e2173f3.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/approach-light-beacon-20fb9bc6.glb"
+dest_files=["res://.godot/imported/approach-light-beacon-20fb9bc6.glb-340b7f256dc35e49a46ae3c48e2173f3.scn"]
 
 [params]
 

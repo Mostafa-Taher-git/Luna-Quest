@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b4ybj0yj48xpp"
-valid=false
+uid="uid://b8mqf863115am"
+path="res://.godot/imported/propellant-tank-farm-3dcbfa21.glb-0d0679cbfa66dd77bce5261264f697aa.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/propellant-tank-farm-3dcbfa21.glb"
+dest_files=["res://.godot/imported/propellant-tank-farm-3dcbfa21.glb-0d0679cbfa66dd77bce5261264f697aa.scn"]
 
 [params]
 

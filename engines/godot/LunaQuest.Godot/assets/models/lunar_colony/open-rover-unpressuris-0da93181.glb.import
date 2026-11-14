@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dtknb3km436i5"
-valid=false
+uid="uid://bwalccilqvlbt"
+path="res://.godot/imported/open-rover-unpressuris-0da93181.glb-f1136e297c49984376b0f645d8669e0c.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/open-rover-unpressuris-0da93181.glb"
+dest_files=["res://.godot/imported/open-rover-unpressuris-0da93181.glb-f1136e297c49984376b0f645d8669e0c.scn"]
 
 [params]
 

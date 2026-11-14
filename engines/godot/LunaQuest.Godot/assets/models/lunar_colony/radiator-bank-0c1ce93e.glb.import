@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bjga0ylexbrer"
-valid=false
+uid="uid://dgca8o3rxktq8"
+path="res://.godot/imported/radiator-bank-0c1ce93e.glb-a050357551cd983dc3b2a618ddc1ff05.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/radiator-bank-0c1ce93e.glb"
+dest_files=["res://.godot/imported/radiator-bank-0c1ce93e.glb-a050357551cd983dc3b2a618ddc1ff05.scn"]
 
 [params]
 

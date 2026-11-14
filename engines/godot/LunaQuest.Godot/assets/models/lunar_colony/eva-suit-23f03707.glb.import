@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://do53wbuajdxhq"
-valid=false
+uid="uid://dxyw88hoegiap"
+path="res://.godot/imported/eva-suit-23f03707.glb-9a9985ab4c5e9e4641fe7e0276578e6d.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/eva-suit-23f03707.glb"
+dest_files=["res://.godot/imported/eva-suit-23f03707.glb-9a9985ab4c5e9e4641fe7e0276578e6d.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dol58w1qdqedb"
-valid=false
+uid="uid://d314way5a4n17"
+path="res://.godot/imported/eva-tool-cart-3f077d9d.glb-a9fe978abd9e581d716a9f8fe1d455ad.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/eva-tool-cart-3f077d9d.glb"
+dest_files=["res://.godot/imported/eva-tool-cart-3f077d9d.glb-a9fe978abd9e581d716a9f8fe1d455ad.scn"]
 
 [params]
 

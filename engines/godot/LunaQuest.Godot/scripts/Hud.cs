@@ -600,7 +600,7 @@ namespace LunaQuest.Godot
 
         private void BuildStart()
         {
-            _startOverlay = Panel(new Color(0.01f, 0.015f, 0.025f, 0.94f), new Color(0.3f, 0.6f, 0.85f, 0.5f));
+            _startOverlay = Panel(new Color(0.01f, 0.015f, 0.025f, 0.52f), new Color(0.3f, 0.6f, 0.85f, 0.0f));
             _startOverlay.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             _root.AddChild(_startOverlay);
 
@@ -622,7 +622,7 @@ namespace LunaQuest.Godot
             m.AddChild(col);
 
             _startTitle = new Label { Text = "LUNA-QUEST", HorizontalAlignment = HorizontalAlignment.Center };
-            _startTitle.AddThemeFontSizeOverride("font_size", 40);
+            _startTitle.AddThemeFontSizeOverride("font_size", 56);
             _startTitle.Modulate = new Color(0.92f, 0.96f, 1f);
             col.AddChild(_startTitle);
 
@@ -661,6 +661,13 @@ namespace LunaQuest.Godot
             _begin.Pressed += Begin;
             col.AddChild(_begin);
 
+            if (IntroPlayer.IsAvailable())
+            {
+                var film = new Button { Text = L.T("Watch the intro film", "شاهد فيلم المقدمة"), CustomMinimumSize = new Vector2(240, 36) };
+                film.Pressed += () => _main.PlayIntro();
+                col.AddChild(film);
+            }
+
             _startHint = Txt(new Label(), "Your name is saved in the shared save file and appears in crew lines.", "يُحفظ اسمك في ملف الحفظ المشترك ويظهر في كلام الطاقم.");
             _startHint.AddThemeFontSizeOverride("font_size", 12);
             _startHint.Modulate = new Color(0.5f, 0.62f, 0.75f);
@@ -671,8 +678,8 @@ namespace LunaQuest.Godot
                 HorizontalAlignment = HorizontalAlignment.Center,
                 AutowrapMode = TextServer.AutowrapMode.WordSmart,
             },
-                "WASD move · mouse look · E interact · V camera · J journal · G resources · H help",
-                "WASD حركة · الفأرة نظر · E تفاعل · V كاميرا · J دفتر · G موارد · H مساعدة");
+                "WASD move · mouse look · E interact · V camera · J journal · G resources · H help · M music",
+                "WASD حركة · الفأرة نظر · E تفاعل · V كاميرا · J دفتر · G موارد · H مساعدة · M موسيقى");
             _startControls.AddThemeFontSizeOverride("font_size", 12);
             _startControls.Modulate = new Color(0.45f, 0.6f, 0.75f);
             col.AddChild(_startControls);

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dha1xnyww5i6j"
-valid=false
+uid="uid://cs10ppp0lep0v"
+path="res://.godot/imported/connector-cases-9058f711.glb-10e20f0c1b843d6d256958c40559fbc7.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/connector-cases-9058f711.glb"
+dest_files=["res://.godot/imported/connector-cases-9058f711.glb-10e20f0c1b843d6d256958c40559fbc7.scn"]
 
 [params]
 

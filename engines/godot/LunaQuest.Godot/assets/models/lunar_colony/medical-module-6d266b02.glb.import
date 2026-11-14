@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://muemm1eqj8e5"
-valid=false
+uid="uid://tosycje5qqj8"
+path="res://.godot/imported/medical-module-6d266b02.glb-3544abba3f2c505b8a90c5e8492ea439.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/medical-module-6d266b02.glb"
+dest_files=["res://.godot/imported/medical-module-6d266b02.glb-3544abba3f2c505b8a90c5e8492ea439.scn"]
 
 [params]
 

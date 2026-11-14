@@ -35,3 +35,7 @@ environment/defaults/default_clear_color=Color(0.02, 0.024, 0.035, 1)
 
 common/physics_ticks_per_second=60
 3d/default_gravity=1.62
+
+[editor]
+
+movie_writer/mjpeg_quality=0.95

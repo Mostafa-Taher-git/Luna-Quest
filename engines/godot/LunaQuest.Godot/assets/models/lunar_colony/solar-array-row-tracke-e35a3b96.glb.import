@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://k31qvird4uns"
-valid=false
+uid="uid://bwore107s2ufg"
+path="res://.godot/imported/solar-array-row-tracke-e35a3b96.glb-5d3e79d5e6655b27c3328617e9a75018.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/solar-array-row-tracke-e35a3b96.glb"
+dest_files=["res://.godot/imported/solar-array-row-tracke-e35a3b96.glb-5d3e79d5e6655b27c3328617e9a75018.scn"]
 
 [params]
 

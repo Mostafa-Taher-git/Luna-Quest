@@ -28,6 +28,13 @@ namespace LunaQuest.Godot
         private double _saveTimer;
         private int _lastSavedDay = 1;
         private double _screenshotTimer = -1;
+        private IntroPlayer? _intro;
+        private Camera3D? _menuCam;
+        private double _menuT;
+        private AudioStreamPlayer? _music;
+        private bool _musicOn = true;
+        private const string IntroSeenPath = "user://intro_seen";
+        private const string MusicPath = "res://assets/audio/music/lunaquest-score.mp3";
         private string _screenshotPath = "";
 
         public override void _Ready()
@@ -71,6 +78,8 @@ namespace LunaQuest.Godot
             Hud.UpdateState();
             GD.Print($"Luna-Quest ready: {content.Buildings.Count} buildings, {content.Npcs.Count} crew, {content.Incidents.Count} incident rules.");
 
+            CreateMenuCamera();
+            CreateMusic();
             HandleCommandLine();
         }
 
@@ -86,6 +95,7 @@ namespace LunaQuest.Godot
             bool voiceCheck = false;
             bool voiceDemo = false;
             bool cinematic = false;
+            bool noIntro = false;
             string? testDialogueNpc = null;
             Vector3? spawn = null;
             float? lookYaw = null, lookPitch = null;
@@ -99,6 +109,7 @@ namespace LunaQuest.Godot
                 else if (arg == "--voice-check") voiceCheck = true;
                 else if (arg == "--voice-demo") voiceDemo = true;
                 else if (arg == "--cinematic") cinematic = true;
+                else if (arg == "--no-intro") noIntro = true;
                 else if (arg.StartsWith("--spawn=", StringComparison.Ordinal))
                 {
                     var parts = arg.Substring("--spawn=".Length).Split(',');
@@ -139,7 +150,75 @@ namespace LunaQuest.Godot
             if (voiceCheck) CallDeferred(nameof(VoicePackCheck));
             if (voiceDemo) CallDeferred(nameof(VoiceDemo));
             if (cinematic) CallDeferred(nameof(StartCinematic));
+            bool scripted = autoStart || cinematic || voiceCheck || voiceDemo || portrait || firstPerson ||
+                            _screenshotTimer > 0 || !string.IsNullOrEmpty(testDialogueNpc);
+            if (cinematic) { _menuCam?.QueueFree(); _menuCam = null; _music?.Stop(); }
+            // The film plays on the first launch; afterwards the menu offers it on demand.
+            if (!scripted && !noIntro && !FileAccess.FileExists(IntroSeenPath)) CallDeferred(nameof(PlayIntro));
             if (!string.IsNullOrEmpty(testDialogueNpc)) CallDeferred(nameof(TestDialogue), testDialogueNpc);
+        }
+
+        // ---- intro film, menu backdrop and music ------------------------------
+
+        /// <summary>Plays the opening film. Skippable; remembered so it is not forced twice.</summary>
+        public void PlayIntro()
+        {
+            if (_intro != null || Started) return;
+            if (!IntroPlayer.IsAvailable()) return;
+            _intro = new IntroPlayer();
+            AddChild(_intro);
+            if (_music != null) _music.StreamPaused = true;
+            Voice?.SetAmbientPaused(true);
+            _intro.Finished += OnIntroFinished;
+        }
+
+        private void OnIntroFinished()
+        {
+            using (var f = FileAccess.Open(IntroSeenPath, FileAccess.ModeFlags.Write))
+                f?.StoreString("1");
+            _intro?.QueueFree();
+            _intro = null;
+            if (_music != null) _music.StreamPaused = false;
+            Voice?.SetAmbientPaused(false);
+        }
+
+        /// <summary>
+        /// Behind the main menu the colony is shown from a slow orbit instead of a dark void, so
+        /// the first screen already shows the actual game.
+        /// </summary>
+        private void CreateMenuCamera()
+        {
+            _menuCam = new Camera3D { Name = "MenuCamera", Fov = 52f, Near = 0.2f, Far = 4000f, Current = true };
+            AddChild(_menuCam);
+            UpdateMenuCamera(0);
+        }
+
+        private void UpdateMenuCamera(double delta)
+        {
+            if (_menuCam == null || !IsInstanceValid(_menuCam)) return;
+            _menuT += delta;
+            double a = 2.35 + _menuT * 0.030;
+            var pos = new Vector3((float)(Math.Sin(a) * 118.0), 13f + (float)(Math.Sin(_menuT * 0.11) * 3.0), 8f + (float)(Math.Cos(a) * 118.0));
+            _menuCam.GlobalPosition = pos;
+            _menuCam.LookAt(new Vector3(0, 4.5f, 8f), Vector3.Up);
+        }
+
+        private void CreateMusic()
+        {
+            if (!ResourceLoader.Exists(MusicPath)) return;
+            var stream = GD.Load<AudioStream>(MusicPath);
+            if (stream is AudioStreamMP3 mp3) mp3.Loop = true;
+            _music = new AudioStreamPlayer { Name = "Music", Stream = stream, Bus = "Master", VolumeDb = -15f, ProcessMode = ProcessModeEnum.Always };
+            AddChild(_music);
+            _music.Play();
+        }
+
+        public void ToggleMusic()
+        {
+            if (_music == null) return;
+            _musicOn = !_musicOn;
+            _music.VolumeDb = _musicOn ? -15f : -80f;
+            Hud?.ShowToast(_musicOn ? L.T("Music on", "الموسيقى تعمل") : L.T("Music off", "الموسيقى متوقفة"), 1.6);
         }
 
         private void StartCinematic()
@@ -197,6 +276,7 @@ namespace LunaQuest.Godot
             }
 
             Hud.UpdateState();
+            UpdateMenuCamera(delta);
 
             if (_screenshotTimer > 0)
             {
@@ -225,6 +305,11 @@ namespace LunaQuest.Godot
 
         public override void _UnhandledInput(InputEvent @event)
         {
+            if (@event is InputEventKey mk && mk.Pressed && !mk.Echo && mk.Keycode == Key.M && _intro == null)
+            {
+                ToggleMusic();
+                return;
+            }
             if (!Started)
             {
                 if (@event.IsActionPressed("load_game")) LoadGame();
@@ -299,6 +384,9 @@ namespace LunaQuest.Godot
             Sim.PlayerName = string.IsNullOrWhiteSpace(playerName) ? "Amara Okafor" : playerName.Trim();
             Started = true;
             GetTree().Paused = false;
+            _menuCam?.QueueFree();
+            _menuCam = null;
+            Player.Camera.Current = true;
             Hud.HideStart();
             Hud.ShowPause(false);
             Player.InputLocked = false;

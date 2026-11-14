@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://6f0mqv0cglha"
-valid=false
+uid="uid://cthkki6voualq"
+path="res://.godot/imported/blast-berm-segment-6e0ba7b3.glb-b858b90c181307ec4d7c763ec31a42b9.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/blast-berm-segment-6e0ba7b3.glb"
+dest_files=["res://.godot/imported/blast-berm-segment-6e0ba7b3.glb-b858b90c181307ec4d7c763ec31a42b9.scn"]
 
 [params]
 

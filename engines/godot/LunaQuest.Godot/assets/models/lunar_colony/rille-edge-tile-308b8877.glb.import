@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://81ag56ssa553"
-valid=false
+uid="uid://cfqidc42bvcol"
+path="res://.godot/imported/rille-edge-tile-308b8877.glb-8a65d9b885998098a84bf7a417c62dec.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/rille-edge-tile-308b8877.glb"
+dest_files=["res://.godot/imported/rille-edge-tile-308b8877.glb-8a65d9b885998098a84bf7a417c62dec.scn"]
 
 [params]
 

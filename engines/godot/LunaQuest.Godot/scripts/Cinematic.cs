@@ -64,56 +64,64 @@ namespace LunaQuest.Godot
         // ---- storyboard ------------------------------------------------------
         private void DefineShots()
         {
-            // 1. Earth over the rim, then the first sight of the colony.
+            // A. Earth over the rim: the first image is the planet everyone left behind.
             _shots.Add(new Shot
             {
-                Start = 0, End = 15.0, FovA = 48f, FovB = 56f,
-                Pos = new[] { new Vector3(70, 1.6f, 150), new Vector3(52, 1.8f, 118), new Vector3(30, 2.2f, 88), new Vector3(12, 2.6f, 66) },
-                Look = new[] { new Vector3(95, 110, -305), new Vector3(70, 60, -305), new Vector3(15, 12, -40), new Vector3(0, 5, 0) },
+                Start = 0, End = 7.0, FovA = 46f, FovB = 52f,
+                Pos = new[] { new Vector3(60, 1.8f, -95), new Vector3(54, 2.0f, -108), new Vector3(48, 2.2f, -122) },
+                Look = new[] { new Vector3(95, 70, -305), new Vector3(90, 52, -305), new Vector3(80, 34, -305) },
             });
-            // 2. Crane around the colony: the whole layout at once.
+            // B. Backlit approach: the Sun sits on the horizon behind the colony, shadows reach for the lens.
+            _shots.Add(new Shot
+            {
+                Start = 7.0, End = 15.0, FovA = 54f, FovB = 50f,
+                Pos = new[] { new Vector3(-52, 1.4f, -108), new Vector3(-40, 1.6f, -96), new Vector3(-26, 1.9f, -84) },
+                Look = new[] { new Vector3(0, 6, 12), new Vector3(0, 6.5f, 22), new Vector3(0, 7, 32) },
+            });
+            // C. Crane around the colony: the whole layout at once.
             _shots.Add(new Shot
             {
                 Start = 15.0, End = 25.2, FovA = 60f, FovB = 56f,
                 Pos = new[] { new Vector3(-95, 20, 88), new Vector3(-30, 24, 104), new Vector3(45, 20, 96), new Vector3(100, 15, 62) },
                 Look = new[] { new Vector3(-10, 3, -6), new Vector3(0, 3, -6), new Vector3(10, 3, -6), new Vector3(20, 3, -6) },
             });
-            // 3. Life support and greenhouse: the air and water that the numbers are about.
+            // D. Life support: the air and water that the numbers are about.
             _shots.Add(new Shot
             {
                 Start = 25.2, End = 33.2, FovA = 52f, FovB = 46f,
-                Pos = new[] { new Vector3(60, 2.6f, 48), new Vector3(48, 3.0f, 36), new Vector3(40, 3.2f, 28) },
-                Look = new[] { new Vector3(30, 3, 16), new Vector3(30, 3.4f, 10), new Vector3(30, 3.6f, 2) },
+                Pos = new[] { new Vector3(62, 1.9f, 50), new Vector3(56, 2.2f, 44), new Vector3(50, 2.6f, 40) },
+                Look = new[] { new Vector3(42, 2.4f, 26), new Vector3(40, 2.6f, 24), new Vector3(38, 3.0f, 20) },
             });
-            // 4. The solar farm that keeps all of it running.
+            // E. The power yard that keeps all of it running.
             _shots.Add(new Shot
             {
-                Start = 33.2, End = 41.3, FovA = 50f, FovB = 44f,
-                Pos = new[] { new Vector3(-26, 2.4f, 22), new Vector3(-38, 2.8f, 14), new Vector3(-46, 3.2f, 8) },
-                Look = new[] { new Vector3(-52, 2.6f, -2), new Vector3(-52, 3.0f, -3), new Vector3(-54, 3.2f, -4) },
+                Start = 33.2, End = 41.3, FovA = 52f, FovB = 46f,
+                Pos = new[] { new Vector3(-82, 3.2f, 26), new Vector3(-80, 3.6f, 18), new Vector3(-78, 4.0f, 10) },
+                Look = new[] { new Vector3(-56, 1.6f, 2), new Vector3(-56, 1.6f, 0), new Vector3(-56, 1.6f, -4) },
             });
-            // 5. The crew and the commander on the plaza.
+            // F. The crew and the commander on the plaza, filmed from the landing pad.
             _shots.Add(new Shot
             {
-                Start = 41.3, End = 50.3, FovA = 50f, FovB = 42f,
-                Pos = new[] { new Vector3(-8, 1.5f, 52), new Vector3(-3, 1.6f, 44), new Vector3(3, 1.6f, 36) },
-                Look = new[] { new Vector3(1, 1.7f, 22), new Vector3(1, 1.8f, 16), new Vector3(0, 2.0f, 8) },
+                Start = 41.3, End = 50.3, FovA = 50f, FovB = 44f,
+                Pos = new[] { new Vector3(-24, 1.8f, 27), new Vector3(-21, 1.9f, 24), new Vector3(-18, 2.0f, 21) },
+                Look = new[] { new Vector3(0, 2.2f, 8), new Vector3(0, 2.4f, 8), new Vector3(0, 2.6f, 8) },
             });
-            // 6. Hazards: dust settling on the panels.
+            // G. Hazards: dust settling on the arrays.
             _shots.Add(new Shot
             {
                 Start = 50.3, End = 62.0, FovA = 52f, FovB = 46f,
-                Pos = new[] { new Vector3(-70, 1.3f, 14), new Vector3(-60, 1.6f, 12), new Vector3(-48, 2.0f, 15) },
-                Look = new[] { new Vector3(-52, 2.2f, -2), new Vector3(-52, 2.4f, -2), new Vector3(-52, 2.6f, -2) },
+                Pos = new[] { new Vector3(-50, 9.0f, -44), new Vector3(-52, 7.5f, -38), new Vector3(-54, 6.0f, -32) },
+                Look = new[] { new Vector3(-52, 1.0f, -2), new Vector3(-52, 1.0f, -2), new Vector3(-52, 1.0f, -2) },
             });
-            // 7. Title: pull back to the whole colony under the Earth.
+            // H. Title: pull back to the whole colony under the Earth.
             _shots.Add(new Shot
             {
                 Start = 62.0, End = Duration + 0.1, FovA = 56f, FovB = 62f,
-                Pos = new[] { new Vector3(4, 4.5f, 70), new Vector3(2, 8f, 100), new Vector3(0, 13f, 140) },
+                Pos = new[] { new Vector3(4, 4.5f, 72), new Vector3(2, 8f, 104), new Vector3(0, 13f, 142) },
                 Look = new[] { new Vector3(0, 12, -20), new Vector3(0, 14, -40), new Vector3(0, 16, -60) },
             });
         }
+
         // ---- overlays --------------------------------------------------------
         private void BuildOverlays()
         {
@@ -132,6 +140,15 @@ namespace LunaQuest.Godot
                 bar.OffsetTop = top ? 0 : -62;
                 root.AddChild(bar);
             }
+            var shade = new TextureRect { MouseFilter = Control.MouseFilterEnum.Ignore, StretchMode = TextureRect.StretchModeEnum.Scale };
+            var grad = new Gradient();
+            grad.SetColor(0, new Color(0, 0, 0, 0));
+            grad.SetColor(1, new Color(0.01f, 0.02f, 0.05f, 0.78f));
+            shade.Texture = new GradientTexture2D { Gradient = grad, FillFrom = new Vector2(0, 0), FillTo = new Vector2(0, 1), Width = 4, Height = 256 };
+            shade.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
+            shade.OffsetTop = -330;
+            shade.OffsetBottom = -62;
+            root.AddChild(shade);
             Add(root, 1.2, 7.0, Caption("SHACKLETON RIM  ·  89.9° S", "Lunar south pole  ·  the Sun never rises more than 2° above the horizon"));
             Add(root, 7.6, 14.2, Caption("LOW SUN. LONG SHADOWS.", "No atmosphere  ·  no weather  ·  no second chances"));
             Add(root, 16.0, 24.4, Big("9 CREW", "ONE SHARED COLONY", false));
@@ -162,36 +179,37 @@ namespace LunaQuest.Godot
         private Control Caption(string title, string sub)
         {
             var box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-            box.Position = new Vector2(70, 560);
-            box.AddChild(MakeLabel(title, 30, new Color(0.9f, 0.96f, 1f)));
-            box.AddChild(MakeLabel(sub, 17, new Color(0.62f, 0.78f, 0.92f)));
+            box.Position = new Vector2(80, 520);
+            box.AddChild(MakeLabel(title, 40, new Color(0.9f, 0.96f, 1f)));
+            box.AddChild(MakeLabel(sub, 23, new Color(0.62f, 0.78f, 0.92f)));
             return box;
         }
         private Control Stat(string number, string caption)
         {
             var box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-            box.Position = new Vector2(70, 500);
-            box.AddChild(MakeLabel(number, 64, new Color(0.55f, 0.9f, 1f), 6));
-            box.AddChild(MakeLabel(caption, 20, new Color(0.92f, 0.96f, 1f)));
+            box.Position = new Vector2(80, 470);
+            box.AddChild(MakeLabel(number, 84, new Color(0.55f, 0.9f, 1f), 6));
+            box.AddChild(MakeLabel(caption, 27, new Color(0.92f, 0.96f, 1f)));
             return box;
         }
         private Control Big(string head, string sub, bool center)
         {
             var box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-            box.Position = new Vector2(70, 500);
-            box.AddChild(MakeLabel(head, 58, new Color(0.96f, 0.98f, 1f), 6));
-            box.AddChild(MakeLabel(sub, 20, new Color(0.62f, 0.82f, 0.95f)));
+            box.Position = new Vector2(80, 470);
+            box.AddChild(MakeLabel(head, 76, new Color(0.96f, 0.98f, 1f), 6));
+            box.AddChild(MakeLabel(sub, 26, new Color(0.62f, 0.82f, 0.95f)));
             return box;
         }
         private Control Title()
         {
-            var box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+            var box = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Begin };
             box.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-            var name = MakeLabel("LUNA-QUEST", 104, new Color(0.97f, 0.99f, 1f), 8);
+            box.OffsetTop = 120;
+            var name = MakeLabel("LUNA-QUEST", 140, new Color(0.97f, 0.99f, 1f), 8);
             name.HorizontalAlignment = HorizontalAlignment.Center;
-            var sub = MakeLabel("THE LIVING MOON COLONY", 30, new Color(0.55f, 0.85f, 1f), 4);
+            var sub = MakeLabel("THE LIVING MOON COLONY", 40, new Color(0.55f, 0.85f, 1f), 4);
             sub.HorizontalAlignment = HorizontalAlignment.Center;
-            var line = MakeLabel("Real numbers. Real Moon. Thirty days.", 20, new Color(0.88f, 0.93f, 1f), 3);
+            var line = MakeLabel("Real numbers. Real Moon. Thirty days.", 27, new Color(0.88f, 0.93f, 1f), 3);
             line.HorizontalAlignment = HorizontalAlignment.Center;
             box.AddChild(name);
             box.AddChild(sub);

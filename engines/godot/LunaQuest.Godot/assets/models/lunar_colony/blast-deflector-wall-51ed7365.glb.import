@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bndrjn60a2b3c"
-valid=false
+uid="uid://v3byhv3tn3kj"
+path="res://.godot/imported/blast-deflector-wall-51ed7365.glb-c306287d0aff5e1400379b66ef385812.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/blast-deflector-wall-51ed7365.glb"
+dest_files=["res://.godot/imported/blast-deflector-wall-51ed7365.glb-c306287d0aff5e1400379b66ef385812.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b5bl5l7gah18b"
-valid=false
+uid="uid://ckhwdagtniiv6"
+path="res://.godot/imported/regolith-ground-tile-d9c409b0.glb-1093caebe75ac0ac3e1d79b815157142.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/regolith-ground-tile-d9c409b0.glb"
+dest_files=["res://.godot/imported/regolith-ground-tile-d9c409b0.glb-1093caebe75ac0ac3e1d79b815157142.scn"]
 
 [params]
 

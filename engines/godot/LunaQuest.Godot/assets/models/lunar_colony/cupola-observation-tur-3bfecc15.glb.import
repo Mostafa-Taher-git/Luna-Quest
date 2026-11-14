@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://w3wnu5l0cmh"
-valid=false
+uid="uid://dwqs0gjlwcu04"
+path="res://.godot/imported/cupola-observation-tur-3bfecc15.glb-761645c791234a3ada0df9406dc01d88.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/cupola-observation-tur-3bfecc15.glb"
+dest_files=["res://.godot/imported/cupola-observation-tur-3bfecc15.glb-761645c791234a3ada0df9406dc01d88.scn"]
 
 [params]
 

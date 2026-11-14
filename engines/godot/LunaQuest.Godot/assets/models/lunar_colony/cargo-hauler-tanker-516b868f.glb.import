@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ow1k4kkwypk7"
-valid=false
+uid="uid://blksbowkg3dtj"
+path="res://.godot/imported/cargo-hauler-tanker-516b868f.glb-4cdfbd7bf577bd0ae2286ebf98eb532d.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/cargo-hauler-tanker-516b868f.glb"
+dest_files=["res://.godot/imported/cargo-hauler-tanker-516b868f.glb-4cdfbd7bf577bd0ae2286ebf98eb532d.scn"]
 
 [params]
 

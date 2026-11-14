@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bihuoghnlg61q"
-valid=false
+uid="uid://csc4gyhmbt87i"
+path="res://.godot/imported/comms-relay-mast-4cdfe54f.glb-3c1d65b37409fcba98f4d32a44a8406b.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/comms-relay-mast-4cdfe54f.glb"
+dest_files=["res://.godot/imported/comms-relay-mast-4cdfe54f.glb-3c1d65b37409fcba98f4d32a44a8406b.scn"]
 
 [params]
 

@@ -38,6 +38,11 @@ namespace LunaQuest.Godot
 
         public bool IsPlaying => _voice != null && _voice.Playing;
 
+        public void SetAmbientPaused(bool paused)
+        {
+            if (_ambient != null) _ambient.StreamPaused = paused;
+        }
+
         public override void _Ready()
         {
             _voice = new AudioStreamPlayer { Bus = "Master", VolumeDb = -2 };

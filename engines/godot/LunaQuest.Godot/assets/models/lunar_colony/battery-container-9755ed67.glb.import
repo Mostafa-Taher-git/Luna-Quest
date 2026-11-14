@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dg3ld8ldl2vtj"
-valid=false
+uid="uid://bau8uuwrdb7gc"
+path="res://.godot/imported/battery-container-9755ed67.glb-d0815874991da7ab29def573129873df.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/battery-container-9755ed67.glb"
+dest_files=["res://.godot/imported/battery-container-9755ed67.glb-d0815874991da7ab29def573129873df.scn"]
 
 [params]
 

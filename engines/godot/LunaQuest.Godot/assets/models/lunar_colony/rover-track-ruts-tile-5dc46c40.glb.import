@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d2s38m75uscnr"
-valid=false
+uid="uid://cf48bkgmoesdh"
+path="res://.godot/imported/rover-track-ruts-tile-5dc46c40.glb-3f97c42de13befaa8c16c40206e7bb0f.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/rover-track-ruts-tile-5dc46c40.glb"
+dest_files=["res://.godot/imported/rover-track-ruts-tile-5dc46c40.glb-3f97c42de13befaa8c16c40206e7bb0f.scn"]
 
 [params]
 

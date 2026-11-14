@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://csdbvnwa0d6gk"
-valid=false
+uid="uid://bh3js44ksmqyx"
+path="res://.godot/imported/connecting-tunnel-tee-eb9bac61.glb-2f11193fc7d7e6705c93211bb6601dc9.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/connecting-tunnel-tee-eb9bac61.glb"
+dest_files=["res://.godot/imported/connecting-tunnel-tee-eb9bac61.glb-2f11193fc7d7e6705c93211bb6601dc9.scn"]
 
 [params]
 

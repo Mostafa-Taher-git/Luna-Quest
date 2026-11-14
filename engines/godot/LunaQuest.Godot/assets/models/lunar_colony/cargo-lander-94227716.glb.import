@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cs52bt4oofvqc"
-valid=false
+uid="uid://yy5uahp040b8"
+path="res://.godot/imported/cargo-lander-94227716.glb-f91212076eee808edc6d5cec7984446b.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/cargo-lander-94227716.glb"
+dest_files=["res://.godot/imported/cargo-lander-94227716.glb-f91212076eee808edc6d5cec7984446b.scn"]
 
 [params]
 

@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bnw2o6an1tf2k"
-valid=false
+uid="uid://b1r6ohucs20l3"
+path="res://.godot/imported/regolith-shielded-habi-a1b4e3d7.glb-93b77c602ff8e5b8c03d31c71d127394.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/regolith-shielded-habi-a1b4e3d7.glb"
+dest_files=["res://.godot/imported/regolith-shielded-habi-a1b4e3d7.glb-93b77c602ff8e5b8c03d31c71d127394.scn"]
 
 [params]
 

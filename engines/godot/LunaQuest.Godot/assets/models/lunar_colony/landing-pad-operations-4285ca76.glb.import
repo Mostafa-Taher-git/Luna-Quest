@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bpxyd07j188l2"
-valid=false
+uid="uid://ctteb1dclfqx4"
+path="res://.godot/imported/landing-pad-operations-4285ca76.glb-503432d1e912773d4f941b094ed840a0.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/landing-pad-operations-4285ca76.glb"
+dest_files=["res://.godot/imported/landing-pad-operations-4285ca76.glb-503432d1e912773d4f941b094ed840a0.scn"]
 
 [params]
 

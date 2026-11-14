@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bev6hh3p6tur1"
-valid=false
+uid="uid://cm6wtc10pbqcm"
+path="res://.godot/imported/crew-lander-add08b1e.glb-d3695c57743792ba42123c8060a85c50.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/crew-lander-add08b1e.glb"
+dest_files=["res://.godot/imported/crew-lander-add08b1e.glb-d3695c57743792ba42123c8060a85c50.scn"]
 
 [params]
 

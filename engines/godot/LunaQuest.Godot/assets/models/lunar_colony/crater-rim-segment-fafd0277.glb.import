@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dju7cny8by1g5"
-valid=false
+uid="uid://bd21f1m85vd18"
+path="res://.godot/imported/crater-rim-segment-fafd0277.glb-6546fa535e994bed073fe9518613526e.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/crater-rim-segment-fafd0277.glb"
+dest_files=["res://.godot/imported/crater-rim-segment-fafd0277.glb-6546fa535e994bed073fe9518613526e.scn"]
 
 [params]
 

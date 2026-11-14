@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://jq7a7wyprfol"
-valid=false
+uid="uid://cqo0dc0p3s6te"
+path="res://.godot/imported/vertical-solar-tower-c58cca7d.glb-5b6e1d8b05cf28a089c514da129cf79a.scn"
 
 [deps]
 
 source_file="res://assets/models/lunar_colony/vertical-solar-tower-c58cca7d.glb"
+dest_files=["res://.godot/imported/vertical-solar-tower-c58cca7d.glb-5b6e1d8b05cf28a089c514da129cf79a.scn"]
 
 [params]
 
