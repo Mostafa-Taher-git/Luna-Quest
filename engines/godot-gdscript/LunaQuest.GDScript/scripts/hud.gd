@@ -244,12 +244,33 @@ func refresh(sim: LQSim) -> void:
 
 	var tasks := sim.journal.size()
 	var total := Content.objectives.size()
+	var samples := int(sim.state["samplesCollected"])
+	var morale := int(round(sim.state["averageMorale"] * 100.0))
+	var next := _next_objective(sim)
 	if arabic:
 		mission_label.text = "المهام: %d من %d   ·   العينات: %d   ·   الروح المعنوية: %d%%" % [
-			tasks, total, int(sim.state["samplesCollected"]), int(round(sim.state["averageMorale"] * 100.0))]
+			tasks, total, samples, morale]
+		if next != "":
+			mission_label.text += "\nالتالي: %s" % next
 	else:
 		mission_label.text = "Tasks: %d of %d   ·   Samples: %d   ·   Morale: %d%%" % [
-			tasks, total, int(sim.state["samplesCollected"]), int(round(sim.state["averageMorale"] * 100.0))]
+			tasks, total, samples, morale]
+		if next != "":
+			mission_label.text += "\nNext: %s" % next
+
+
+## The first task the commander has not finished, so a new player always has somewhere to walk.
+func _next_objective(sim: LQSim) -> String:
+	for objective in Content.objectives:
+		var id := str(objective.get("id", ""))
+		var done := false
+		for entry in sim.journal:
+			if str(entry.get("objectiveId", "")) == id:
+				done = true
+				break
+		if not done:
+			return str(objective.get("titleAr", "")) if arabic else str(objective.get("titleEn", ""))
+	return ""
 
 
 func _colour(label: Label, warn: bool) -> void:
