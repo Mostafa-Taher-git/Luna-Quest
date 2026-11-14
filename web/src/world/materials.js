@@ -332,22 +332,22 @@ export class Materials {
       map: this.interior,
       roughness: 0.82,
       metalness: 0.03,
-      emissive: 0x2c3038,
-      emissiveIntensity: 0.55,
+      emissive: 0x9aa4b2,
+      emissiveIntensity: 0.5,
     });
     this.interiorFloor = new THREE.MeshStandardMaterial({
       color: PALETTE.floor,
       roughness: 0.86,
       metalness: 0.05,
-      emissive: 0x1e2126,
-      emissiveIntensity: 0.5,
+      emissive: 0x6b727c,
+      emissiveIntensity: 0.42,
     });
     this.ceiling = new THREE.MeshStandardMaterial({
       color: 0xc3c9cf,
       roughness: 0.9,
       metalness: 0.02,
-      emissive: 0x22262c,
-      emissiveIntensity: 0.5,
+      emissive: 0x8d949c,
+      emissiveIntensity: 0.46,
     });
     this.plant = new THREE.MeshStandardMaterial({ color: PALETTE.plant, roughness: 0.85, metalness: 0 });
     this.soil = new THREE.MeshStandardMaterial({ color: 0x3a332c, roughness: 1 });
