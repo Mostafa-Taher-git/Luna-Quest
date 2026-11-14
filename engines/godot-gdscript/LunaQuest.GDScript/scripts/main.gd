@@ -17,6 +17,7 @@ var player: ColonyPlayer
 var crew: ColonyCrew
 var hud: LunaHud
 
+var commander_name := "Mostafa"
 var playing := false
 var paused := false
 var arabic := false
@@ -142,9 +143,11 @@ func crew_fit(node: Node3D, target_height: float) -> void:
 # ---- session flow ----------------------------------------------------------
 
 func _on_start_requested(player_name: String) -> void:
-	if player_name.strip_edges() != "":
-		sim.player_name = player_name.strip_edges()
-	_begin_session()
+	var cleaned := player_name.strip_edges()
+	if cleaned != "":
+		commander_name = cleaned
+	# "Begin" always means a fresh thirty days; "Continue from a save" is the other button.
+	_restart_mission()
 
 
 func _begin_session() -> void:
@@ -190,6 +193,7 @@ func _restart_mission() -> void:
 	sim = LQSim.new()
 	sim.clock.total_minutes = OPENING_MINUTE
 	sim.arabic = arabic
+	sim.player_name = commander_name
 	mission_complete = false
 	crew.queue_free()
 	crew = ColonyCrew.new()
@@ -249,13 +253,11 @@ func _update_prompt() -> void:
 	if target.is_empty():
 		hud.set_prompt("")
 		return
-	if target["type"] == "console":
-		hud.set_prompt("[E]  %s  ·  %s" % [
-			tr_label(target["label_en"], target["label_ar"], arabic),
-			"read the panel"])
-	else:
-		hud.set_prompt("[E]  %s  ·  %s" % [
-			tr_label(target["label_en"], target["label_ar"], arabic), "talk"])
+	var action := "استخدام" if arabic else "use"
+	if target["type"] == "npc":
+		action = "تحدث" if arabic else "talk"
+	hud.set_prompt("[E]  %s  ·  %s" % [
+		tr_label(target["label_en"], target["label_ar"], arabic), action])
 
 
 func tr_label(english: String, arabic_text: String, use_arabic: bool) -> String:
