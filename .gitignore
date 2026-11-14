@@ -63,3 +63,7 @@ web/public/
 web/dist/
 web/.vite/
 out/
+
+# ---- capture / local only ---------------------------------------------------
+node_modules/
+shots/

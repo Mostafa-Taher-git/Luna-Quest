@@ -82,6 +82,9 @@ for (const file of await readdir(contentDir)) {
 // ---- hero assets -----------------------------------------------------------
 await copy('assets/astronaut/cute_astronaut.glb', 'models/astronaut/cute_astronaut.glb', { required: true });
 await copy('assets/video/intro.mp4', 'media/intro.mp4', { required: true });
+// The player's poster attribute points at media/, not the site root: without this the first
+// frame of the film is a black rectangle until the video has buffered.
+await copy('web/static/intro-poster.jpg', 'media/intro-poster.jpg', { required: true });
 await copy('assets/video/intro.webm', 'media/intro.webm');
 await copy('assets/audio/music/lunaquest-score.mp3', 'audio/lunaquest-score.mp3', { required: true });
 await copy('assets/noto-sans-latin.woff', 'fonts/noto-sans-latin.woff');
@@ -104,11 +107,17 @@ await copy(`${godotArt}/earth/blue_marble_2048.jpg`, 'textures/earth_day.jpg', {
 await copy(`${godotArt}/rocks`, 'models/rocks', { required: true });
 
 // ---- voice pack ------------------------------------------------------------
+// pack.json is the manifest the audio manager fetches before it can play anything. Without it the
+// build still ships every mp3 and then reads silence, so it is copied as required, not as a
+// stray file that happens to end in .mp3.
 const voiceDir = join(root, 'engines/godot/LunaQuest.Godot/assets/voice');
 if (existsSync(voiceDir)) {
   await mkdir(join(out, 'audio/voice'), { recursive: true });
   for (const file of await readdir(voiceDir)) {
-    if (file.endsWith('.mp3')) await copy(join('engines/godot/LunaQuest.Godot/assets/voice', file), join('audio/voice', file));
+    if (!file.endsWith('.mp3') && file !== 'pack.json') continue;
+    await copy(join('engines/godot/LunaQuest.Godot/assets/voice', file), join('audio/voice', file), {
+      required: file === 'pack.json',
+    });
   }
 }
 
