@@ -30,19 +30,25 @@ find "$ROOT/shared/LunaQuest.Core" -name '*.cs' -not -path '*/obj/*' -not -path 
   -exec cp -f {} "$UNITY/Assets/Scripts/Core/" \;
 
 echo "== assets -> Godot =="
-mkdir -p "$GODOT/assets/astronaut" "$GODOT/assets/textures" "$GODOT/assets/voice"
+mkdir -p "$GODOT/assets/astronaut" "$GODOT/assets/textures" "$GODOT/assets/voice" "$GODOT/assets/models/lunar_colony"
 cp -f "$ROOT/assets/astronaut/cute_astronaut.glb" "$GODOT/assets/astronaut/"
 cp -f "$ROOT/assets/textures/earth.jpg" "$GODOT/assets/textures/"
 cp -f "$ROOT/assets/noto-sans-latin.woff" "$GODOT/assets/"
 cp -f "$ROOT/assets/noto-sans-arabic.woff" "$GODOT/assets/"
+if [[ -d "$ROOT/assets/models/lunar_colony" ]]; then
+  cp -rf "$ROOT/assets/models/lunar_colony"/* "$GODOT/assets/models/lunar_colony/"
+fi
 find "$ROOT/assets/audio/voice" -name '*.mp3' -exec cp -f {} "$GODOT/assets/voice/" \;
 cp -f "$ROOT/assets/audio/voice/pack.json" "$GODOT/assets/voice/"
 
 echo "== assets -> Unity =="
-mkdir -p "$UNITY/Assets/Resources/Textures" "$UNITY/Assets/Resources/Fonts" "$UNITY/Assets/Resources/Voice"
+mkdir -p "$UNITY/Assets/Resources/Textures" "$UNITY/Assets/Resources/Fonts" "$UNITY/Assets/Resources/Voice" "$UNITY/Assets/Models/lunar_colony"
 cp -f "$ROOT/assets/textures/earth.jpg" "$UNITY/Assets/Resources/Textures/"
 cp -f "$ROOT/assets/fonts/DejaVuSans.ttf" "$UNITY/Assets/Resources/Fonts/"
 cp -f "$ROOT/assets/fonts/NotoNaskhArabic.ttf" "$UNITY/Assets/Resources/Fonts/"
+if [[ -d "$ROOT/assets/models/lunar_colony" ]]; then
+  cp -rf "$ROOT/assets/models/lunar_colony"/* "$UNITY/Assets/Models/lunar_colony/"
+fi
 find "$ROOT/assets/audio/voice" -name '*.mp3' -exec cp -f {} "$UNITY/Assets/Resources/Voice/" \;
 cp -f "$ROOT/assets/audio/voice/pack.json" "$UNITY/Assets/Resources/Voice/"
 if [[ -f "$ROOT/tools/bake_astronaut_obj.py" ]]; then

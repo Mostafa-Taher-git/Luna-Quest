@@ -1,0 +1,547 @@
+{
+  "pack": "Moon Base Colony and Lunar Rovers",
+  "license": "CC0 1.0 Universal",
+  "count": 54,
+  "assets": [
+    {
+      "id": "18099",
+      "title": "Inflatable dome habitat (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-inflatable-dome-habita-f86f5d7b",
+      "filename": "inflatable-dome-habita-f86f5d7b.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18099/v1/model.glb"
+    },
+    {
+      "id": "18100",
+      "title": "Inflatable dome habitat with regolith shielding (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-inflatable-dome-habita-514822a4",
+      "filename": "inflatable-dome-habita-514822a4.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18100/v1/model.glb"
+    },
+    {
+      "id": "18101",
+      "title": "Rigid cylinder crew habitat on legs (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-rigid-cylinder-habitat-9b2fdbb4",
+      "filename": "rigid-cylinder-habitat-9b2fdbb4.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18101/v1/model.glb"
+    },
+    {
+      "id": "18103",
+      "title": "Rigid cylinder logistics module on legs (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-rigid-cylinder-habitat-2dec4448",
+      "filename": "rigid-cylinder-habitat-2dec4448.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18103/v1/model.glb"
+    },
+    {
+      "id": "18105",
+      "title": "Regolith shielded habitat (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-regolith-shielded-habi-a1b4e3d7",
+      "filename": "regolith-shielded-habi-a1b4e3d7.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18105/v1/model.glb"
+    },
+    {
+      "id": "18098",
+      "title": "Pressurised connecting tunnel, straight bay (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-connecting-tunnel-stra-cf36f8da",
+      "filename": "connecting-tunnel-stra-cf36f8da.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18098/v1/model.glb"
+    },
+    {
+      "id": "18102",
+      "title": "Pressurised connecting tunnel, quarter turn (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-connecting-tunnel-elbo-48d05c8f",
+      "filename": "connecting-tunnel-elbo-48d05c8f.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18102/v1/model.glb"
+    },
+    {
+      "id": "18104",
+      "title": "Pressurised connecting tunnel, tee junction (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-connecting-tunnel-tee-eb9bac61",
+      "filename": "connecting-tunnel-tee-eb9bac61.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18104/v1/model.glb"
+    },
+    {
+      "id": "18108",
+      "title": "Airlock with dust-lock vestibule (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-airlock-with-dust-lock-fe27e26c",
+      "filename": "airlock-with-dust-lock-fe27e26c.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18108/v1/model.glb"
+    },
+    {
+      "id": "18106",
+      "title": "Cupola observation turret (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-cupola-observation-tur-3bfecc15",
+      "filename": "cupola-observation-tur-3bfecc15.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18106/v1/model.glb"
+    },
+    {
+      "id": "18107",
+      "title": "Pressurised greenhouse module (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-greenhouse-module-b35be615",
+      "filename": "greenhouse-module-b35be615.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18107/v1/model.glb"
+    },
+    {
+      "id": "18113",
+      "title": "Medical and crew care module (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-medical-module-6d266b02",
+      "filename": "medical-module-6d266b02.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18113/v1/model.glb"
+    },
+    {
+      "id": "18110",
+      "title": "Pressurised workshop and vehicle bay (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-workshop-module-7729780d",
+      "filename": "workshop-module-7729780d.glb",
+      "category": "buildings",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18110/v1/model.glb"
+    },
+    {
+      "id": "18109",
+      "title": "Regolith bucket drum excavator (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-regolith-excavator-64b4560f",
+      "filename": "regolith-excavator-64b4560f.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18109/v1/model.glb"
+    },
+    {
+      "id": "18111",
+      "title": "Regolith hopper and screening deck (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-regolith-hopper-screen-148a2c37",
+      "filename": "regolith-hopper-screen-148a2c37.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18111/v1/model.glb"
+    },
+    {
+      "id": "18112",
+      "title": "Oxygen extraction plant skid (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-oxygen-extraction-plan-002fb0ae",
+      "filename": "oxygen-extraction-plan-002fb0ae.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18112/v1/model.glb"
+    },
+    {
+      "id": "18114",
+      "title": "Water processing skid (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-water-processing-skid-27dcfe03",
+      "filename": "water-processing-skid-27dcfe03.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18114/v1/model.glb"
+    },
+    {
+      "id": "18116",
+      "title": "Regolith sintering print gantry (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-sintering-print-gantry-64cc192a",
+      "filename": "sintering-print-gantry-64cc192a.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18116/v1/model.glb"
+    },
+    {
+      "id": "18115",
+      "title": "Fixed solar array row (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-solar-array-row-e52454d9",
+      "filename": "solar-array-row-e52454d9.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18115/v1/model.glb"
+    },
+    {
+      "id": "18119",
+      "title": "Tracking solar array row (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-solar-array-row-tracke-e35a3b96",
+      "filename": "solar-array-row-tracke-e35a3b96.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18119/v1/model.glb"
+    },
+    {
+      "id": "18117",
+      "title": "Vertical solar tower (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-vertical-solar-tower-c58cca7d",
+      "filename": "vertical-solar-tower-c58cca7d.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18117/v1/model.glb"
+    },
+    {
+      "id": "18118",
+      "title": "Thermal radiator bank (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-radiator-bank-0c1ce93e",
+      "filename": "radiator-bank-0c1ce93e.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18118/v1/model.glb"
+    },
+    {
+      "id": "18120",
+      "title": "Battery storage container (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-battery-container-9755ed67",
+      "filename": "battery-container-9755ed67.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18120/v1/model.glb"
+    },
+    {
+      "id": "18121",
+      "title": "Nuclear power unit with shielding berm (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-nuclear-power-unit-8239903e",
+      "filename": "nuclear-power-unit-8239903e.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18121/v1/model.glb"
+    },
+    {
+      "id": "18123",
+      "title": "Cargo lander with unloading ramp (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-cargo-lander-94227716",
+      "filename": "cargo-lander-94227716.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18123/v1/model.glb"
+    },
+    {
+      "id": "18122",
+      "title": "Crew lander with ascent cabin (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-crew-lander-add08b1e",
+      "filename": "crew-lander-add08b1e.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18122/v1/model.glb"
+    },
+    {
+      "id": "18124",
+      "title": "Sintered landing pad (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-landing-pad-6b137fe7",
+      "filename": "landing-pad-6b137fe7.glb",
+      "category": "roads-infrastructure",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18124/v1/model.glb"
+    },
+    {
+      "id": "18126",
+      "title": "Landing pad blast deflector wall (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-blast-deflector-wall-51ed7365",
+      "filename": "blast-deflector-wall-51ed7365.glb",
+      "category": "roads-infrastructure",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18126/v1/model.glb"
+    },
+    {
+      "id": "18125",
+      "title": "Blast berm segment (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-blast-berm-segment-6e0ba7b3",
+      "filename": "blast-berm-segment-6e0ba7b3.glb",
+      "category": "roads-infrastructure",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18125/v1/model.glb"
+    },
+    {
+      "id": "18127",
+      "title": "Cryogenic propellant tank farm (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-propellant-tank-farm-3dcbfa21",
+      "filename": "propellant-tank-farm-3dcbfa21.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18127/v1/model.glb"
+    },
+    {
+      "id": "18129",
+      "title": "Cryogenic transfer arm tower (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-cryo-transfer-arm-5d350240",
+      "filename": "cryo-transfer-arm-5d350240.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18129/v1/model.glb"
+    },
+    {
+      "id": "18128",
+      "title": "Approach light beacon (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-approach-light-beacon-20fb9bc6",
+      "filename": "approach-light-beacon-20fb9bc6.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18128/v1/model.glb"
+    },
+    {
+      "id": "18130",
+      "title": "Open unpressurised crew rover (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-open-rover-unpressuris-0da93181",
+      "filename": "open-rover-unpressuris-0da93181.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18130/v1/model.glb"
+    },
+    {
+      "id": "18131",
+      "title": "Open crew rover, science fit (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-open-rover-unpressuris-3741288d",
+      "filename": "open-rover-unpressuris-3741288d.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18131/v1/model.glb"
+    },
+    {
+      "id": "18133",
+      "title": "Pressurised long range rover (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-pressurised-long-range-35466e96",
+      "filename": "pressurised-long-range-35466e96.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18133/v1/model.glb"
+    },
+    {
+      "id": "18132",
+      "title": "Small robotic survey rover (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-small-survey-rover-f1fa6584",
+      "filename": "small-survey-rover-f1fa6584.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18132/v1/model.glb"
+    },
+    {
+      "id": "18134",
+      "title": "Six-wheel cargo hauler with flatbed (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-cargo-hauler-flatbed-76ce4ade",
+      "filename": "cargo-hauler-flatbed-76ce4ade.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18134/v1/model.glb"
+    },
+    {
+      "id": "18135",
+      "title": "Six-wheel cargo hauler with cryogenic tank (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-cargo-hauler-tanker-516b868f",
+      "filename": "cargo-hauler-tanker-516b868f.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18135/v1/model.glb"
+    },
+    {
+      "id": "18137",
+      "title": "Four-wheel crane rover (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-crane-rover-d5a76830",
+      "filename": "crane-rover-d5a76830.glb",
+      "category": "vehicles",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18137/v1/model.glb"
+    },
+    {
+      "id": "18136",
+      "title": "Surface EVA suit (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-eva-suit-23f03707",
+      "filename": "eva-suit-23f03707.glb",
+      "category": "characters",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18136/v1/model.glb"
+    },
+    {
+      "id": "18138",
+      "title": "EVA tool cart (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-eva-tool-cart-3f077d9d",
+      "filename": "eva-tool-cart-3f077d9d.glb",
+      "category": "weapons-tools",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18138/v1/model.glb"
+    },
+    {
+      "id": "18139",
+      "title": "Hand pulled equipment sled (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-equipment-sled-408c66bc",
+      "filename": "equipment-sled-408c66bc.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18139/v1/model.glb"
+    },
+    {
+      "id": "18140",
+      "title": "Regolith ground tile (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-regolith-ground-tile-d9c409b0",
+      "filename": "regolith-ground-tile-d9c409b0.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18140/v1/model.glb"
+    },
+    {
+      "id": "18141",
+      "title": "Crater rim segment tile (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-crater-rim-segment-fafd0277",
+      "filename": "crater-rim-segment-fafd0277.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18141/v1/model.glb"
+    },
+    {
+      "id": "18142",
+      "title": "Boulder field tile (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-boulder-field-tile-a94a18f4",
+      "filename": "boulder-field-tile-a94a18f4.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18142/v1/model.glb"
+    },
+    {
+      "id": "18143",
+      "title": "Rille edge tile (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-rille-edge-tile-308b8877",
+      "filename": "rille-edge-tile-308b8877.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18143/v1/model.glb"
+    },
+    {
+      "id": "18144",
+      "title": "Rover track ruts tile (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-rover-track-ruts-tile-5dc46c40",
+      "filename": "rover-track-ruts-tile-5dc46c40.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18144/v1/model.glb"
+    },
+    {
+      "id": "18145",
+      "title": "Graded dust berm (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-dust-berm-2dec8cfd",
+      "filename": "dust-berm-2dec8cfd.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18145/v1/model.glb"
+    },
+    {
+      "id": "18146",
+      "title": "Survey marker array (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-survey-marker-array-99d264a2",
+      "filename": "survey-marker-array-99d264a2.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18146/v1/model.glb"
+    },
+    {
+      "id": "18147",
+      "title": "Communications relay mast (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-comms-relay-mast-4cdfe54f",
+      "filename": "comms-relay-mast-4cdfe54f.glb",
+      "category": "props",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18147/v1/model.glb"
+    },
+    {
+      "id": "18148",
+      "title": "Lunar Colony Overview (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-colony-o-5943a18b-starter-scene",
+      "filename": "colony-o-5943a18b-starter-scene.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18148/v1/model.glb"
+    },
+    {
+      "id": "18149",
+      "title": "Landing Pad Operations (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-landing-pad-operations-4285ca76",
+      "filename": "landing-pad-operations-4285ca76.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18149/v1/model.glb"
+    },
+    {
+      "id": "18151",
+      "title": "Connector Cases (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-connector-cases-9058f711",
+      "filename": "connector-cases-9058f711.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18151/v1/model.glb"
+    },
+    {
+      "id": "18150",
+      "title": "Resource and Power Yard (Moon Base Colony and Lunar Rovers)",
+      "slug": "lunar-surface-colony-and-rovers-resource-yard-e9352363",
+      "filename": "resource-yard-e9352363.glb",
+      "category": "environments",
+      "triangles": null,
+      "bytes": null,
+      "cdnUrl": "https://cdn.3dassets.dev/assets/18150/v1/model.glb"
+    }
+  ]
+}
