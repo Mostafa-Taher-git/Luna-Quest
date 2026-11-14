@@ -1,0 +1,274 @@
+{
+  "when": "2026-11-14T22:35:10.193Z",
+  "viewport": [
+    1600,
+    900
+  ],
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "report": [
+    {
+      "name": "hero-A-plaza-spawn",
+      "note": "Spawn on the plaza, third person, full HUD",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/hero-A-plaza-spawn.png",
+      "kb": 712,
+      "facts": [
+        {
+          "pose": {
+            "x": -6,
+            "y": 0,
+            "z": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "hero-B-plaza-mirror",
+      "note": "The other side of the plaza walk, looking down the base",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/hero-B-plaza-mirror.png",
+      "kb": 773,
+      "facts": [
+        {
+          "pose": {
+            "x": 6,
+            "y": 0,
+            "z": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "hero-C-colony-wide",
+      "note": "Further back: the whole line of modules",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/hero-C-colony-wide.png",
+      "kb": 358,
+      "facts": [
+        {
+          "pose": {
+            "x": -14,
+            "y": 0,
+            "z": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "hero-D-aerial",
+      "note": "Aerial of the base from the rim side",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/hero-D-aerial.png",
+      "kb": 915,
+      "facts": [
+        {
+          "free": true
+        }
+      ]
+    },
+    {
+      "name": "hero-E-life-support",
+      "note": "Three-quarter on Life Support with the facade sign readable",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/hero-E-life-support.png",
+      "kb": 643,
+      "facts": [
+        {
+          "stand_near_crew": {
+            "at": {
+              "x": 34.9,
+              "y": 0,
+              "z": 25.2
+            },
+            "stand": {
+              "x": 28.940674628499767,
+              "y": 0,
+              "z": 22.60453450868758
+            },
+            "yaw": 4.301633170249604,
+            "id": "npc_nour",
+            "name": "Noor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "console-A-water-filter",
+      "note": "Water Filter panel, first person, inside Life Support",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/console-A-water-filter.png",
+      "kb": 135,
+      "facts": [
+        {
+          "stand_at_console": {
+            "x": 29.1,
+            "y": 0.25,
+            "z": 19.220000000000002
+          }
+        },
+        {
+          "open_console": {
+            "name": "Water Filter",
+            "buildingId": "life_support",
+            "interactionId": "clean_filter"
+          }
+        }
+      ]
+    },
+    {
+      "name": "console-B-power",
+      "note": "Load budget panel at the Power Farm",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/console-B-power.png",
+      "kb": 155,
+      "facts": [
+        {
+          "stand_at_console": {
+            "x": -57.1,
+            "y": 0.25,
+            "z": -5.08
+          }
+        },
+        {
+          "open_console": {
+            "name": "Load Budget",
+            "buildingId": "power_farm",
+            "interactionId": "balance_load"
+          }
+        }
+      ]
+    },
+    {
+      "name": "console-C-greenhouse",
+      "note": "Harvest panel in the greenhouse",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/console-C-greenhouse.png",
+      "kb": 145,
+      "facts": [
+        {
+          "stand_at_console": {
+            "x": 33.1,
+            "y": 0.25,
+            "z": -11.080000000000002
+          }
+        },
+        {
+          "open_console": {
+            "name": "Harvest",
+            "buildingId": "greenhouse",
+            "interactionId": "harvest"
+          }
+        }
+      ]
+    },
+    {
+      "name": "crew-A-dialogue",
+      "note": "Noor dialogue, six voiced topics",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/crew-A-dialogue.png",
+      "kb": 149,
+      "facts": [
+        {
+          "talk": "Noor"
+        }
+      ]
+    },
+    {
+      "name": "crew-B-noor-third",
+      "note": "Noor outside the Life Support hatch, third person",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/crew-B-noor-third.png",
+      "kb": 729,
+      "facts": [
+        {
+          "stand_near_crew": {
+            "at": {
+              "x": 34.9,
+              "y": 0,
+              "z": 25.2
+            },
+            "stand": {
+              "x": 31.782814421061417,
+              "y": 0,
+              "z": 23.842371896851965
+            },
+            "yaw": 4.301633170249604,
+            "id": "npc_nour",
+            "name": "Noor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "crew-C-noor-close",
+      "note": "Closer on Noor, hatch and sign in frame",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/crew-C-noor-close.png",
+      "kb": 731,
+      "facts": [
+        {
+          "stand_near_crew": {
+            "at": {
+              "x": 34.9,
+              "y": 0,
+              "z": 25.2
+            },
+            "stand": {
+              "x": 32.88299756656915,
+              "y": 0,
+              "z": 24.321534756786566
+            },
+            "yaw": 4.301633170249604,
+            "id": "npc_nour",
+            "name": "Noor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "crew-D-arabic",
+      "note": "Third person near Noor with the interface in Arabic",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/crew-D-arabic.png",
+      "kb": 685,
+      "facts": [
+        {
+          "arabic": "ar"
+        },
+        {
+          "stand_near_crew": {
+            "at": {
+              "x": 34.9,
+              "y": 0,
+              "z": 25.2
+            },
+            "stand": {
+              "x": 31.782814421061417,
+              "y": 0,
+              "z": 23.842371896851965
+            },
+            "yaw": 4.301633170249604,
+            "id": "npc_nour",
+            "name": "Noor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "crew-E-abdelaziz-power",
+      "note": "Abdulaziz outside the Power Farm",
+      "file": "/home/runner/work/Luna-Quest/Luna-Quest/shots/crew-E-abdelaziz-power.png",
+      "kb": 507,
+      "facts": [
+        {
+          "stand_near_crew": {
+            "at": {
+              "x": -65.1,
+              "y": 0,
+              "z": -19.2
+            },
+            "stand": {
+              "x": -61.997775051247906,
+              "y": 0,
+              "z": -17.808525829438388
+            },
+            "yaw": 1.1491566127441835,
+            "id": "npc_abdelaziz",
+            "name": "Abdulaziz"
+          }
+        }
+      ]
+    }
+  ]
+}
