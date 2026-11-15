@@ -1,4 +1,9 @@
-# CI parity job — apply with a Workflows-capable token
+# CI parity job — applied
+
+> **Status: applied.** The edits below are in `.github/workflows/ci.yml` (the `parity` job) and
+> `pages.yml` has been deleted; the token now has the Workflows permission. This file is kept as
+> the record of what changed. A second workflow, `godot-dotnet.yml`, was added at the same time so
+> the C# edition is compiled and run on every push.
 
 The push token used for the architecture pass has **Contents** write but not **Workflows**
 write, so GitHub rejects any change under `.github/workflows/` (HTTP 403). The parity guard

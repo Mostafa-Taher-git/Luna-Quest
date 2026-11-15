@@ -36,6 +36,11 @@ var odometer := 0.0
 var _wheels: Array = []
 var _steers: Array = []
 var _seat := Vector3(0.0, 0.34, -0.18)
+## Last place the rover's own body sat, used by exit(): transform changes only reach the physics
+## server on the next physics tick, and that tick fires before the frame in which the exit is
+## handled. See exit().
+var _settled_position := Vector3(-11.0, 0.05, -28.0)
+var _settled_rotation := 0.4
 
 
 func setup(colony_world: ColonyWorld) -> void:
@@ -78,8 +83,10 @@ func _load_model() -> Node3D:
 func _rig_wheels() -> void:
 	if model == null:
 		return
-	for corner in ["front-left", "front-right", "rear-left", "rear-right"]:
-		var front := corner.begins_with("front")
+	for corner: String in ["front-left", "front-right", "rear-left", "rear-right"]:
+		# Typed explicitly: `corner` comes out of an untyped Array, and parse-time inference
+		# of `var front := corner.begins_with(...)` fails without it.
+		var front: bool = corner.begins_with("front")
 		for child in model.find_children("*", "Node3D", true, false):
 			var n := child.name.to_lower()
 			if n == "wheel-" + corner:
@@ -100,6 +107,11 @@ func enter(player: ColonyPlayer) -> void:
 	occupied = true
 	has_driven = true
 	player.rover = self
+	# The commander rides inside the rover's own box collider, so the suit capsule must stop
+	# colliding while it is carried at the hand controller — otherwise move_and_slide pushes
+	# the two bodies apart every physics frame (jitter, and the rover shoves itself backwards).
+	player.collision_layer = 0
+	player.collision_mask = 0
 
 
 func exit(player: ColonyPlayer) -> void:
@@ -107,8 +119,18 @@ func exit(player: ColonyPlayer) -> void:
 	speed = 0.0
 	velocity = Vector3.ZERO
 	player.rover = null
+	# Walking again: the suit is solid once more.
+	player.collision_layer = 1
+	player.collision_mask = 1
 	var side := global_transform.basis.x.normalized()
-	var spot := global_position + side * 1.8
+	# Read the pose from the last physics frame, not from the node: a rover that moved this frame
+	# has already been ticked by the physics server at its old transform, so global_position here
+	# can be a frame ahead of where its collider actually is — and the commander would be dropped
+	# straight into the rover's own box.
+	var origin := Vector3(_settled_position.x, global_position.y, _settled_position.z)
+	var basis := Basis(Vector3.UP, _settled_rotation)
+	side = basis.x.normalized()
+	var spot := origin + side * 1.8
 	spot.y = world.height_at(spot.x, spot.z) if world != null else 0.0
 	player.global_position = spot
 	player.velocity = Vector3.ZERO
@@ -128,8 +150,14 @@ func drive(delta: float, player: ColonyPlayer) -> void:
 		steer_in += 1.0
 	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		steer_in -= 1.0
-	var handbrake := Input.is_key_pressed(KEY_SPACE)
-	var boost := Input.is_key_pressed(KEY_SHIFT)
+	_step(delta, throttle, steer_in, Input.is_key_pressed(KEY_SHIFT),
+		Input.is_key_pressed(KEY_SPACE), player)
+
+
+## One physics step with the controls passed in (keyboard here, the audit when it drives the
+## rover itself). Kept separate so the vehicle can be tested without a keyboard.
+func _step(delta: float, throttle: float, steer_in: float, boost: bool, handbrake: bool,
+		driver: ColonyPlayer = null) -> void:
 	var flat := battery_kwh <= 0.05
 	var max_f := 0.0 if flat else MAX_FORWARD * (1.0 if boost else 0.72)
 
@@ -154,6 +182,8 @@ func drive(delta: float, player: ColonyPlayer) -> void:
 	else:
 		velocity.y = 0.0
 	move_and_slide()
+	_settled_position = global_position
+	_settled_rotation = rotation.y
 	odometer += absf(speed) * delta
 
 	spin += (speed / WHEEL_RADIUS) * delta
@@ -175,12 +205,14 @@ func drive(delta: float, player: ColonyPlayer) -> void:
 	if not reached_ice and pos2.distance_to(ICE_SITE) < 12.0:
 		reached_ice = true
 
+	if driver == null:
+		return
 	# Carry the commander at the hand controller, facing the way the rover points.
-	player.global_position = seat_global()
-	player.velocity = Vector3.ZERO
-	player.rotation.y = rotation.y
-	if player.astronaut != null:
-		player.astronaut.rotation.x = -0.32
+	driver.global_position = seat_global()
+	driver.velocity = Vector3.ZERO
+	driver.rotation.y = rotation.y
+	if driver.astronaut != null:
+		driver.astronaut.rotation.x = -0.32
 
 
 func speed_kmh() -> float:
@@ -203,6 +235,13 @@ func capture() -> Dictionary:
 	}
 
 
+## Keep the exit reference in step with a rover that is placed (spawn, save load, restart) rather
+## than driven, so exit() never reads a stale pose.
+func settle() -> void:
+	_settled_position = global_position
+	_settled_rotation = rotation.y
+
+
 func restore(data: Dictionary, player: ColonyPlayer) -> void:
 	if data.is_empty():
 		return
@@ -216,3 +255,6 @@ func restore(data: Dictionary, player: ColonyPlayer) -> void:
 	reached_ice = bool(data.get("reachedIce", false))
 	if bool(data.get("occupied", false)) and player != null:
 		enter(player)
+
+	# The saved pose is where the rover now is; exit() measures from here.
+	settle()

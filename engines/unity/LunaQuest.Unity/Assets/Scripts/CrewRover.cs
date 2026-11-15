@@ -30,6 +30,13 @@ namespace LunaQuest.Unity
         public float BatteryKwh = BatteryKwhMax;
 
         private CharacterController _controller;
+        /// <summary>
+        /// Where the rover's own capsule last actually was. On a groundless stretch (and for one
+        /// frame after the player exits, while their controller is still live) CharacterController
+        /// ignores gravity, so transform.position can drift far above the surface. exit() measures
+        /// the step-out from this instead, so the commander is dropped onto the ground they can see.
+        /// </summary>
+        private Vector3 _settledPosition;
         private readonly List<(Transform wheel, Transform steer, bool front)> _corners = new();
         private readonly Vector3 _seat = new Vector3(0f, 0.34f, -0.18f);
         private float _vertical;
@@ -37,6 +44,9 @@ namespace LunaQuest.Unity
         public float SpeedKmh() => Mathf.Abs(Speed) * 3.6f;
         public float BatteryPercent() => BatteryKwh / BatteryKwhMax;
         public Vector3 SeatGlobal => transform.TransformPoint(_seat);
+
+        /// <summary>Keep the exit reference in step with a rover that was placed, not driven.</summary>
+        public void Settle() => _settledPosition = transform.position;
 
         public static CrewRover Create(LunaQuestGame game)
         {
@@ -48,6 +58,7 @@ namespace LunaQuest.Unity
             rover._controller.center = new Vector3(0f, 0.7f, 0f);
             rover._controller.slopeLimit = 50f;
             rover._controller.stepOffset = 0.35f;
+            rover._settledPosition = go.transform.position;
             rover.BuildBody();
             return rover;
         }
@@ -96,6 +107,8 @@ namespace LunaQuest.Unity
             Occupied = true;
             HasDriven = true;
             p.Rover = this;
+            // The seat is inside the rover's own capsule: park the suit's controller.
+            p.SetDriving(true);
             p.ConfigureDriveCamera();
         }
 
@@ -106,8 +119,10 @@ namespace LunaQuest.Unity
             _vertical = 0f;
             p.Rover = null;
             Vector3 side = transform.right;
-            Vector3 spot = transform.position + side * 1.8f;
+            Vector3 spot = _settledPosition + side * 1.8f;
             spot.y = 0.05f;
+            // Teleport re-enables the suit controller: leave it live so walking works again.
+            p.SetDriving(false);
             p.Teleport(spot);
             p.Halt();
             p.Visual.localRotation = Quaternion.Euler(0f, 180f, 0f);
@@ -121,6 +136,16 @@ namespace LunaQuest.Unity
             float steerIn = (Input.GetKey(KeyCode.A) ? 1f : 0f) - (Input.GetKey(KeyCode.D) ? 1f : 0f);
             bool handbrake = Input.GetKey(KeyCode.Space);
             bool boost = Input.GetKey(KeyCode.LeftShift);
+            SimulateForTest(dt, throttle, steerIn, boost, handbrake, p);
+        }
+
+        /// <summary>
+        /// One physics step with the controls passed in — the keyboard supplies them in play, the
+        /// playtest supplies them headlessly. Keeps the vehicle testable without a keyboard.
+        /// </summary>
+        public void SimulateForTest(float dt, float throttle, float steerIn, bool boost, bool handbrake,
+            ColonyPlayer p)
+        {
             bool flat = BatteryKwh <= 0.05f;
             float maxF = flat ? 0f : MaxForward * (boost ? 1f : 0.72f);
 
@@ -132,12 +157,21 @@ namespace LunaQuest.Unity
 
             float steerTarget = steerIn * SteerMax * (0.55f + 0.45f / (1f + Mathf.Abs(Speed) * 0.35f));
             Steer = Mathf.Lerp(Steer, steerTarget, Mathf.Clamp(dt * 6f, 0f, 1f));
-            transform.Rotate(0f, (Speed / 2.3f) * Mathf.Tan(Steer) * dt * Mathf.Rad2Deg, 0f);
+            // Same bicycle model as the two Godot engines (yaw rate = speed / wheelbase * tan(steer))
+            // with one sign change: Unity's yaw is clockwise seen from above, Godot's is
+            // counter-clockwise, so a left steer turns the Unity rover by MINUS that angle. Without
+            // the minus the two editions drive mirrored: A steers right here and left in Godot.
+            transform.Rotate(0f, -(Speed / 2.3f) * Mathf.Tan(Steer) * dt * Mathf.Rad2Deg, 0f);
 
             if (_controller.isGrounded) _vertical = -2f;
             else _vertical -= Gravity * dt;
             Vector3 velocity = transform.forward * Speed + new Vector3(0f, _vertical, 0f);
             _controller.Move(velocity * dt);
+            // Only remember a pose the capsule could really reach: see _settledPosition.
+            float height = Game != null && Game.World != null
+                ? Game.World.HeightAt(transform.position.x, transform.position.z)
+                : 0f;
+            if (transform.position.y - height < 3f) _settledPosition = transform.position;
             Odometer += Mathf.Abs(Speed) * dt;
 
             Spin += (Speed / WheelRadius) * dt;
@@ -172,6 +206,7 @@ namespace LunaQuest.Unity
             Odometer = Num("roverOdometer", 0f);
             HasDriven = Bool("roverDriven", false);
             ReachedIce = Bool("roverIce", false);
+            Settle();
             if (Bool("roverOccupied", false)) Enter(p);
         }
     }

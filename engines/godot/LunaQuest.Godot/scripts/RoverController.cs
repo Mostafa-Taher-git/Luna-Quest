@@ -29,6 +29,16 @@ namespace LunaQuest.Godot
         public float Speed, Steer, Spin, Odometer;
         public float BatteryKwh = BatteryKwhMax;
 
+        /// <summary>
+        /// Last place the rover's own body sat. Physics transforms reach the physics server on the
+        /// next tick, and input (which drives the physics process) runs before that tick — so at the
+        /// moment E is pressed, GlobalPosition can be a frame ahead of where the collider actually
+        /// is. exit() measures from the settled pose so the commander is never dropped into the
+        /// rover's own box.
+        /// </summary>
+        private Vector3 _settledPosition = new Vector3(-11f, 0.05f, -28f);
+        private float _settledYaw = 0.4f;
+
         private Node3D _model = null!;
         private readonly List<(Node3D node, bool front)> _wheels = new();
         private readonly List<(Node3D node, bool front)> _steers = new();
@@ -99,14 +109,21 @@ namespace LunaQuest.Godot
             p.ConfigureDriveCamera();
         }
 
+        /// <summary>Keep the exit reference in step with a rover that was placed, not driven.</summary>
+        public void Settle()
+        {
+            _settledPosition = GlobalPosition;
+            _settledYaw = Rotation.Y;
+        }
+
         public void Exit(PlayerController p)
         {
             Occupied = false;
             Speed = 0f;
             Velocity = Vector3.Zero;
             p.Rover = null;
-            Vector3 side = GlobalTransform.Basis.X.Normalized();
-            Vector3 spot = GlobalPosition + side * 1.8f;
+            Vector3 side = new Basis(Vector3.Up, _settledYaw).X.Normalized();
+            Vector3 spot = new Vector3(_settledPosition.X, GlobalPosition.Y, _settledPosition.Z) + side * 1.8f;
             spot.Y = 0.05f;
             p.GlobalPosition = spot;
             p.Velocity = Vector3.Zero;
@@ -121,6 +138,16 @@ namespace LunaQuest.Godot
             float steerIn = (Input.IsActionPressed("move_left") ? 1f : 0f) - (Input.IsActionPressed("move_right") ? 1f : 0f);
             bool handbrake = Input.IsActionPressed("jump");
             bool boost = Input.IsActionPressed("sprint");
+            Step(dt, throttle, steerIn, boost, handbrake, p);
+        }
+
+        /// <summary>
+        /// One physics step with the controls passed in — actions in play, the audit (--rover-test)
+        /// when it drives the vehicle itself. Keeps the vehicle testable without a keyboard.
+        /// </summary>
+        public void Step(float dt, float throttle, float steerIn, bool boost, bool handbrake,
+            PlayerController p)
+        {
             bool flat = BatteryKwh <= 0.05f;
             float maxF = flat ? 0f : MaxForward * (boost ? 1f : 0.72f);
 
@@ -140,6 +167,8 @@ namespace LunaQuest.Godot
             v.Y = IsOnFloor() ? 0f : Velocity.Y - Gravity * dt;
             Velocity = v;
             MoveAndSlide();
+            _settledPosition = GlobalPosition;
+            _settledYaw = Rotation.Y;
             Odometer += Mathf.Abs(Speed) * dt;
 
             Spin += (Speed / WheelRadius) * dt;
@@ -161,8 +190,10 @@ namespace LunaQuest.Godot
             p.Visual.Rotation = new Vector3(-0.32f, Mathf.Pi, 0);
         }
 
-        public void Restore(Dictionary<string, object> extras, PlayerController p)
+        public void Restore(Dictionary<string, object?> extras, PlayerController p)
         {
+            // SaveData.Extras is Dictionary<string, object?>; the Json helpers already accept a
+            // nullable payload (a missing or null extras key falls back to the default).
             float Num(string k, float d) => extras.TryGetValue(k, out var o) ? (float)LunaQuest.Core.Content.Json.Num(o, d) : d;
             bool Bool(string k, bool d) => extras.TryGetValue(k, out var o) && LunaQuest.Core.Content.Json.Bool(o, d);
             if (extras.ContainsKey("roverX"))
@@ -172,6 +203,8 @@ namespace LunaQuest.Godot
             Odometer = Num("roverOdometer", 0f);
             HasDriven = Bool("roverDriven", false);
             ReachedIce = Bool("roverIce", false);
+            // The saved pose is where the rover now is: exit() measures the step-out from here.
+            Settle();
             if (Bool("roverOccupied", false)) Enter(p);
         }
     }

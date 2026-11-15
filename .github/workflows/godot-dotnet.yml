@@ -1,0 +1,148 @@
+name: Godot .NET build
+
+# The C# edition of the game (Godot .NET, C#) is compiled here, on every push and pull request:
+# the project's C# is built against the real Godot API, the project is imported headlessly and a
+# few hundred frames are run, so a typo in a script cannot reach main. The GDScript workflow does
+# the same for the other Godot edition; `ci.yml` covers content, the shared simulation, engine
+# parity and the immutable asset locks.
+#
+# This job exists because a script that has never been compiled is not verified. It needs no
+# licence, no GPU and no editor.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-dotnet-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.7.2'
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_DIR: engines/godot/LunaQuest.Godot
+
+jobs:
+  build:
+    name: Compile and run headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Diagnostic helper
+        # One annotation per log tail, newlines percent-encoded: the Actions log blob host is not
+        # reachable from every machine, and a check run only keeps ten annotations. GITHUB_ENV
+        # only accepts NAME=VALUE pairs, so the helper is installed as a script on PATH.
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bin"
+          cat > "$RUNNER_TEMP/bin/annotate" <<'SCRIPT'
+          #!/usr/bin/env bash
+          # annotate <title> <body> — emit one escaped notice annotation.
+          title="$1"
+          body="${2//%/%25}"
+          body="${body//$'\r'/}"
+          body="${body//$'\n'/%0A}"
+          body="${body//$'\t'/ }"
+          echo "::notice title=${title}::${body}"
+          SCRIPT
+          chmod +x "$RUNNER_TEMP/bin/annotate"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build the project's C# against the engine API
+        run: |
+          set -euo pipefail
+          # Debug is what a headless editor run loads from .godot/mono/temp/bin/Debug/; Release is
+          # what an exported game loads. Build both and prove the assemblies are there — a missing
+          # assembly is exactly what makes Godot report "associated class could not be found".
+          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Debug > build-debug.log 2>&1 || {
+            annotate "build (Debug)" "$(tail -40 build-debug.log)"; cat build-debug.log; exit 1; }
+          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release > build-release.log 2>&1 || {
+            annotate "build (Release)" "$(tail -40 build-release.log)"; cat build-release.log; exit 1; }
+          grep -Ei "warning (CS|NU|MSB)" build-debug.log build-release.log | sort -u | while read -r line; do
+            echo "::warning::${line}"
+          done || true
+          found=$(find "${PROJECT_DIR}" -name "LunaQuest.Godot.dll" -printf "%p (%s bytes)\n")
+          echo "$found"
+          annotate "built assemblies" "${found:-none found}"
+          case "$found" in
+            *"mono/temp/bin/Debug"*) ;;
+            *) echo "::error::no Debug assembly: the editor run would not find the C# scripts"; exit 1 ;;
+          esac
+
+      - name: Fetch Godot .NET ${GODOT_VERSION}
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64" godot-dir
+          chmod +x godot-dir/Godot_v*
+          # The mono editor finds its own .NET through this variable (tools/godot-mono.sh does
+          # the same); without it the C# glue never loads and every script fails to instantiate.
+          echo "DOTNET_ROOT=${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}" >> "$GITHUB_ENV"
+
+      - name: Import the project (loads every script and every asset)
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --import > import.log 2>&1 || true
+          # The import pass is allowed to warn; a parse or script error is not.
+          problems=$(grep -Ei "parse error|script error|failed to load script" import.log || true)
+          tail -c 4000 import.log
+          annotate "import.log tail" "$(tail -15 import.log)"
+          if [ -n "$problems" ]; then
+            annotate "import.log errors" "$problems"
+            exit 1
+          fi
+
+      - name: Run the game headlessly (600 frames, the colony must report itself built)
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 600 > run.log 2>&1 || true
+          problems=$(grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" run.log || true)
+          tail -c 4000 run.log
+          # Mirror the tail into ONE annotation (GitHub caps a check run at 10 annotations, so
+          # one per line would be truncated after the first ten).
+          annotate "run.log tail" "$(tail -40 run.log)"
+          if [ -n "$problems" ]; then
+            annotate "run.log errors" "$problems"
+            exit 1
+          fi
+          # A silent exit 0 proves nothing: the colony has to have actually been built.
+          if ! grep -qF "Luna-Quest ready" run.log; then
+            echo "::error::run: the game never printed its ready line — the colony did not build"
+            exit 1
+          fi
+
+      - name: Rover playtest (enter, drive, brake, battery, exit, save, restart)
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" -- --rover-test > rover.log 2>&1 || true
+          tail -c 4000 rover.log
+          annotate "rover.log tail" "$(tail -40 rover.log)"
+          if ! grep -q "ROVER TEST OK" rover.log; then
+            annotate "rover test failures" "$(grep -E '·|ROVER TEST|SCRIPT ERROR' rover.log || true)"
+            echo "::error::the rover playtest did not pass"
+            exit 1
+          fi
+
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-dotnet-logs
+          path: |
+            import.log
+            run.log
+            rover.log
+          retention-days: 7

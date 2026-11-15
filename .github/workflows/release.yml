@@ -4,16 +4,15 @@ name: Release
 #   git tag v3.1 && git push origin v3.1
 #
 # Outputs, all attached to one GitHub Release:
-#   · LunaQuest-v<tag>-Web.zip      — the browser build, unzip and serve, or use the Pages link
 #   · LunaQuest-v<tag>-Windows.zip — Godot .NET export for Windows
 #   · LunaQuest-v<tag>-Linux.zip   — Godot .NET export for Linux
 #   · LunaQuest-GDScript-Web.zip   — the pure-GDScript web export (stock Godot, no .NET)
 #   · LunaQuest-GDScript-Windows.zip / -Linux.zip — the GDScript desktop exports
 #   · the intro film as a shareable MP4
 #
-# The Godot job is allowed to fail without sinking the release: the web build is the one that
-# needs no install, so it must always ship. If the Godot toolchain moves or the version needs
-# bumping, only that job goes red.
+# The engine jobs are allowed to fail without sinking the release (continue-on-error): if the
+# Godot toolchain moves or the version needs bumping, only that job goes red and the release
+# still publishes the film and the archives that did build.
 
 on:
   push:
@@ -34,36 +33,6 @@ env:
   DOTNET_VERSION: '8.0.x'
 
 jobs:
-  web:
-    name: Browser build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - name: Package the site
-        working-directory: .
-        run: |
-          set -euo pipefail
-          mkdir -p out
-          cd web/dist
-          zip -qr ../../out/LunaQuest-Web.zip .
-          cd ../..
-          ls -lh out
-      - uses: actions/upload-artifact@v4
-        with:
-          name: web-zip
-          path: out/LunaQuest-Web.zip
-
   film:
     name: Intro film
     runs-on: ubuntu-latest
@@ -180,8 +149,8 @@ jobs:
 
   publish:
     name: Publish the release
-    needs: [web, godot, gdscript]
-    if: always() && needs.web.result == 'success'
+    needs: [film, godot, gdscript]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -201,9 +170,6 @@ jobs:
           body: |
             **Luna-Quest — The Living Moon Colony**
 
-            Play in the browser: open the Pages deployment of this repository, or unzip
-            `LunaQuest-Web.zip` behind any static web server. No install, no plugins.
-
             Desktop builds are Godot 4 .NET exports. Unzip, then run `LunaQuest.exe` on Windows
             or `./LunaQuest.x86_64` on Linux.
 
@@ -213,10 +179,9 @@ jobs:
 
             The intro film is the original render of the game world and is included unchanged.
 
-            Saved games use schema 2 and are interchangeable between the Godot, Unity and web
-            builds. The simulation is deterministic at a one-second step.
+            Saved games use schema 2 and are interchangeable between the Godot .NET, GDScript
+            and Unity builds. The simulation is deterministic at a one-second step.
           files: |
-            artifacts/web-zip/*.zip
             artifacts/godot-builds/*.zip
             artifacts/gdscript-builds/*.zip
             artifacts/intro-film/*.mp4

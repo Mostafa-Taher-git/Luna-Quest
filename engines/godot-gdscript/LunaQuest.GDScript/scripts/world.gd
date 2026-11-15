@@ -165,12 +165,16 @@ func _make_terrain() -> void:
 			var b := a + 1
 			var c := a + TERRAIN_CELLS + 1
 			var d := c + 1
+			# Clockwise seen from above, so the surface faces up for the renderer *and* for
+			# the physics trimesh baked from it. The old a-c-b / b-c-d order wound every
+			# triangle face-down: the ground was drawn inside-out and a ray cast downwards
+			# passed straight through it (nothing could stand on the Moon).
 			indices.append(a)
-			indices.append(c)
-			indices.append(b)
 			indices.append(b)
 			indices.append(c)
+			indices.append(b)
 			indices.append(d)
+			indices.append(c)
 
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)

@@ -54,16 +54,52 @@
     }
   ],
   "derived": [
-    { "path": "web/public/models/astronaut/cute_astronaut.glb", "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2" },
-    { "path": "web/dist/models/astronaut/cute_astronaut.glb", "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2" },
-    { "path": "web/public/media/intro.mp4", "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a" },
-    { "path": "web/dist/media/intro.mp4", "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a" },
-    { "path": "web/public/media/intro.webm", "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458" },
-    { "path": "web/dist/media/intro.webm", "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458" },
-    { "path": "web/public/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
-    { "path": "web/public/media/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
-    { "path": "web/dist/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
-    { "path": "web/dist/media/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" }
+    {
+      "path": "engines/godot-gdscript/LunaQuest.GDScript/assets/video/intro.ogv",
+      "sha256": "b498e5e4ac16fbe1d644118f4ed6788db548ed984981106a5130c6b9f358388d",
+      "bytes": 2821038,
+      "note": "build artefact of tools/sync-gdscript-assets.sh (a copy of assets/video/intro.ogv, the same bytes as the .NET project's copy); optional in a fresh clone, byte-pinned when present"
+    },
+    {
+      "path": "web/public/models/astronaut/cute_astronaut.glb",
+      "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2"
+    },
+    {
+      "path": "web/dist/models/astronaut/cute_astronaut.glb",
+      "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2"
+    },
+    {
+      "path": "web/public/media/intro.mp4",
+      "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a"
+    },
+    {
+      "path": "web/dist/media/intro.mp4",
+      "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a"
+    },
+    {
+      "path": "web/public/media/intro.webm",
+      "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458"
+    },
+    {
+      "path": "web/dist/media/intro.webm",
+      "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458"
+    },
+    {
+      "path": "web/public/intro-poster.jpg",
+      "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf"
+    },
+    {
+      "path": "web/public/media/intro-poster.jpg",
+      "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf"
+    },
+    {
+      "path": "web/dist/intro-poster.jpg",
+      "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf"
+    },
+    {
+      "path": "web/dist/media/intro-poster.jpg",
+      "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf"
+    }
   ],
   "rules": {
     "intro": "The existing film is final. Never re-render, re-encode, trim, replace or regenerate it, and never create another intro video, even if the model, the game, the story or the engine changes. Only playback, skip and decode-failure handling may be edited.",

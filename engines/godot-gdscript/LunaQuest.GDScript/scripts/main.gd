@@ -69,6 +69,7 @@ func _ready() -> void:
 	rover.setup(world)
 	rover.position = Vector3(-11.0, 0.05, -28.0)
 	rover.rotation.y = 0.4
+	rover.settle()
 
 	sim = LQSim.new()
 	sim.clock.total_minutes = OPENING_MINUTE
@@ -135,7 +136,8 @@ func crew_fit(node: Node3D, target_height: float) -> void:
 		var mesh_node := child as MeshInstance3D
 		if mesh_node == null or mesh_node.mesh == null:
 			continue
-		var box: AABB = mesh_node.global_transform * mesh_node.get_aabb()
+		# The suit is measured before it joins the tree, so only the local transform is valid.
+		var box: AABB = mesh_node.transform * mesh_node.get_aabb()
 		if first:
 			bounds = box
 			first = false
@@ -213,6 +215,13 @@ func _restart_mission() -> void:
 		rover.rotation.y = 0.4
 		rover.battery_kwh = ColonyRover.BATTERY_KWH
 		rover.speed = 0.0
+		# A new mission starts with a clean rover: no milestones carried over.
+		rover.has_driven = false
+		rover.reached_ice = false
+		rover.odometer = 0.0
+		rover.steer = 0.0
+		rover.spin = 0.0
+		rover.settle()
 	for child in hud.toast_box.get_children():
 		child.queue_free()
 	_begin_session()
@@ -230,6 +239,10 @@ func _on_mission_complete() -> void:
 # ---- the loop --------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	# --selftest and a failed startup quit before the colony exists; the frames that follow must
+	# not touch the simulation or the world.
+	if sim == null or world == null:
+		return
 	if playing and not paused:
 		var fast := Input.is_key_pressed(KEY_TAB) or Input.is_key_pressed(KEY_T)
 		var speed := 6.0 if fast else 1.0

@@ -33,6 +33,8 @@ namespace LunaQuest.Unity
         private Material _rock;
         private Material _earthMat;
         private Material _suit;
+        private readonly LunaQuest.Core.Terrain.LunarTerrain _terrain =
+            new LunaQuest.Core.Terrain.LunarTerrain(1337);
 
         public void Init(LunaQuestGame game)
         {
@@ -207,12 +209,19 @@ namespace LunaQuest.Unity
             return mat;
         }
 
+        /// <summary>
+        /// The height of the shared lunar surface at a point, in metres. One Moon: this is the
+        /// same deterministic field (seed 1337) the ground mesh is built from, so gameplay code
+        /// never has to guess where the ground is.
+        /// </summary>
+        public float HeightAt(float x, float z) => (float)_terrain.Height(x, z);
+
         private void BuildGround()
         {
             // One Moon for every engine: the ground is generated from the shared deterministic
             // heightfield (LunaQuest.Core.Terrain.LunarTerrain) — the same surface Godot draws,
             // seed 1337, flat pad around (0, 8). Replaces the old flat 1600 m plane.
-            var terrain = new LunaQuest.Core.Terrain.LunarTerrain(1337);
+            var terrain = _terrain;
             const float size = 840f;
             const int cells = 210;
             float step = size / cells;
@@ -233,22 +242,33 @@ namespace LunaQuest.Unity
             for (int ix = 0; ix < cells; ix++)
             {
                 int a = iz * n + ix, b = a + 1, c = a + n, d = c + 1;
-                tris[t++] = a; tris[t++] = b; tris[t++] = c;
-                tris[t++] = b; tris[t++] = d; tris[t++] = c;
+                // Unity treats clockwise (seen from above) as the front face, so this order is
+                // what makes the ground face the sky and the MeshCollider hittable from above.
+                tris[t++] = a; tris[t++] = c; tris[t++] = b;
+                tris[t++] = b; tris[t++] = c; tris[t++] = d;
+            }
+            // Guarantee the surface faces up regardless of the winding convention: sum the
+            // geometry normals of every triangle and flip them all only if the surface as a whole
+            // points down. A single-vertex test is not enough — mesh.normals[0].y is always
+            // positive on this grid, so the old guard never fired even when every triangle faced
+            // down, and a MeshCollider only accepts a ray from the side its triangles face.
+            double upness = 0;
+            for (int i = 0; i < tris.Length; i += 3)
+            {
+                Vector3 e1 = verts[tris[i + 1]] - verts[tris[i]];
+                Vector3 e2 = verts[tris[i + 2]] - verts[tris[i]];
+                upness += Vector3.Cross(e1, e2).y;
+            }
+            if (upness < 0)
+            {
+                for (int i = 0; i < tris.Length; i += 3)
+                    (tris[i + 1], tris[i + 2]) = (tris[i + 2], tris[i + 1]);
             }
             var mesh = new Mesh { name = "Regolith", indexFormat = IndexFormat.UInt32 };
             mesh.vertices = verts;
             mesh.uv = uv;
             mesh.triangles = tris;
             mesh.RecalculateNormals();
-            // Guarantee the surface faces up regardless of winding convention.
-            if (mesh.normals.Length > 0 && mesh.normals[0].y < 0f)
-            {
-                for (int i = 0; i < tris.Length; i += 3)
-                    (tris[i + 1], tris[i + 2]) = (tris[i + 2], tris[i + 1]);
-                mesh.triangles = tris;
-                mesh.RecalculateNormals();
-            }
             mesh.RecalculateBounds();
             var ground = new GameObject("Regolith");
             ground.transform.SetParent(transform, false);
