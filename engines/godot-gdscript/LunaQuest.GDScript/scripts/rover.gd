@@ -112,6 +112,8 @@ func exit(player: ColonyPlayer) -> void:
 	spot.y = world.height_at(spot.x, spot.z) if world != null else 0.0
 	player.global_position = spot
 	player.velocity = Vector3.ZERO
+	if player.astronaut != null:
+		player.astronaut.rotation.x = 0.0
 
 
 ## Called by ColonyPlayer._physics_process while the commander is at the wheel.
