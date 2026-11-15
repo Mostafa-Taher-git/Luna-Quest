@@ -209,13 +209,55 @@ namespace LunaQuest.Unity
 
         private void BuildGround()
         {
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Regolith";
+            // One Moon for every engine: the ground is generated from the shared deterministic
+            // heightfield (LunaQuest.Core.Terrain.LunarTerrain) — the same surface Godot draws,
+            // seed 1337, flat pad around (0, 8). Replaces the old flat 1600 m plane.
+            var terrain = new LunaQuest.Core.Terrain.LunarTerrain(1337);
+            const float size = 840f;
+            const int cells = 210;
+            float step = size / cells;
+            float half = size * 0.5f;
+            int n = cells + 1;
+            var verts = new Vector3[n * n];
+            var uv = new Vector2[n * n];
+            for (int iz = 0; iz < n; iz++)
+            for (int ix = 0; ix < n; ix++)
+            {
+                float x = -half + ix * step, z = -half + iz * step;
+                verts[iz * n + ix] = new Vector3(x, (float)terrain.Height(x, z), z);
+                uv[iz * n + ix] = new Vector2(ix / (float)cells * 80f, iz / (float)cells * 80f);
+            }
+            var tris = new int[cells * cells * 6];
+            int t = 0;
+            for (int iz = 0; iz < cells; iz++)
+            for (int ix = 0; ix < cells; ix++)
+            {
+                int a = iz * n + ix, b = a + 1, c = a + n, d = c + 1;
+                tris[t++] = a; tris[t++] = b; tris[t++] = c;
+                tris[t++] = b; tris[t++] = d; tris[t++] = c;
+            }
+            var mesh = new Mesh { name = "Regolith", indexFormat = IndexFormat.UInt32 };
+            mesh.vertices = verts;
+            mesh.uv = uv;
+            mesh.triangles = tris;
+            mesh.RecalculateNormals();
+            // Guarantee the surface faces up regardless of winding convention.
+            if (mesh.normals.Length > 0 && mesh.normals[0].y < 0f)
+            {
+                for (int i = 0; i < tris.Length; i += 3)
+                    (tris[i + 1], tris[i + 2]) = (tris[i + 2], tris[i + 1]);
+                mesh.triangles = tris;
+                mesh.RecalculateNormals();
+            }
+            mesh.RecalculateBounds();
+            var ground = new GameObject("Regolith");
             ground.transform.SetParent(transform, false);
-            ground.transform.localScale = new Vector3(160f, 1f, 160f);
-            var renderer = ground.GetComponent<Renderer>();
+            ground.isStatic = true;
+            ground.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = ground.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = _regolith;
             renderer.receiveShadows = true;
+            ground.AddComponent<MeshCollider>().sharedMesh = mesh;
 
             // A slightly paler apron around the base, so the colony sits on a place.
             var apron = GameObject.CreatePrimitive(PrimitiveType.Plane);
