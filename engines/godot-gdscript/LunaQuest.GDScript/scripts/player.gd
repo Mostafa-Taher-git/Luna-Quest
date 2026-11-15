@@ -20,6 +20,7 @@ var bob_time := 0.0
 var _pitch := 0.0
 var _head: Node3D
 var _current_target: Dictionary = {}
+var rover: ColonyRover = null # set while driving the crew rover
 
 
 func _ready() -> void:
@@ -79,6 +80,11 @@ func _physics_process(delta: float) -> void:
 	if not can_move:
 		return
 
+	# At the wheel: the rover owns movement and carries the commander this frame.
+	if rover != null:
+		rover.drive(delta, self)
+		return
+
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 
@@ -134,6 +140,13 @@ func target() -> Dictionary:
 			"interaction_id": str(collider.get_meta("interaction_id")),
 			"label_en": str(collider.get_meta("label_en", "")),
 			"label_ar": str(collider.get_meta("label_ar", "")),
+		}
+	if collider.has_meta("rover_id"):
+		return {
+			"type": "rover",
+			"body": collider,
+			"label_en": "Crew rover",
+			"label_ar": "\u0645\u0631\u0643\u0628\u0629 \u0627\u0644\u0637\u0627\u0642\u0645",
 		}
 	if collider.has_meta("npc_id"):
 		return {
