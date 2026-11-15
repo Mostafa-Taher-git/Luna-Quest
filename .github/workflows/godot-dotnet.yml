@@ -1,0 +1,86 @@
+name: Godot .NET build
+
+# The C# edition of the game (Godot .NET, C#) is compiled here, on every push and pull request:
+# the project's C# is built against the real Godot API, the project is imported headlessly and a
+# few hundred frames are run, so a typo in a script cannot reach main. The GDScript workflow does
+# the same for the other Godot edition; `ci.yml` covers content, the shared simulation, engine
+# parity and the immutable asset locks.
+#
+# This job exists because a script that has never been compiled is not verified. It needs no
+# licence, no GPU and no editor.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-dotnet-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.7.2'
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_DIR: engines/godot/LunaQuest.Godot
+
+jobs:
+  build:
+    name: Compile and run headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build the project's C# against the engine API
+        run: dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release
+
+      - name: Fetch Godot .NET ${GODOT_VERSION}
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64" godot-dir
+          chmod +x godot-dir/Godot_v*
+
+      - name: Import the project (loads every script and every asset)
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --import > import.log 2>&1 || true
+          # The import pass is allowed to warn; a parse or script error is not.
+          problems=$(grep -Ei "parse error|script error|failed to load script" import.log || true)
+          tail -c 4000 import.log
+          if [ -n "$problems" ]; then
+            echo "$problems" | while read -r line; do echo "::error::import: $line"; done
+            exit 1
+          fi
+
+      - name: Run the game headlessly for 400 frames
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 400 > run.log 2>&1 || true
+          problems=$(grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" run.log || true)
+          tail -c 4000 run.log
+          if [ -n "$problems" ]; then
+            echo "$problems" | while read -r line; do echo "::error::run: $line"; done
+            exit 1
+          fi
+          grep -F "ready" run.log || true
+
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-dotnet-logs
+          path: |
+            import.log
+            run.log
+          retention-days: 7
