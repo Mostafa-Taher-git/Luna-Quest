@@ -21,6 +21,7 @@ namespace LunaQuest.Unity
         public ColonySimulation Sim;
         public ColonyWorld World;
         public ColonyPlayer Player;
+        public CrewRover Rover;
         public ColonyHud Hud;
         public VoicePlayer Voice;
 
@@ -76,6 +77,10 @@ namespace LunaQuest.Unity
 
             Player = ColonyPlayer.Create(this);
             Player.Teleport(new Vector3(0f, 0.15f, 23f));
+
+            Rover = CrewRover.Create(this);
+            Rover.transform.position = new Vector3(-11f, 0.05f, -28f);
+            Rover.transform.rotation = Quaternion.Euler(0f, 0.4f * Mathf.Rad2Deg, 0f);
 
             Hud = new ColonyHud(this);
             Hud.Init();
@@ -191,6 +196,24 @@ namespace LunaQuest.Unity
         private void Interact()
         {
             if (Player == null) return;
+
+            if (Rover != null)
+            {
+                if (Rover.Occupied)
+                {
+                    Rover.Exit(Player);
+                    Hud.ShowSubtitle(L.T("Out of the rover. It recharges on the garage apron.",
+                        "خرجت من المركبة. هي تُشحن على أرضية المرآب."), 4f);
+                    return;
+                }
+                if ((Player.transform.position - Rover.transform.position).sqrMagnitude < 4.2f * 4.2f)
+                {
+                    Rover.Enter(Player);
+                    Hud.ShowSubtitle(L.T("At the wheel. W drive, A/D steer, Space brake, E to step out.",
+                        "أنت على المقعد. W للسائق، A/D للتوجيه، Space للفرملة، E للخروج."), 6f);
+                    return;
+                }
+            }
 
             if (Player.FocusCrew != null)
             {
@@ -313,6 +336,18 @@ namespace LunaQuest.Unity
                 data.Extras["thirdPerson"] = Player.ThirdPerson;
                 data.Extras["yaw"] = Player.Yaw;
                 data.Extras["pitch"] = Player.Pitch;
+            if (Rover != null)
+            {
+                data.Extras["roverX"] = Rover.transform.position.x;
+                data.Extras["roverY"] = Rover.transform.position.y;
+                data.Extras["roverZ"] = Rover.transform.position.z;
+                data.Extras["roverYaw"] = Rover.transform.eulerAngles.y * Mathf.Deg2Rad;
+                data.Extras["roverBattery"] = Rover.BatteryKwh;
+                data.Extras["roverOdometer"] = Rover.Odometer;
+                data.Extras["roverDriven"] = Rover.HasDriven;
+                data.Extras["roverIce"] = Rover.ReachedIce;
+                data.Extras["roverOccupied"] = Rover.Occupied;
+            }
                 File.WriteAllText(SavePath, data.ToJson());
                 if (announce)
                     Hud.ShowToast(L.T("Colony saved.", "حُفظت المستعمرة."), 2.5f);
@@ -361,6 +396,7 @@ namespace LunaQuest.Unity
                 if (data.Extras.TryGetValue("pitch", out object ppitch))
                     pitch = (float)LunaQuest.Core.Content.Json.Num(ppitch, -8.0);
                 Player.SetLook(yaw, pitch);
+                if (Rover != null) Rover.Restore(data.Extras, Player);
 
                 L.Arabic = Sim.Language == "ar";
                 World.RefreshLanguage();

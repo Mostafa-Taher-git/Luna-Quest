@@ -32,6 +32,7 @@ namespace LunaQuest.Unity
         private float _jumpBuffer;
         private float _bob;
         private Vector3 _horizontal;
+        public CrewRover Rover;
 
         private const float GroundAcceleration = 24f;
         private const float GroundDeceleration = 30f;
@@ -47,6 +48,11 @@ namespace LunaQuest.Unity
         {
             get
             {
+                if (Rover != null && Rover.Occupied)
+                    return L.T($"Step out (E) · {Rover.SpeedKmh():F0} km/h · battery {Rover.BatteryPercent() * 100f:F0}%",
+                        $"اخرج (E) · {Rover.SpeedKmh():F0} كم/س · البطارية {Rover.BatteryPercent() * 100f:F0}%");
+                if (Rover != null && (Rover.transform.position - transform.position).sqrMagnitude < 4.2f * 4.2f)
+                    return L.T("Drive the crew rover (E)", "قد مركبة الطاقم (E)");
                 if (FocusCrew != null)
                     return L.T($"Talk to {FocusCrew.DisplayName}", $"تحدّث مع {FocusCrew.DisplayName}");
                 if (FocusStation != null)
@@ -138,6 +144,12 @@ namespace LunaQuest.Unity
 
             _pivot.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
 
+            if (Rover != null)
+            {
+                Rover.Drive(dt, this);
+                return;
+            }
+
             Vector3 input = Vector3.zero;
             bool sprinting = false;
             if (Game.InputActive)
@@ -228,6 +240,7 @@ namespace LunaQuest.Unity
         {
             FocusStation = null;
             FocusCrew = null;
+            if (Rover != null) return;
             if (!Game.Started || Game.World == null) return;
 
             Ray ray = Camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
@@ -247,6 +260,20 @@ namespace LunaQuest.Unity
                 FocusCrew = crew;
         }
 
+        public void Halt() { _horizontal = Vector3.zero; _vertical = 0f; }
+
+        public void ConfigureDriveCamera()
+        {
+            _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.5f : 1.2f, 0f);
+            Camera.transform.localPosition = new Vector3(0f, 0f, ThirdPerson ? -7.5f : -0.05f);
+        }
+
+        public void RestoreWalkCamera()
+        {
+            _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.45f : 1.58f, 0f);
+            Camera.transform.localPosition = new Vector3(0f, 0f, ThirdPerson ? -3.9f : -0.05f);
+        }
+
         public void SetThirdPerson(bool thirdPerson, bool announce)
         {
             ThirdPerson = thirdPerson;
@@ -256,6 +283,7 @@ namespace LunaQuest.Unity
             Camera.fieldOfView = ThirdPerson ? 70f : 78f;
             Camera.transform.localPosition = new Vector3(0f, 0f, -0.05f);
             _bob = 0f;
+            if (Rover != null) ConfigureDriveCamera();
             Game.Hud?.SetFirstPerson(!ThirdPerson);
             if (announce)
             {
