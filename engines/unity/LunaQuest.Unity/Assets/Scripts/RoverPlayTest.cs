@@ -47,7 +47,6 @@ namespace LunaQuest.Unity
                 CheckGround(game);
                 CheckDriving(game);
                 CheckPauseGate(game);
-                CheckNeutralSteer(game);
                 CheckExit(game);
                 CheckRestart(game);
             }
@@ -122,6 +121,14 @@ namespace LunaQuest.Unity
             Expect(rover.transform.position.y > game.World.HeightAt(
                     rover.transform.position.x, rover.transform.position.z) - 2f,
                 $"the rover sank through the ground (y {rover.transform.position.y:F2})");
+            // BUG-5: the suit leans back against the seat. Euler(18, 180, 0) on a suit facing the
+            // rover's forward tips its head backwards; a forward lean would mean the sign is wrong.
+            float lean = player.Visual.localEulerAngles.x;
+            if (lean > 180f) lean -= 360f;
+            Expect(lean > 5f && lean < 40f,
+                $"the driver is not leaning back against the seat (X {lean:F1}°, expected +18)");
+            Expect(player.Visual.localPosition.y > rover.SeatGlobal.y - 0.6f,
+                "the suit is not sitting at the hand controller");
         }
 
         /// <summary>BUG-1: an open dialogue must not let the wheel keep driving.</summary>
@@ -146,15 +153,20 @@ namespace LunaQuest.Unity
             Expect(Mathf.Approximately(rover.Speed, speedBefore), "the rover changed speed during a dialogue");
             game.Hud.CloseDialogue();
 
-            // BUG-5: rolling forward with the wheel held still must not steer the rover.
+            // With the wheel centred the rover must track straight.
             float yaw = rover.transform.eulerAngles.y;
             for (int i = 0; i < 60; i++) rover.SimulateForTest(1f / 60f, 1f, 0f, false, false, player);
             Expect(Mathf.Abs(Mathf.DeltaAngle(yaw, rover.transform.eulerAngles.y)) < 0.5f,
                 $"the rover steered itself with the wheel centred ({Mathf.DeltaAngle(yaw, rover.transform.eulerAngles.y):F2}°)");
-        }
 
-        /// <summary>Steering with the wheel held dead straight: the vehicle must track straight.</summary>
-        private static void CheckNeutralSteer(LunaQuestGame game) { }
+            // A steers LEFT in every engine. Unity's yaw is clockwise, so a left turn must make the
+            // yaw angle decrease; a positive delta here means this edition is mirrored.
+            yaw = rover.transform.eulerAngles.y;
+            for (int i = 0; i < 90; i++) rover.SimulateForTest(1f / 60f, 1f, 1f, false, false, player);
+            float turned = Mathf.DeltaAngle(yaw, rover.transform.eulerAngles.y);
+            Expect(turned < -1f,
+                $"A should steer left: the yaw moved {turned:F2}° (Godot turns the other way)");
+        }
 
         /// <summary>BUG-2: stepping out leaves a live, grounded, upright suit beside the rover.</summary>
         private static void CheckExit(LunaQuestGame game)
