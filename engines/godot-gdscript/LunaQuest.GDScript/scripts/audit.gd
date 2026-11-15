@@ -40,6 +40,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_consoles(world)
 	_check_crew(world, crew)
 	_check_perimeter()
+	_check_ground_faces()
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -235,3 +236,35 @@ func _check_perimeter() -> void:
 		if not hit.is_empty():
 			blocked += 1
 	expect(blocked >= 10, "perimeter: only %d of 12 headings are closed off" % blocked)
+
+
+## The ground trimesh must face up. A triangle wound the other way is invisible from above and
+## unfindable by a downward ray, so the commander falls through the Moon — which is exactly what
+## happened before the winding was fixed. This guards the winding itself, not just a ray: one
+## probe per ring of radius 40, 90 and 150 m, where the first is inside the flat pad, the second
+## is on the fade and the third is the open highlands.
+func _check_ground_faces() -> void:
+	var facing := 0
+	var probes := 0
+	for radius in [40.0, 90.0, 150.0]:
+		for i in range(8):
+			var angle := TAU * float(i) / 8.0
+			var spot := Vector3(cos(angle) * radius, 0.0, sin(angle) * radius + 8.0)
+			var down := ray(spot + Vector3(0, 30.0, 0), spot - Vector3(0, 30.0, 0))
+			if down.is_empty() or not _is_ground(down["collider"]):
+				# A roof, a wall or a kit module is in the way: not a terrain probe.
+				continue
+			probes += 1
+			# The same segment from below must not find the surface: a face-down triangle is
+			# invisible from above and solid from underneath.
+			var up := ray(spot - Vector3(0, 30.0, 0), spot + Vector3(0, 30.0, 0))
+			if up.is_empty() or not _is_ground(up["collider"]):
+				facing += 1
+	expect(probes >= 12, "ground: only %d terrain probes found, the ground body is missing" % probes)
+	expect(facing == probes,
+		"ground: only %d of %d terrain probes are face-up (triangles wound the wrong way)" % [
+			facing, probes])
+
+
+func _is_ground(collider: Object) -> bool:
+	return collider != null and collider is Node and (collider as Node).name == "Ground"
