@@ -7,6 +7,7 @@
  * has an active warning. No dialogue is generated — every line is content.
  */
 import * as THREE from 'three';
+import { CREW_HEIGHT_M } from './crew-metrics.js';
 
 const TRIM = {
   npc_safaa: 0xd45f6a,
@@ -49,7 +50,7 @@ export class Crew {
         this.members.push({ profile, ...member, target: spawn.clone(), position: spawn.clone(), bob: Math.random() * 6 });
         this.nexoEyes.push(...member.eyes);
       } else {
-        const astronaut = await this.factory.create({ height: 1.76, trim: TRIM[profile.id], role: profile.id });
+        const astronaut = await this.factory.create({ height: CREW_HEIGHT_M, trim: TRIM[profile.id], role: profile.id });
         astronaut.root.position.copy(spawn);
         astronaut.root.rotation.y = Math.random() * Math.PI * 2;
         this.root.add(astronaut.root);

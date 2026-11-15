@@ -24,6 +24,7 @@ import { AstronautFactory } from './world/astronaut.js';
 import { mergeStaticMeshes } from './world/merge.js';
 import { createPlaza } from './world/plaza.js';
 import { Crew } from './world/crew.js';
+import { PLAYER_HEIGHT_M } from './world/crew-metrics.js';
 import { Hud } from './ui/hud.js';
 import { AudioManager } from './audio.js';
 
@@ -122,7 +123,7 @@ class Game {
     // ---- the commander and the crew ---------------------------------------
     this.setProgress(0.74, 'Waking the crew…');
     this.astronauts = new AstronautFactory({ materials: this.materials, baseUrl: BASE });
-    const commanderSuit = await this.astronauts.create({ height: 1.78, trim: 0xf2a93b, role: 'commander' });
+    const commanderSuit = await this.astronauts.create({ height: PLAYER_HEIGHT_M, trim: 0xf2a93b, role: 'commander' });
 
     this.player = new Player({
       camera: this.camera,

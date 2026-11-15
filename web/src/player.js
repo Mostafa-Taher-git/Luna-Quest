@@ -8,6 +8,7 @@
  */
 import * as THREE from 'three';
 import { KEYS } from './input.js';
+import { BODY_RADIUS_M, CREW_HEIGHT_M, EYE_HEIGHT_M } from './world/crew-metrics.js';
 
 const GRAVITY = 1.62; // m/s², real lunar surface gravity
 const WALK_SPEED = 3.1;
@@ -18,9 +19,9 @@ const JUMP_SPEED = 2.95; // ≈ 2.7 m apex under lunar gravity
 const COYOTE = 0.14;
 const JUMP_BUFFER = 0.16;
 const STEP_HEIGHT = 0.42;
-const RADIUS = 0.34;
-const HEIGHT = 1.78;
-const EYE = 1.62;
+const RADIUS = BODY_RADIUS_M;
+const HEIGHT = CREW_HEIGHT_M;
+const EYE = EYE_HEIGHT_M;
 
 export class Player {
   constructor({ camera, scene, terrain, colliders, spawn = new THREE.Vector3(0, 0, 23), astronaut = null }) {

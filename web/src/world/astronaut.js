@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { ASTRONAUT_MODEL_PATH, CREW_HEIGHT_M } from './crew-metrics.js';
 
 const SUIT_MESH = 'Object_9';
 const VISOR_MESH = 'Object_10';
@@ -26,11 +27,15 @@ export class AstronautFactory {
     this.template = null;
     this.animations = [];
     this.failed = false;
+    this.modelPath = `${this.baseUrl}${ASTRONAUT_MODEL_PATH}`;
+    this.modelUrl = this.modelPath;
   }
 
   async load() {
-    if (this.template || this.failed) return this.template;
-    const url = new URL(`${this.baseUrl}models/astronaut/cute_astronaut.glb`, location.href).href;
+    if (this.template) return this.template;
+    if (this.failed) return null;
+    const url = new URL(this.modelPath, location.href).href;
+    this.modelUrl = url;
     const gltf = await new Promise((resolve) => {
       this.loader.load(
         url,
@@ -67,14 +72,20 @@ export class AstronautFactory {
    * Builds one astronaut, standing `height` metres tall with the soles on y = 0.
    * `trim` recolours the frame, patches and chest keys so each crew member is recognisable.
    */
-  async create({ height = 1.78, trim = 0xe08a2a, role = 'crew' } = {}) {
+  async create({ height = CREW_HEIGHT_M, trim = 0xe08a2a, role = 'crew' } = {}) {
     const template = await this.load();
     const root = new THREE.Group();
     root.name = `astronaut-${role}`;
 
     if (!template) {
-      root.add(fallbackSuit(this.materials));
-      return { root, mixer: null, play: () => {}, actions: {} };
+      // There is exactly one human character model in this game. A missing GLB is a broken
+      // build, not an invitation to draw a different astronaut: the boot screen reports the
+      // error instead of silently showing a substitute suit.
+      throw new Error(
+        `Cute Astronaut model could not be loaded from ${this.modelUrl}. ` +
+          'Every astronaut uses this one model; the game will not draw a substitute. ' +
+          'Run "npm run sync" in web/ (or tools/sync-content.sh) and reload.',
+      );
     }
 
     // A skinned mesh must be cloned with SkeletonUtils, or the clones share bones. Here it also
@@ -229,33 +240,4 @@ function frontFromRig(model) {
     if (Math.abs(delta) > 1e-4) return Math.sign(delta);
   }
   return null;
-}
-
-/** A blocky emergency suit, used only if the GLB cannot be fetched. */
-function fallbackSuit(mats) {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.7, 8, 16), mats.suit);
-  body.position.y = 1.0;
-  body.castShadow = true;
-  g.add(body);
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 16), mats.suit);
-  helmet.position.y = 1.62;
-  helmet.castShadow = true;
-  g.add(helmet);
-  const visor = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 16, 0, Math.PI, 0, Math.PI * 0.6), mats.visor);
-  visor.position.set(0, 1.63, 0.06);
-  visor.rotation.y = Math.PI;
-  g.add(visor);
-  for (const side of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.4, 4, 10), mats.suit);
-    leg.position.set(side * 0.12, 0.35, 0);
-    leg.castShadow = true;
-    g.add(leg);
-    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.34, 4, 10), mats.suit);
-    arm.position.set(side * 0.34, 1.05, 0);
-    arm.rotation.z = side * 0.22;
-    arm.castShadow = true;
-    g.add(arm);
-  }
-  return g;
 }

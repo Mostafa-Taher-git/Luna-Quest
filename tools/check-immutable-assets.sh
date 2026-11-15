@@ -111,6 +111,9 @@ for path in tracked_files():
     rel = path.as_posix()
     if rel.startswith('docs/') or rel == GUARD:
         continue
+    # Test code may name the prop in an assertion; it is not a runtime loading path.
+    if 'test' in path.parts or 'tests' in path.parts:
+        continue
     if path.suffix.lower() not in CODE_EXT:
         continue
     if PROP not in path.read_bytes().decode('utf-8', errors='ignore'):
