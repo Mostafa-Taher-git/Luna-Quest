@@ -183,7 +183,7 @@ func _make_terrain() -> void:
 	var node := MeshInstance3D.new()
 	node.name = "Regolith"
 	node.mesh = mesh
-	node.material_override = _mat("regolith", Color(0.40, 0.36, 0.31), 1.0, 0.0)
+	node.material_override = _regolith_material()
 	add_child(node)
 
 	# Ground collision: the colony pad is graded flat, so a plain slab under it is exact and
@@ -197,6 +197,37 @@ func _make_terrain() -> void:
 	shape.position = Vector3(0, -1.0, 0)
 	body.add_child(shape)
 	add_child(body)
+
+
+## The scanned regolith: Poly Haven "moon_dusted_03" (CC0), the same PBR set the Godot .NET
+## and browser builds wear. Albedo + OpenGL normal + roughness + AO over the graded heightfield,
+## tiled so a tile spans a few metres of basaltic dust. Falls back to the flat clay colour when
+## the textures have not been synced in, so a fresh clone still boots.
+func _regolith_material() -> StandardMaterial3D:
+	var m := _mat("regolith", Color(0.40, 0.36, 0.31), 1.0, 0.0)
+	var dir := "res://assets/real/regolith/"
+	var albedo_path := dir + "moon_dusted_03_albedo.jpg"
+	if not ResourceLoader.exists(albedo_path):
+		return m
+	m.albedo_texture = load(albedo_path) as Texture2D
+	m.albedo_color = Color(0.62, 0.60, 0.56)
+	m.roughness = 1.0
+	m.metallic = 0.0
+	m.uv1_scale = Vector3(3.0, 3.0, 3.0)
+	var normal_path := dir + "moon_dusted_03_normal.jpg"
+	if ResourceLoader.exists(normal_path):
+		m.normal_enabled = true
+		m.normal_texture = load(normal_path) as Texture2D
+		m.normal_scale = 1.1
+	var rough_path := dir + "moon_dusted_03_rough.jpg"
+	if ResourceLoader.exists(rough_path):
+		m.roughness_texture = load(rough_path) as Texture2D
+	var ao_path := dir + "moon_dusted_03_ao.jpg"
+	if ResourceLoader.exists(ao_path):
+		m.ao_enabled = true
+		m.ao_texture = load(ao_path) as Texture2D
+		m.ao_light_affect = 0.6
+	return m
 
 
 func _make_sky() -> void:
@@ -627,18 +658,43 @@ func _make_rocks() -> void:
 		var x := cos(angle) * radius
 		var z := sin(angle) * radius
 		var scale := rng.randf_range(0.4, 2.6)
-		var mesh := MeshInstance3D.new()
-		var sphere := SphereMesh.new()
-		sphere.radius = scale
-		sphere.height = scale * rng.randf_range(1.1, 1.8)
-		sphere.radial_segments = 9
-		sphere.rings = 6
-		mesh.mesh = sphere
-		mesh.material_override = _mat("rock", Color(0.34, 0.32, 0.30), 1.0, 0.0)
-		mesh.position = Vector3(x, height_at(x, z) + scale * 0.32, z)
-		mesh.rotation = Vector3(rng.randf() * 0.6, rng.randf() * TAU, rng.randf() * 0.6)
-		mesh.scale = Vector3(1.0, rng.randf_range(0.6, 1.0), rng.randf_range(0.7, 1.2))
-		rocks.add_child(mesh)
+		var rock := _scanned_rock(i)
+		if rock != null:
+			rock.position = Vector3(x, height_at(x, z) - scale * 0.12, z)
+			rock.rotation = Vector3(rng.randf() * 0.3, rng.randf() * TAU, rng.randf() * 0.3)
+			rock.scale = Vector3(scale, scale * rng.randf_range(0.7, 1.0), scale * rng.randf_range(0.8, 1.2))
+			rocks.add_child(rock)
+		else:
+			var mesh := MeshInstance3D.new()
+			var sphere := SphereMesh.new()
+			sphere.radius = scale
+			sphere.height = scale * rng.randf_range(1.1, 1.8)
+			sphere.radial_segments = 9
+			sphere.rings = 6
+			mesh.mesh = sphere
+			mesh.material_override = _mat("rock", Color(0.34, 0.32, 0.30), 1.0, 0.0)
+			mesh.position = Vector3(x, height_at(x, z) + scale * 0.32, z)
+			mesh.rotation = Vector3(rng.randf() * 0.6, rng.randf() * TAU, rng.randf() * 0.6)
+			mesh.scale = Vector3(1.0, rng.randf_range(0.6, 1.0), rng.randf_range(0.7, 1.2))
+			rocks.add_child(mesh)
+
+
+## One of the seven Poly Haven photoscanned Moon rocks (CC0), glTF at 1k. Returns null when the
+## scans have not been synced, and the caller falls back to a rough boulder sphere.
+func _scanned_rock(index: int) -> Node3D:
+	var id := "moon_rock_%02d" % (1 + (index % 7))
+	var path := "res://assets/real/rocks/%s/%s.gltf" % [id, id]
+	if not ResourceLoader.exists(path):
+		return null
+	var scene := load(path) as PackedScene
+	if scene == null:
+		return null
+	var node := scene.instantiate() as Node3D
+	for child in node.find_children("*", "MeshInstance3D", true, false):
+		var mi := child as MeshInstance3D
+		if mi != null:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	return node
 
 
 func _make_rovers() -> void:
