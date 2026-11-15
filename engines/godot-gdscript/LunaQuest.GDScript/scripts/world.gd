@@ -8,24 +8,18 @@ extends Node3D
 ## from the same content the simulation reads — so the building you walk into is the building the
 ## resource model knows about.
 
-const COLONY_RADIUS := 110.0
 const TERRAIN_SIZE := 420.0
-const TERRAIN_CELLS := 96
+const TERRAIN_CELLS := 160
 const WALL_T := 0.28
 
 var materials: Dictionary = {}
 var interactables: Array = []
 var building_nodes: Dictionary = {}
 var sun: DirectionalLight3D
-var noise_a := FastNoiseLite.new()
-var noise_b := FastNoiseLite.new()
+var terrain := LQTerrain.new(1337)
 
 
 func build() -> void:
-	noise_a.seed = 1337
-	noise_a.frequency = 0.012
-	noise_b.seed = 77031
-	noise_b.frequency = 0.045
 	_make_materials()
 	_make_environment()
 	_make_terrain()
@@ -132,12 +126,9 @@ func point_sun(clock: LQClock) -> void:
 
 
 func height_at(x: float, z: float) -> float:
-	var r := sqrt(x * x + z * z)
-	if r <= COLONY_RADIUS:
-		return 0.0
-	var t: float = clampf((r - COLONY_RADIUS) / 70.0, 0.0, 1.0)
-	var relief: float = noise_a.get_noise_2d(x, z) * 16.0 + noise_b.get_noise_2d(x, z) * 4.0
-	return t * t * relief
+	# The shared deterministic heightfield (shared/LunaQuest.Core/Terrain/LunarTerrain.cs),
+	# ported exactly in terrain.gd, so GDScript, Godot .NET and Unity draw the same Moon.
+	return terrain.height(x, z)
 
 
 func _make_terrain() -> void:
@@ -148,15 +139,24 @@ func _make_terrain() -> void:
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()
 
-	for iz in range(TERRAIN_CELLS + 1):
-		for ix in range(TERRAIN_CELLS + 1):
+	# Sample the shared heightfield once per grid vertex; normals come from the same grid,
+	# so the drawn surface and the analytic height_at agree to within a grid cell.
+	var n := TERRAIN_CELLS + 1
+	var heights := PackedFloat32Array()
+	heights.resize(n * n)
+	for iz in range(n):
+		for ix in range(n):
+			heights[iz * n + ix] = height_at(-half + ix * step, -half + iz * step)
+	for iz in range(n):
+		for ix in range(n):
 			var x := -half + ix * step
 			var z := -half + iz * step
-			var y := height_at(x, z)
-			verts.append(Vector3(x, y, z))
-			var dx: float = height_at(x + step, z) - height_at(x - step, z)
-			var dz: float = height_at(x, z + step) - height_at(x, z - step)
-			normals.append(Vector3(-dx, 2.0 * step, -dz).normalized())
+			verts.append(Vector3(x, heights[iz * n + ix], z))
+			var hl := heights[iz * n + maxi(ix - 1, 0)]
+			var hr := heights[iz * n + mini(ix + 1, TERRAIN_CELLS)]
+			var hd := heights[maxi(iz - 1, 0) * n + ix]
+			var hu := heights[mini(iz + 1, TERRAIN_CELLS) * n + ix]
+			normals.append(Vector3(hl - hr, 2.0 * step, hd - hu).normalized())
 			uvs.append(Vector2(float(ix) / float(TERRAIN_CELLS) * 40.0, float(iz) / float(TERRAIN_CELLS) * 40.0))
 
 	for iz in range(TERRAIN_CELLS):
