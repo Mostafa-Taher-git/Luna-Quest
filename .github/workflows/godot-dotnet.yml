@@ -35,20 +35,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Annotation helper
-        # One annotation, newlines percent-encoded: the Actions log blob host is not reachable
-        # from every machine, and a check run only keeps ten annotations.
-        shell: bash
+      - name: Diagnostic helper
+        # One annotation per log tail, newlines percent-encoded: the Actions log blob host is not
+        # reachable from every machine, and a check run only keeps ten annotations. GITHUB_ENV
+        # only accepts NAME=VALUE pairs, so the helper is installed as a script on PATH.
         run: |
-          {
-            echo 'annotate() {'
-            echo '  local title="$1" body="${2//%/%25}"'
-            echo '  body="${body//$'"'"'\r'"'"'/}"'
-            echo '  body="${body//$'"'"'\n'"'"'/%0A}"'
-            echo '  body="${body//$'"'"'\t'"'"'/ }"'
-            echo '  echo "::notice title=${title}::${body}"'
-            echo '}'
-          } >> "$GITHUB_ENV"
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bin"
+          cat > "$RUNNER_TEMP/bin/annotate" <<'SCRIPT'
+          #!/usr/bin/env bash
+          # annotate <title> <body> — emit one escaped notice annotation.
+          title="$1"
+          body="${2//%/%25}"
+          body="${body//$'\r'/}"
+          body="${body//$'\n'/%0A}"
+          body="${body//$'\t'/ }"
+          echo "::notice title=${title}::${body}"
+          SCRIPT
+          chmod +x "$RUNNER_TEMP/bin/annotate"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
       - uses: actions/setup-dotnet@v4
         with:
