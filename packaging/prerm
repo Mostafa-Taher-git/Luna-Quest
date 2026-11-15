@@ -1,0 +1,7 @@
+#!/bin/sh
+# Pre-removal for the luna-quest package.
+# The game has no daemon, no service and no system-wide state: Godot keeps
+# saves in the user's own XDG data directory. Nothing to stop or clean up.
+set -e
+
+exit 0

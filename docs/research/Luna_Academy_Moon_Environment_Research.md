@@ -55,7 +55,7 @@ The NASA Planetary Data System's LRO CRaTER Data Bundle, version 2.4, lists this
 
 ## 1.3 A direct lunar-surface radiation benchmark
 
-RadLab's CRaTER record is orbital. To avoid pretending that orbital data are surface measurements, this document adds a separate, direct surface reference from the **Lunar Lander Neutrons and Dosimetry (LND)** experiment on China's Chang'e 4 lander.
+RadLab's CRaTER record is orbital. To avoid pretending that orbital data are surface measurements, this document adds a separate, direct surface reference from the **Lunar Lander Neutrons and Dosimetry (LND)** experiment on the Chang'e 4 lander.
 
 The paper shows time-resolved measurements during **3–12 January 2019** and **31 January–10 February 2019**. For its reported averages, the authors excluded readings affected by Yutu-2 still being piggybacked on the lander and the interval when the lander thermal-control system (TCS) was active (**11 January 2019 14:41 to 3 February 2019 07:53**). The reported values also correct for the known RTG/RHU background. Its final table reports:
 

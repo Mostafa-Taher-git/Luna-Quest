@@ -1,0 +1,17 @@
+Package: luna-quest
+Version: @@VERSION@@
+Section: games
+Priority: optional
+Architecture: amd64
+Maintainer: Luna-Quest contributors <luna-quest@users.noreply.github.com>
+Installed-Size: @@INSTALLED_SIZE@@
+Depends: libc6, libgl1, libx11-6, libxcursor1, libxinerama1, libxi6, libxrandr2, libxext6, libxrender1, libasound2t64 | libasound2, libpulse0, libudev1, libfontconfig1, libfreetype6, libgl1-mesa-dri, libgles2, libxkbcommon0, libwayland-client0
+Description: The Living Moon Colony (Luna-Quest)
+ A walkable, data-driven lunar colony game set on the Shackleton rim. Keep
+ nine people alive for 30 Earth days by balancing air, water, power, food,
+ dust, radiation, sleep and time.
+ .
+ This is the pure-GDScript build: one self-contained binary with its data
+ embedded. No Godot editor, no .NET runtime, no Python and no extra downloads
+ are needed. Start it from the applications menu or run `luna-quest`.
+Homepage: https://github.com/Mostafa-Taher-git/Luna-Quest

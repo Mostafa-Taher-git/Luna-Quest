@@ -1,0 +1,19 @@
+#!/bin/sh
+# Post-installation for the luna-quest package.
+set -e
+
+# The files are shipped with the right modes already; re-assert them in case
+# the package was unpacked with a restrictive umask.
+chmod 755 /opt/luna-quest/luna-quest
+chmod 755 /usr/bin/luna-quest
+
+# Refresh the desktop/icon databases when the tools are available. Either may
+# be missing on a minimal system, and neither is required to launch the game.
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications || true
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
+fi
+
+exit 0

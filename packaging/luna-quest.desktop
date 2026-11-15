@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Luna-Quest
+GenericName=Lunar colony simulation
+Comment=The Living Moon Colony
+Exec=luna-quest
+Icon=luna-quest
+Terminal=false
+Categories=Game;Simulation;
+Keywords=moon;colony;space;simulation;
+StartupNotify=true
