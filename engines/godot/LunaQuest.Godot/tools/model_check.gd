@@ -5,7 +5,7 @@ extends Node3D
 # frame and renders front/side views so scale, facing and visor can be checked.
 
 const MODEL := "res://assets/astronaut/cute_astronaut.glb"
-const HEIGHT := 1.78
+const HEIGHT := 1.75
 
 var inst: Node3D
 var cam: Camera3D

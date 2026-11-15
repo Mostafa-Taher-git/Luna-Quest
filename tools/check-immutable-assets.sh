@@ -122,6 +122,22 @@ for path in tracked_files():
         continue  # asset library index: decorative, not a character load
     problems.append(f'decorative EVA suit prop referenced by runtime code: {rel}')
 
+# 7. No runtime may still contain a substitute-suit builder. NEXO is a robot, not a human,
+#    so its procedural body is allowed; a second human-shaped suit is not.
+SUIT_BUILDERS = ('fallbackSuit', '_fallback_suit', 'FallbackSuit', 'BuildFallbackSuit')
+for path in tracked_files():
+    rel = path.as_posix()
+    if rel.startswith('docs/') or rel == GUARD:
+        continue
+    if 'test' in path.parts or 'tests' in path.parts:
+        continue
+    if path.suffix.lower() not in {'.js', '.mjs', '.gd', '.cs', '.py', '.sh'}:
+        continue
+    text = path.read_bytes().decode('utf-8', errors='ignore')
+    for name in SUIT_BUILDERS:
+        if name in text:
+            problems.append(f'substitute astronaut suit builder "{name}" still exists in {rel}')
+
 # ---- report ----------------------------------------------------------------
 if problems:
     print(f'immutable asset check FAILED with {len(problems)} problem(s):', file=sys.stderr)

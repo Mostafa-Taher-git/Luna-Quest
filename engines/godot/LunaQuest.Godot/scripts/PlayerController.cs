@@ -52,7 +52,7 @@ namespace LunaQuest.Godot
 
             var shape = new CollisionShape3D
             {
-                Shape = new CapsuleShape3D { Radius = 0.34f, Height = 1.72f },
+                Shape = new CapsuleShape3D { Radius = 0.34f, Height = 1.75f },
                 Position = new Vector3(0, 0.9f, 0)
             };
             AddChild(shape);

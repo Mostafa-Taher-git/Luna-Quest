@@ -970,10 +970,16 @@ namespace LunaQuest.Godot
 
         // ---- helpers ---------------------------------------------------------
 
-        public Node3D CreateAstronaut(float targetHeight = 1.78f)
+        public Node3D CreateAstronaut(float targetHeight = 1.75f)
         {
             var packed = GD.Load<PackedScene>("res://assets/astronaut/cute_astronaut.glb");
-            if (packed == null) return FallbackSuit();
+            if (packed == null)
+            {
+                // There is exactly one human character model in Luna-Quest. A missing GLB is a
+                // broken checkout, not an invitation to draw a different astronaut.
+                GD.PushError("Luna-Quest: the Cute Astronaut GLB is missing. Run tools/sync-content.sh before launching. No substitute astronaut will be drawn.");
+                return new Node3D { Name = "SuitHolder" };
+            }
             var holder = new Node3D { Name = "SuitHolder" };
             // The imported Sketchfab node faces +Z once the action is posed, which is
             // also the direction the player/crew yaw math uses. Keep the model upright
@@ -1140,22 +1146,6 @@ namespace LunaQuest.Godot
                 };
                 modelRoot.AddChild(band);
             }
-        }
-
-        private Node3D FallbackSuit()
-        {
-            var n = new Node3D();
-            var white = Mat(new Color(0.9f, 0.91f, 0.93f), 0.15f, 0.5f);
-            var body = new MeshInstance3D { Mesh = new CapsuleMesh { Radius = 0.3f, Height = 1.15f }, MaterialOverride = white };
-            body.Position = new Vector3(0, 0.85f, 0);
-            n.AddChild(body);
-            var helmet = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.27f, Height = 0.54f }, MaterialOverride = white };
-            helmet.Position = new Vector3(0, 1.55f, 0);
-            n.AddChild(helmet);
-            var visor = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.22f, Height = 0.3f }, MaterialOverride = Mat(new Color(0.06f, 0.08f, 0.12f), 0.9f, 0.1f) };
-            visor.Position = new Vector3(0, 1.56f, 0.1f);
-            n.AddChild(visor);
-            return n;
         }
 
         private static Aabb? ComputeBounds(Node node, Transform3D xform)

@@ -108,6 +108,16 @@ func _test_content() -> void:
 					found = true
 		expect(found, "content: objective %s has no console" % objective.get("id", ""))
 
+	# The two frozen assets must be present. A clean checkout needs
+	# tools/sync-gdscript-assets.sh once; CI runs it before this harness. A missing model must
+	# fail here instead of silently turning every astronaut into a different shape at runtime.
+	expect(ResourceLoader.exists(ColonyCrew.ASTRONAUT_SCENE),
+		"assets: the Cute Astronaut GLB is missing; run tools/sync-gdscript-assets.sh")
+	expect(ResourceLoader.exists("res://assets/video/intro.ogv"),
+		"assets: the intro stream is missing; run tools/sync-gdscript-assets.sh")
+	expect(ColonyCrew.CREW_HEIGHT_M == 1.75,
+		"assets: the crew height drifted from the shared 1.75 m")
+
 
 # ---- clock -----------------------------------------------------------------
 

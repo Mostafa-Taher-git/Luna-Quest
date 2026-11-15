@@ -2,10 +2,10 @@ class_name ColonyCrew
 extends Node3D
 ## The six crew and NEXO, standing where their schedule says they should be.
 ##
-## Humans use the Cute Astronaut GLB when it is present (the sync script copies it from the .NET
-## project) and a blocky emergency suit when it is not, so the project never fails to open. Each
-## suit carries a trim band in its own colour, which is how you tell Dr. Safaa from Noor at
-## thirty metres.
+## Every human uses the one Cute Astronaut GLB, copied in by tools/sync-gdscript-assets.sh. A
+## missing model is a broken checkout, not a reason to draw a different astronaut: the build
+## reports the error and leaves the character out. Each suit carries a trim band in its own
+## colour, which is how you tell Dr. Safaa from Noor at thirty metres.
 
 const TRIM := {
 	"npc_safaa": Color(0.83, 0.37, 0.42),
@@ -19,6 +19,10 @@ const TRIM := {
 
 const ASTRONAUT_SCENE := "res://assets/astronaut/cute_astronaut.glb"
 
+## Standing height shared by the player and every human crew member (metres). The web runtime
+## reads the same value from web/src/world/crew-metrics.js.
+const CREW_HEIGHT_M := 1.75
+
 var members: Array = []
 var world: ColonyWorld
 var sim: LQSim
@@ -31,6 +35,8 @@ func build(colony: ColonyWorld, simulation: LQSim) -> void:
 	sim = simulation
 	if ResourceLoader.exists(ASTRONAUT_SCENE):
 		_astronaut_template = load(ASTRONAUT_SCENE) as PackedScene
+	if _astronaut_template == null:
+		push_error("Luna-Quest: the Cute Astronaut GLB is missing. Run tools/sync-gdscript-assets.sh before launching. No substitute astronaut will be drawn.")
 	for profile in Content.npcs:
 		_spawn(profile)
 	print("Luna-Quest (GDScript): %d crew placed" % members.size())
@@ -121,14 +127,15 @@ func _spot_for(building: Dictionary, npc_id: String) -> Vector3:
 
 
 func _build_astronaut(root: Node3D, trim: Color) -> void:
-	var body: Node3D
-	if _astronaut_template != null:
-		body = _astronaut_template.instantiate() as Node3D
-		root.add_child(body)
-		_fit_height(body, 1.76)
-	else:
-		body = _fallback_suit(trim)
-		root.add_child(body)
+	if _astronaut_template == null:
+		# There is exactly one human character model in Luna-Quest. A missing GLB is reported
+		# by build(); it must never be answered with a differently shaped astronaut.
+		return
+	var body := _astronaut_template.instantiate() as Node3D
+	if body == null:
+		return
+	root.add_child(body)
+	_fit_height(body, CREW_HEIGHT_M)
 
 	var band := MeshInstance3D.new()
 	var torus := TorusMesh.new()
@@ -210,54 +217,6 @@ func _build_nexo(root: Node3D, trim: Color) -> void:
 	skirt.material_override = shell_mat
 	skirt.position = Vector3(0, 0.55, 0)
 	root.add_child(skirt)
-
-
-func _fallback_suit(trim: Color) -> Node3D:
-	var group := Node3D.new()
-	var suit_mat := StandardMaterial3D.new()
-	suit_mat.albedo_color = Color(0.93, 0.94, 0.96)
-	suit_mat.roughness = 0.55
-	suit_mat.emission_enabled = true
-	suit_mat.emission = trim
-	suit_mat.emission_energy_multiplier = 0.12
-
-	var torso := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.29
-	capsule.height = 1.15
-	capsule.radial_segments = 16
-	torso.mesh = capsule
-	torso.material_override = suit_mat
-	torso.position = Vector3(0, 0.95, 0)
-	group.add_child(torso)
-
-	var helmet := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.3
-	sphere.height = 0.6
-	sphere.radial_segments = 18
-	sphere.rings = 12
-	helmet.mesh = sphere
-	helmet.material_override = suit_mat
-	helmet.position = Vector3(0, 1.66, 0)
-	group.add_child(helmet)
-
-	var visor := MeshInstance3D.new()
-	var visor_mesh := SphereMesh.new()
-	visor_mesh.radius = 0.26
-	visor_mesh.height = 0.5
-	visor_mesh.radial_segments = 16
-	visor_mesh.rings = 10
-	visor.mesh = visor_mesh
-	var visor_mat := StandardMaterial3D.new()
-	visor_mat.albedo_color = Color(0.05, 0.07, 0.11)
-	visor_mat.roughness = 0.1
-	visor_mat.metallic = 0.6
-	visor.material_override = visor_mat
-	visor.position = Vector3(0, 1.68, 0.1)
-	visor.scale = Vector3(0.92, 0.92, 0.7)
-	group.add_child(visor)
-	return group
 
 
 func _fit_height(node: Node3D, target_height: float) -> void:

@@ -67,13 +67,13 @@ namespace LunaQuest.Unity
 
             player._controller = go.AddComponent<CharacterController>();
             player._controller.radius = 0.34f;
-            player._controller.height = 1.72f;
-            player._controller.center = new Vector3(0f, 0.88f, 0f);
+            player._controller.height = 1.75f;
+            player._controller.center = new Vector3(0f, 0.875f, 0f);
             player._controller.slopeLimit = 55f;
             player._controller.stepOffset = 0.38f;
             player._controller.skinWidth = 0.04f;
 
-            var visualGo = game.World.CreateAstronaut(1.78f, new Color(0.95f, 0.55f, 0.15f), true);
+            var visualGo = game.World.CreateAstronaut(1.75f, new Color(0.95f, 0.55f, 0.15f), true);
             player.Visual = visualGo.transform;
             player.Visual.SetParent(go.transform, false);
             player.Visual.localPosition = Vector3.zero;

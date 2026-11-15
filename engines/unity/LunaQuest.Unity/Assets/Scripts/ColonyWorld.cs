@@ -731,7 +731,7 @@ namespace LunaQuest.Unity
                 agent.Init(_game, p.Id, p.DisplayNameEn, p.DisplayNameAr, start);
 
                 var visual = p.IsRobot ? CreateRobot()
-                                       : CreateAstronaut(1.72f, crewColours[index % crewColours.Length], false);
+                                       : CreateAstronaut(1.75f, crewColours[index % crewColours.Length], false);
                 visual.transform.SetParent(go.transform, false);
                 visual.transform.localPosition = Vector3.zero;
                 visual.transform.localRotation = Quaternion.identity;
@@ -786,13 +786,20 @@ namespace LunaQuest.Unity
         public GameObject CreateAstronaut(float targetHeight, Color accent, bool isPlayer)
         {
             var holder = new GameObject(isPlayer ? "CommanderSuit" : "CrewSuit");
-            var model = _astronaut != null ? Instantiate(_astronaut) : BuildFallbackSuit();
+            if (_astronaut == null)
+            {
+                // There is exactly one human character model in Luna-Quest. A missing bake is a
+                // broken checkout, not an invitation to draw a different astronaut.
+                Debug.LogError("Luna-Quest: the Cute Astronaut bake is missing. Run tools/bake_astronaut_obj.py. No substitute astronaut will be drawn.");
+                return holder;
+            }
+            var model = Instantiate(_astronaut);
             model.name = "ModelRoot";
             model.transform.SetParent(holder.transform, false);
 
-            // The OBJ is baked from the standing 0.4 s pose; the visible sole-to-crown
-            // height is 2.309 model units, not the raw animated AABB.
-            float scale = targetHeight / 2.309f;
+            // The OBJ is baked from the standing 0.4 s pose; the visible sole-to-crown height
+            // is 2.311 model units in both engines, not the raw animated AABB.
+            float scale = targetHeight / 2.311f;
             model.transform.localScale = new Vector3(scale, scale, scale);
             model.transform.localPosition = new Vector3(0f, 0.004f * scale, 0f);
 
@@ -856,25 +863,6 @@ namespace LunaQuest.Unity
                     new Vector3(-0.02f, s < 0 ? 0.93f : 1.43f, -0.49f),
                     new Vector3(0.38f, 0.035f, 0.02f), _orange));
             }
-        }
-
-        private GameObject BuildFallbackSuit()
-        {
-            var root = new GameObject("FallbackSuit");
-            var white = _suit;
-            var body = Cylinder(root.transform, "Body", new Vector3(0f, 0.85f, 0f), 0.30f, 1.15f, white);
-            body.name = "Body";
-            var head = Sphere(root.transform, "Helmet", new Vector3(0f, 1.62f, 0f),
-                new Vector3(0.56f, 0.58f, 0.56f), white);
-            head.name = "Helmet";
-            Sphere(root.transform, "FallbackVisor", new Vector3(0f, 1.62f, 0.24f),
-                new Vector3(0.40f, 0.32f, 0.24f), _visor);
-            Cylinder(root.transform, "LegL", new Vector3(-0.15f, 0.28f, 0f), 0.10f, 0.56f, white);
-            Cylinder(root.transform, "LegR", new Vector3(0.15f, 0.28f, 0f), 0.10f, 0.56f, white);
-            Cylinder(root.transform, "ArmL", new Vector3(-0.38f, 1.0f, 0f), 0.09f, 0.65f, white);
-            Cylinder(root.transform, "ArmR", new Vector3(0.38f, 1.0f, 0f), 0.09f, 0.65f, white);
-            foreach (var collider in root.GetComponentsInChildren<Collider>()) Destroy(collider);
-            return root;
         }
 
         // ---- labels and language ---------------------------------------------

@@ -39,7 +39,7 @@ namespace LunaQuest.Godot
         public override void _Ready()
         {
             _slot = World.Npcs.Count;
-            _visual = World.CreateAstronaut(1.72f);
+            _visual = World.CreateAstronaut(1.75f);
             AddChild(_visual);
             _animator = _visual.GetNodeOrNull<AstronautAnimator>("Animator");
 

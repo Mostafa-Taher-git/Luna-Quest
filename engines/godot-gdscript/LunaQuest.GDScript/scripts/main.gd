@@ -103,22 +103,20 @@ func _ready() -> void:
 		Content.objectives.size()])
 
 
-## The commander's third-person body: the same Cute Astronaut the colony walks around in, or a
-## blocky stand-in if the model has not been synced into `assets/`.
+## The commander's third-person body: the same Cute Astronaut the colony walks around in. A
+## missing model is reported, never answered with a differently shaped stand-in.
 func crew_astronaut() -> Node3D:
+	var holder := Node3D.new()
+	holder.name = "Suit"
 	if ResourceLoader.exists(ColonyCrew.ASTRONAUT_SCENE):
 		var scene := load(ColonyCrew.ASTRONAUT_SCENE) as PackedScene
 		if scene != null:
 			var model := scene.instantiate() as Node3D
-			var holder := Node3D.new()
-			holder.name = "Suit"
 			holder.add_child(model)
-			crew_fit(holder, 1.78)
+			crew_fit(holder, ColonyCrew.CREW_HEIGHT_M)
 			return holder
-	var fallback := ColonyCrew.new()
-	var suit := fallback._fallback_suit(Color(0.91, 0.58, 0.23))
-	fallback.free()
-	return suit
+	push_error("Luna-Quest: the Cute Astronaut GLB is missing. Run tools/sync-gdscript-assets.sh before launching. No substitute astronaut will be drawn.")
+	return holder
 
 
 func crew_fit(node: Node3D, target_height: float) -> void:

@@ -67,7 +67,7 @@ namespace LunaQuest.Godot
             Player = new PlayerController { Name = "Commander", ProcessMode = ProcessModeEnum.Pausable };
             AddChild(Player);
             Player.GlobalPosition = new Vector3(0, 0.1f, 23);
-            Player.Visual.AddChild(World.CreateAstronaut(1.78f));
+            Player.Visual.AddChild(World.CreateAstronaut(1.75f));
             Player.InputLocked = true;
 
             Hud = new Hud { Name = "Hud", ProcessMode = ProcessModeEnum.Always };
