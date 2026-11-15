@@ -32,10 +32,15 @@ heightfield, **one** simulation and **one** content set exist.
 | 2 | **GDScript ground collision was a flat slab under a rolling mesh.** Beyond the pad the visual terrain rose up to 16 m while physics stayed at y = 0 — the commander walked through hills and floated over bowls. | High | Fixed: the ground collider is now a trimesh baked from the same mesh that is drawn. |
 | 3 | **Unity ground was a flat 1600 m plane.** `ColonyWorld.BuildGround` never used the mirrored `Core/LunarTerrain.cs`; Unity had no craters, no relief, and a different horizon from Godot. | High | Fixed: Unity generates its ground mesh + MeshCollider from the shared `LunarTerrain`. |
 | 4 | **Nothing enforced the Unity core mirror.** `tools/sync-content.sh` copies `shared/LunaQuest.Core` into Unity, but CI never checked drift — a hand edit in Unity would silently fork the simulation. | High | Fixed: `tools/check-engine-parity.py` fails CI on any byte difference (core mirror, content JSON in all four homes). |
-| 5 | **The immutable-asset guard was not run in CI.** `tools/check-immutable-assets.sh` exists but no workflow invoked it. | Medium | Fixed: the parity job runs it on every push. |
-| 6 | **CI and Pages still built/deployed the retired browser edition.** | Medium | Fixed: `pages.yml` removed, the `web` CI job removed, `web/DEPRECATED.md` added. |
+| 5 | **The immutable-asset guard was not run in CI.** `tools/check-immutable-assets.sh` exists but no workflow invoked it. | Medium | Prepared: `tools/check-engine-parity.py` and the guard are ready; wiring them into `ci.yml` needs the **Workflows** permission on the push token (see `CI_Parity_Job.md`). |
+| 6 | **CI and Pages still built/deployed the retired browser edition.** | Medium | Partly done: `web/DEPRECATED.md` added and README updated. Removing `pages.yml` and the CI `web` job needs the **Workflows** permission (see `CI_Parity_Job.md`). |
 | 7 | **The crew rover was driveable in GDScript only.** Feature parity across the three engines was broken. | Medium | Fixed: `RoverController.cs` (Godot .NET) and `CrewRover.cs` (Unity) mirror the GDScript vehicle: same kit mesh where the engine can load GLB, same lunar physics constants, same battery/garage/ice-site rules, same save keys. |
 | 8 | Unity cannot import `.glb` without a glTF package (none is in `Packages/manifest.json`), so the 54 kit GLBs sit unused there. | Low | Documented. The Unity rover uses the procedural LTV fallback (the same fallback GDScript uses when the kit is absent). Adding `com.unity.cloud.gltfast` is the optional next step; it is an editor-side decision, not an architecture blocker. |
+
+> **Token note:** the push token has Contents write but not Workflows write, so GitHub rejects
+> edits under `.github/workflows/` (HTTP 403). Everything else in this review is committed; the
+> three workflow edits are prepared verbatim in `docs/design/CI_Parity_Job.md` for a token that
+> has the Workflows permission.
 
 ## Rules going forward
 
