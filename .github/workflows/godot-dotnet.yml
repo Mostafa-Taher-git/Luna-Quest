@@ -38,16 +38,17 @@ jobs:
       - name: Annotation helper
         # One annotation, newlines percent-encoded: the Actions log blob host is not reachable
         # from every machine, and a check run only keeps ten annotations.
+        shell: bash
         run: |
-          cat >> "$GITHUB_ENV" <<'HELPER'
-          annotate() {
-            local title="$1" body="${2//'%'/'%25'}"
-            body="${body//$'\r'/}"
-            body="${body//$'\n'/'%0A'}"
-            body="${body//$'\t'/' '}"
-            echo "::notice title=${title}::${body}"
-          }
-          HELPER
+          {
+            echo 'annotate() {'
+            echo '  local title="$1" body="${2//%/%25}"'
+            echo '  body="${body//$'"'"'\r'"'"'/}"'
+            echo '  body="${body//$'"'"'\n'"'"'/%0A}"'
+            echo '  body="${body//$'"'"'\t'"'"'/ }"'
+            echo '  echo "::notice title=${title}::${body}"'
+            echo '}'
+          } >> "$GITHUB_ENV"
 
       - uses: actions/setup-dotnet@v4
         with:
