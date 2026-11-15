@@ -1,7 +1,7 @@
 name: CI
 
 # Every push and pull request: the shared simulation must pass its checks, the content must
-# stay consistent, and the browser build must compile. Nothing here needs a GPU or a licence.
+# stay consistent, and the three engines must agree. Nothing here needs a GPU or a licence.
 
 on:
   push:
@@ -42,52 +42,15 @@ jobs:
       - name: Run the 426-check simulation harness
         run: dotnet run --project shared/LunaQuest.Tests/LunaQuest.Tests.csproj -c Release
 
-  web:
-    name: Browser build
+  parity:
+    name: Engine parity and asset locks
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - name: Install
-        run: npm ci
-      - name: Rules-engine and world tests
-        run: npm test
-      - name: Build the static site
-        run: npm run build
-      - name: Check the build is complete
-        run: |
-          test -f dist/index.html
-          test -f dist/asset-manifest.json
-          test -f dist/media/intro.mp4
-          test -f dist/media/intro-poster.jpg
-          test -f dist/models/astronaut/cute_astronaut.glb
-          test -f dist/content/buildings.json
-          test -f dist/audio/voice/pack.json
-          test -f dist/audio/lunaquest-score.mp3
-          node -e "const m=require('./dist/asset-manifest.json'); if(!m.video||!m.astronaut||!m.kit||!m.voice) { console.error(m); process.exit(1) }"
-          node -e "
-            const pack = require('./dist/audio/voice/pack.json');
-            const fs = require('node:fs');
-            const files = fs.readdirSync('./dist/audio/voice').filter((f) => f.endsWith('.mp3'));
-            const entries = Object.keys(pack).length;
-            console.log('voice pack: ' + entries + ' lines, ' + files.length + ' clips');
-            // Every line the manifest promises must exist, or the game goes quiet mid-sentence.
-            for (const [id, line] of Object.entries(pack)) {
-              if (!line || !line.file) { console.error('no file for ' + id); process.exit(1); }
-              if (!files.includes(line.file)) { console.error('missing clip for ' + id + ': ' + line.file); process.exit(1); }
-            }
-            if (entries < 90) { console.error('voice pack shrank to ' + entries + ' lines'); process.exit(1); }
-          "
-      - name: Upload the site
-        uses: actions/upload-artifact@v4
-        with:
-          name: luna-quest-web
-          path: web/dist
-          retention-days: 14
+          python-version: '3.12'
+      - name: One simulation, one content set, one Moon
+        run: python3 tools/check-engine-parity.py
+      - name: Immutable assets (intro film + Cute Astronaut)
+        run: bash tools/check-immutable-assets.sh
