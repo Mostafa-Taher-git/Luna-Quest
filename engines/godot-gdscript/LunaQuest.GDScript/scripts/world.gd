@@ -206,8 +206,13 @@ func _make_terrain() -> void:
 ## the textures have not been synced in, so a fresh clone still boots.
 func _regolith_material() -> StandardMaterial3D:
 	var m := _mat("regolith", Color(0.40, 0.36, 0.31), 1.0, 0.0)
+	# Prefer the moon_02 set named in the design table; fall back to moon_dusted_03, then clay.
 	var dir := "res://assets/real/regolith/"
-	var albedo_path := dir + "moon_dusted_03_albedo.jpg"
+	var stem := "moon_dusted_03"
+	if ResourceLoader.exists(dir + "moon_02/moon_02_albedo.jpg"):
+		dir += "moon_02/"
+		stem = "moon_02"
+	var albedo_path := dir + stem + "_albedo.jpg"
 	if not ResourceLoader.exists(albedo_path):
 		return m
 	m.albedo_texture = load(albedo_path) as Texture2D
@@ -215,15 +220,15 @@ func _regolith_material() -> StandardMaterial3D:
 	m.roughness = 1.0
 	m.metallic = 0.0
 	m.uv1_scale = Vector3(3.0, 3.0, 3.0)
-	var normal_path := dir + "moon_dusted_03_normal.jpg"
+	var normal_path := dir + stem + "_normal.jpg"
 	if ResourceLoader.exists(normal_path):
 		m.normal_enabled = true
 		m.normal_texture = load(normal_path) as Texture2D
 		m.normal_scale = 1.1
-	var rough_path := dir + "moon_dusted_03_rough.jpg"
+	var rough_path := dir + stem + "_rough.jpg"
 	if ResourceLoader.exists(rough_path):
 		m.roughness_texture = load(rough_path) as Texture2D
-	var ao_path := dir + "moon_dusted_03_ao.jpg"
+	var ao_path := dir + stem + "_ao.jpg"
 	if ResourceLoader.exists(ao_path):
 		m.ao_enabled = true
 		m.ao_texture = load(ao_path) as Texture2D

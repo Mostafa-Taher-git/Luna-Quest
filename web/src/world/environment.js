@@ -46,12 +46,16 @@ export function loadRegolithTextures(baseUrl = './') {
       );
     });
 
+  // Prefer the moon_02 regolith named in the design table; fall back to moon_dusted_03.
+  const loadFirst = (files, colorSpace = THREE.NoColorSpace) =>
+    files.reduce((chain, file) => chain.then((tex) => tex ?? load(file, colorSpace)), Promise.resolve(null));
+
   return Promise.all([
-    load('moon_dusted_03_albedo.jpg', THREE.SRGBColorSpace),
-    load('moon_dusted_03_normal.jpg'),
-    load('moon_dusted_03_rough.jpg'),
-    load('moon_dusted_03_ao.jpg'),
-    load('moon_dusted_03_height.jpg'),
+    loadFirst(['moon_02/moon_02_albedo.jpg', 'moon_dusted_03_albedo.jpg'], THREE.SRGBColorSpace),
+    loadFirst(['moon_02/moon_02_normal.jpg', 'moon_dusted_03_normal.jpg']),
+    loadFirst(['moon_02/moon_02_rough.jpg', 'moon_dusted_03_rough.jpg']),
+    loadFirst(['moon_02/moon_02_ao.jpg', 'moon_dusted_03_ao.jpg']),
+    loadFirst(['moon_02/moon_02_height.jpg', 'moon_dusted_03_height.jpg']),
     load('../../textures/earth_day.jpg', THREE.SRGBColorSpace),
   ]).then(([albedo, normal, rough, ao, height, earth]) => ({ albedo, normal, rough, ao, height, earth }));
 }
