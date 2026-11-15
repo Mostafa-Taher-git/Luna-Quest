@@ -78,8 +78,10 @@ func _load_model() -> Node3D:
 func _rig_wheels() -> void:
 	if model == null:
 		return
-	for corner in ["front-left", "front-right", "rear-left", "rear-right"]:
-		var front := corner.begins_with("front")
+	for corner: String in ["front-left", "front-right", "rear-left", "rear-right"]:
+		# Typed explicitly: `corner` comes out of an untyped Array, and parse-time inference
+		# of `var front := corner.begins_with(...)` fails without it.
+		var front: bool = corner.begins_with("front")
 		for child in model.find_children("*", "Node3D", true, false):
 			var n := child.name.to_lower()
 			if n == "wheel-" + corner:
