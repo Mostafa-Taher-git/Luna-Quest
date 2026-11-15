@@ -213,6 +213,12 @@ func _restart_mission() -> void:
 		rover.rotation.y = 0.4
 		rover.battery_kwh = ColonyRover.BATTERY_KWH
 		rover.speed = 0.0
+		# A new mission starts with a clean rover: no milestones carried over.
+		rover.has_driven = false
+		rover.reached_ice = false
+		rover.odometer = 0.0
+		rover.steer = 0.0
+		rover.spin = 0.0
 	for child in hud.toast_box.get_children():
 		child.queue_free()
 	_begin_session()
