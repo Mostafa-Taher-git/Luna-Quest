@@ -16,6 +16,7 @@ var world: ColonyWorld
 var player: ColonyPlayer
 var crew: ColonyCrew
 var hud: LunaHud
+var rover: ColonyRover
 
 var commander_name := "Amara Okafor"
 var playing := false
@@ -60,6 +61,14 @@ func _ready() -> void:
 	world.name = "Colony"
 	add_child(world)
 	world.build()
+
+	# The rideable crew rover, parked on the garage apron beside the static kit rovers.
+	rover = ColonyRover.new()
+	rover.name = "CrewRover"
+	add_child(rover)
+	rover.setup(world)
+	rover.position = Vector3(-11.0, 0.05, -28.0)
+	rover.rotation.y = 0.4
 
 	sim = LQSim.new()
 	sim.clock.total_minutes = OPENING_MINUTE
@@ -197,6 +206,13 @@ func _restart_mission() -> void:
 	crew = ColonyCrew.new()
 	add_child(crew)
 	crew.build(world, sim)
+	if rover != null:
+		if rover.occupied:
+			rover.exit(player)
+		rover.position = Vector3(-11.0, 0.05, -28.0)
+		rover.rotation.y = 0.4
+		rover.battery_kwh = ColonyRover.BATTERY_KWH
+		rover.speed = 0.0
 	for child in hud.toast_box.get_children():
 		child.queue_free()
 	_begin_session()
@@ -247,9 +263,18 @@ func _update_prompt() -> void:
 	if not playing or paused or dialogue_open:
 		hud.set_prompt("")
 		return
+	if rover != null and rover.occupied:
+		var kmh := int(rover.speed_kmh())
+		var batt := int(rover.battery_percent() * 100.0)
+		var out := "اخرج" if arabic else "step out"
+		hud.set_prompt("[E] %s · %d km/h · %d%%" % [out, kmh, batt])
+		return
 	var target := player.target()
 	if target.is_empty():
 		hud.set_prompt("")
+		return
+	if target["type"] == "rover":
+		hud.set_prompt("[E]  %s" % ("قد مركبة الطاقم" if arabic else "drive the crew rover"))
 		return
 	var action := "استخدام" if arabic else "use"
 	if target["type"] == "npc":
@@ -339,8 +364,20 @@ func _toggle_language() -> void:
 # ---- interaction -----------------------------------------------------------
 
 func _interact() -> void:
+	if rover != null and rover.occupied:
+		rover.exit(player)
+		var msg := "خرجت من المركبة. هي تُشحن على أرضية المرآب." if arabic else "Out of the rover. It recharges on the garage apron."
+		hud.set_subtitle(msg)
+		_subtitle_until = Time.get_ticks_msec() + 5000
+		return
 	var target := player.target()
 	if target.is_empty():
+		return
+	if target["type"] == "rover":
+		rover.enter(player)
+		var msg := "أنت على المقعد. W للسائق، A/D للتوجيه، Space للفرملة، E للخروج." if arabic else "At the wheel. W drive, A/D steer, Space brake, E to step out."
+		hud.set_subtitle(msg)
+		_subtitle_until = Time.get_ticks_msec() + 7000
 		return
 	if target["type"] == "console":
 		var result: Dictionary = sim.interact(str(target["building_id"]), str(target["interaction_id"]))
@@ -390,6 +427,7 @@ func _save_game() -> void:
 		"playerName": sim.player_name,
 		"arabic": arabic,
 		"savedAt": Time.get_datetime_string_from_system(true),
+		"rover": rover.capture() if rover != null else {},
 	})
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -421,4 +459,6 @@ func _load_game() -> bool:
 	sim.arabic = arabic
 	hud.set_language(arabic)
 	hud.refresh(sim)
+	if rover != null:
+		rover.restore(extras.get("rover", {}), player)
 	return true

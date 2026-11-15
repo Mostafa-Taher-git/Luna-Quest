@@ -146,7 +146,7 @@ func target() -> Dictionary:
 			"type": "rover",
 			"body": collider,
 			"label_en": "Crew rover",
-			"label_ar": "\u0645\u0631\u0643\u0628\u0629 \u0627\u0644\u0637\u0627\u0642\u0645",
+			"label_ar": "مركبة الطاقم",
 		}
 	if collider.has_meta("npc_id"):
 		return {
