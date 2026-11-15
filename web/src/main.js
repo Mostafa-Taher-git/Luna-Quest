@@ -126,6 +126,11 @@ class Game {
       materials: this.materials, baseUrl: BASE, spec: CREW_ROVER,
     });
     await this.rover.load();
+    if (this.rover.available) {
+      this.roverBox = { minX: 0, maxX: 0, minY: 0, maxY: 0, minZ: 0, maxZ: 0, tag: 'rover' };
+      this.rover.updateCollider(this.roverBox);
+      this.allColliders.push(this.roverBox);
+    }
     console.info(`Geometry merged: dressing ${propMerge.merged} materials from ${propMerge.removed} meshes (${propMerge.skipped} kept whole).`);
 
     // ---- the commander and the crew ---------------------------------------
@@ -619,6 +624,7 @@ class Game {
     }
 
     // ---- world -------------------------------------------------------------
+    if (this.rover?.available && this.roverBox) this.rover.updateCollider(this.roverBox);
     this.player.update(dt, input);
     if (this.rover?.occupied) {
       const kmh = this.rover.speedKmh().toFixed(0);

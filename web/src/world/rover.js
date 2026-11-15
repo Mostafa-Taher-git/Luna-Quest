@@ -358,6 +358,14 @@ export class CrewRover {
     pos.needsUpdate = true;
   }
 
+  /** Keep a dynamic AABB in the player's collider list so the parked rover is solid on foot. */
+  updateCollider(box) {
+    const half = 1.35;
+    box.minX = this.position.x - half; box.maxX = this.position.x + half;
+    box.minZ = this.position.z - half; box.maxZ = this.position.z + half;
+    box.minY = this.position.y; box.maxY = this.position.y + 1.8;
+  }
+
   speedKmh() {
     return Math.abs(this.speed) * 3.6;
   }
