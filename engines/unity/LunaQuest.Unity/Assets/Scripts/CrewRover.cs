@@ -96,6 +96,8 @@ namespace LunaQuest.Unity
             Occupied = true;
             HasDriven = true;
             p.Rover = this;
+            // The seat is inside the rover's own capsule: park the suit's controller.
+            p.SetDriving(true);
             p.ConfigureDriveCamera();
         }
 
@@ -108,6 +110,8 @@ namespace LunaQuest.Unity
             Vector3 side = transform.right;
             Vector3 spot = transform.position + side * 1.8f;
             spot.y = 0.05f;
+            // Teleport re-enables the suit controller: leave it live so walking works again.
+            p.SetDriving(false);
             p.Teleport(spot);
             p.Halt();
             p.Visual.localRotation = Quaternion.Euler(0f, 180f, 0f);
