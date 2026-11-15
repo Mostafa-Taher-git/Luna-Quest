@@ -20,6 +20,7 @@ namespace LunaQuest.Godot
         public ColonySimulation Sim = null!;
         public WorldBuilder World = null!;
         public PlayerController Player = null!;
+        public RoverController Rover = null!;
         public Hud Hud = null!;
         public VoicePlayer Voice = null!;
         public bool Started { get; private set; }
@@ -69,6 +70,11 @@ namespace LunaQuest.Godot
             Player.GlobalPosition = new Vector3(0, 0.1f, 23);
             Player.Visual.AddChild(World.CreateAstronaut(1.75f));
             Player.InputLocked = true;
+
+            Rover = new RoverController { Name = "CrewRover", ProcessMode = ProcessModeEnum.Pausable };
+            AddChild(Rover);
+            Rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+            Rover.Rotation = new Vector3(0, 0.4f, 0);
 
             Hud = new Hud { Name = "Hud", ProcessMode = ProcessModeEnum.Always };
             AddChild(Hud);
@@ -432,6 +438,24 @@ namespace LunaQuest.Godot
         /// A conversation locks the suit, releases the mouse and opens the topic panel. The
         /// colony keeps running: talking costs time, just like everything else.
         /// </summary>
+        public void TryRoverInteraction()
+        {
+            if (!Started || Rover == null) return;
+            if (Rover.Occupied)
+            {
+                Rover.Exit(Player);
+                Hud.ShowSubtitle(L.T("Out of the rover. It recharges on the garage apron.",
+                    "خرجت من المركبة. هي تُشحن على أرضية المرآب."), 4.0);
+                return;
+            }
+            if (Player.GlobalPosition.DistanceTo(Rover.GlobalPosition) < 4.2f)
+            {
+                Rover.Enter(Player);
+                Hud.ShowSubtitle(L.T("At the wheel. W drive, A/D steer, Space brake, E to step out.",
+                    "أنت على المقعد. W للسائق، A/D للتوجيه، Space للفرملة، E للخروج."), 6.0);
+            }
+        }
+
         public void OpenDialogue(NpcProfile profile)
         {
             if (!Started || profile == null) return;
@@ -499,6 +523,18 @@ namespace LunaQuest.Godot
                 data.Extras["thirdPerson"] = Player.ThirdPerson;
                 data.Extras["yaw"] = Player.Yaw;
                 data.Extras["pitch"] = Player.Pitch;
+                if (Rover != null)
+                {
+                    data.Extras["roverX"] = Rover.GlobalPosition.X;
+                    data.Extras["roverY"] = Rover.GlobalPosition.Y;
+                    data.Extras["roverZ"] = Rover.GlobalPosition.Z;
+                    data.Extras["roverYaw"] = Rover.Rotation.Y;
+                    data.Extras["roverBattery"] = Rover.BatteryKwh;
+                    data.Extras["roverOdometer"] = Rover.Odometer;
+                    data.Extras["roverDriven"] = Rover.HasDriven;
+                    data.Extras["roverIce"] = Rover.ReachedIce;
+                    data.Extras["roverOccupied"] = Rover.Occupied;
+                }
 
                 using var file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
                 if (file == null)
@@ -551,6 +587,7 @@ namespace LunaQuest.Godot
                 if (data.Extras.TryGetValue("pitch", out var ppitch))
                     pitch = (float)LunaQuest.Core.Content.Json.Num(ppitch, -0.12);
                 Player.ResetLook(yaw, pitch);
+                if (Rover != null) Rover.Restore(data.Extras, Player);
 
                 // Guard against save files written under an older, taller layout: an obviously
                 // invalid height is clamped rather than dropping the player out of the world.

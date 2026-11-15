@@ -37,6 +37,7 @@ namespace LunaQuest.Godot
         private float _jumpBuffer;
         private Interactable? _focus;
         private AstronautAnimator? _animator;
+        public RoverController? Rover;
 
         public float Yaw => _yaw;
         public float Pitch => _pitch;
@@ -100,8 +101,11 @@ namespace LunaQuest.Godot
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             if (e.IsActionPressed("toggle_view")) ToggleView();
-            if (e.IsActionPressed("interact") && _focus != null)
-                Main.Instance?.DoInteract(_focus);
+            if (e.IsActionPressed("interact"))
+            {
+                if (_focus != null) Main.Instance?.DoInteract(_focus);
+                else Main.Instance?.TryRoverInteraction();
+            }
         }
 
         public override void _PhysicsProcess(double delta)
@@ -114,6 +118,12 @@ namespace LunaQuest.Godot
                 MoveAndSlide();
                 UpdateAnimation();
                 UpdateFocus();
+                return;
+            }
+
+            if (Rover != null)
+            {
+                Rover.Drive(dt, this);
                 return;
             }
 
@@ -240,7 +250,26 @@ namespace LunaQuest.Godot
                     _focus = station;
             }
 
-            Main.Instance?.Hud.SetPrompt(_focus != null ? _focus.Prompt : "");
+            string prompt = "";
+            if (_focus != null) prompt = _focus.Prompt;
+            else if (Rover != null && Rover.Occupied)
+                prompt = L.T($"Step out (E) · {Rover.SpeedKmh():F0} km/h · battery {Rover.BatteryPercent() * 100f:F0}%",
+                    $"اخرج (E) · {Rover.SpeedKmh():F0} كم/س · البطارية {Rover.BatteryPercent() * 100f:F0}%");
+            else if (Rover != null && GlobalPosition.DistanceTo(Rover.GlobalPosition) < 4.2f)
+                prompt = L.T("Drive the crew rover (E)", "قد مركبة الطاقم (E)");
+            Main.Instance?.Hud.SetPrompt(prompt);
+        }
+
+        public void ConfigureDriveCamera()
+        {
+            _arm.SpringLength = ThirdPerson ? 7.5f : 0.05f;
+            _arm.Position = new Vector3(0, ThirdPerson ? 1.5f : 1.2f, 0);
+        }
+
+        public void RestoreWalkCamera()
+        {
+            _arm.SpringLength = ThirdPerson ? 3.9f : 0.05f;
+            _arm.Position = new Vector3(0, ThirdPerson ? 1.45f : 1.58f, 0);
         }
 
         public void ToggleView() => SetThirdPerson(!ThirdPerson, true);
@@ -267,6 +296,7 @@ namespace LunaQuest.Godot
                 Camera.Fov = 78;
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
+            if (Rover != null) ConfigureDriveCamera();
             Main.Instance?.Hud.SetFirstPerson(!ThirdPerson);
             if (announce)
             {
