@@ -40,7 +40,12 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Build the project's C# against the engine API
-        run: dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release
+        run: |
+          set -euo pipefail
+          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release
+          # Godot.NET.Sdk writes the assembly into .godot/mono/temp/bin/<Configuration>/; prove
+          # it is there, because a missing assembly makes every script fail to instantiate.
+          find "${PROJECT_DIR}" -name "LunaQuest.Godot.dll" -printf "built: %p (%s bytes)\n"
 
       - name: Fetch Godot .NET ${GODOT_VERSION}
         run: |
@@ -50,6 +55,9 @@ jobs:
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64" godot-dir
           chmod +x godot-dir/Godot_v*
+          # The mono editor finds its own .NET through this variable (tools/godot-mono.sh does
+          # the same); without it the C# glue never loads and every script fails to instantiate.
+          echo "DOTNET_ROOT=${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}" >> "$GITHUB_ENV"
 
       - name: Import the project (loads every script and every asset)
         run: |
