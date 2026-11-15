@@ -107,9 +107,14 @@ namespace LunaQuest.Godot
             Expect(rover.ReachedIce && rover.HasDriven, "restore() lost the milestones");
             Expect(rover.GlobalPosition.DistanceTo(new Vector3(-11f, 0.05f, -28f)) < 0.2f,
                 "restore() lost the parked position");
+            // An old save (schema 2, written before the rover existed) has no rover keys at all:
+            // it must load without complaint and leave the rover as if it had just spawned.
             rover.Restore(new System.Collections.Generic.Dictionary<string, object?>(), player);
-            Expect(Mathf.Abs(rover.BatteryKwh - 7.5f) < 0.001f,
-                "an old save with no rover keys disturbed the rover");
+            Expect(Mathf.Abs(rover.BatteryKwh - RoverController.BatteryKwhMax) < 0.001f,
+                $"an old save did not leave a full battery on the rover ({rover.BatteryKwh:F2} kWh)");
+            Expect(rover.GlobalPosition.DistanceTo(new Vector3(-11f, 0.05f, -28f)) < 0.2f,
+                "an old save did not put the rover back on its apron");
+            Expect(!rover.Occupied, "an old save seated the commander in the rover");
 
             // Restart: the rover is put back with full power and no milestones.
             rover.HasDriven = true;
