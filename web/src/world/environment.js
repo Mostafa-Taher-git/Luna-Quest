@@ -133,6 +133,17 @@ export function createEnvironment(scene, { textures = {} } = {}) {
   }
   if (regolithMat.normalMap) regolithMat.normalScale = new THREE.Vector2(0.35, 0.35);
 
+  // The scanned height map used to be loaded and then discarded. Feed it in as a low-amplitude
+  // bump map so the near field catches the grazing polar sun instead of reading as a flat
+  // colour. A bump map needs no extra geometry, so the coarse terrain mesh still costs nothing.
+  if (textures.height) {
+    regolithMat.bumpMap = textures.height;
+    regolithMat.bumpScale = 0.12;
+    textures.height.wrapS = THREE.RepeatWrapping;
+    textures.height.wrapT = THREE.RepeatWrapping;
+    textures.height.repeat.set(140, 140);
+  }
+
   const near = terrainMesh(terrain, { size: 320, cells: 128, material: regolithMat, yOffset: 0.0 });
   // The far band uses its own copy of the maps at a much lower repeat: tiling a 1 m scan
   // across a kilometre turns into a visible grid, which is exactly what a plain does not have.
@@ -143,6 +154,11 @@ export function createEnvironment(scene, { textures = {} } = {}) {
       farMat[key].repeat.set(26, 26);
       farMat[key].needsUpdate = true;
     }
+  }
+  if (farMat.bumpMap) {
+    farMat.bumpMap = regolithMat.bumpMap.clone();
+    farMat.bumpMap.repeat.set(26, 26);
+    farMat.bumpMap.needsUpdate = true;
   }
   // The far band is a ring, not a bigger plane: overlapping planes fight for the depth
   // buffer and show up as shimmering bands across the plain.

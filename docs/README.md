@@ -25,6 +25,10 @@ and keeps the decorative EVA suit prop out of every character loading path.
 CSA, DONKI, OSDR and other source links. The game numbers are anchored to those sources;
 the research is not a flight-certified design.
 
+| File | What it is |
+|---|---|
+| `research/Luna-Quest_Surface_Habitat_Design_EN.md` | Browser research notes that drive building shape, dust porches, shielding and ground textures |
+
 ## Screenshots
 
 | File | View |

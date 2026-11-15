@@ -189,6 +189,22 @@ export function createBuilding(materials, building, { solids = new SolidWorld() 
   }[door];
   portico(ctx, { x: porticoPos.x, z: porticoPos.z, yaw: porticoPos.yaw, width: 3.6, depth: 2.4, height: 3.1 });
 
+  // Dust-mitigation porch. Lunar dust is fine and abrasive and attacks seals, joints and
+  // instruments, so a real surface habitat gives the crew a grated sill and a marked cleaning
+  // zone before the pressure hatch. See the surface habitat design note in docs/research/.
+  const dustPorch = new THREE.Group();
+  dustPorch.name = 'dust-porch';
+  dustPorch.position.set(porticoPos.x, 0, porticoPos.z);
+  dustPorch.rotation.y = porticoPos.yaw;
+  ctx.group.add(dustPorch);
+  for (let i = 0; i < 7; i += 1) {
+    box(dustPorch, 3.2, 0.04, 0.16, materials.alloy, { x: 0, y: 0.15, z: -0.9 + i * 0.3, cast: false });
+  }
+  box(dustPorch, 3.4, 0.05, 0.12, materials.hazardStripe, { x: 0, y: 0.17, z: 1.06, cast: false });
+  for (const sx of [-1, 1]) {
+    box(dustPorch, 0.12, 0.5, 0.12, materials.alloy, { x: sx * 1.62, y: 0.4, z: -0.85, cast: false });
+  }
+
   // The hatch hangs open against the wall beside the opening. A door panel across the
   // doorway would look tidy and make the building impossible to enter.
   const side = door === 'north' || door === 'south' ? [-2.75, 0.05] : [0.05, -2.75];
@@ -221,6 +237,26 @@ export function createBuilding(materials, building, { solids = new SolidWorld() 
   // ---- interior ---------------------------------------------------------------
   const interior = interiorRooms(ctx, building, style, { w, d });
   consoles.push(...interior.consoles);
+
+  // ---- regolith shielding ------------------------------------------------------
+  // Piled regolith on the lee side of the modules that need the most shielding. NASA surface
+  // habitat studies treat in-situ material as radiation and thermal cover; the berm is kept
+  // clear of the hatch and the plaza so it never blocks an approach route.
+  if (['habitat', 'life_support', 'storm_shelter', 'medical'].includes(building.id)) {
+    const away = {
+      north: { x: 0, z: -d / 2 - 2.9, yaw: 0 },
+      south: { x: 0, z: d / 2 + 2.9, yaw: 0 },
+      east: { x: -w / 2 - 2.9, z: 0, yaw: Math.PI / 2 },
+      west: { x: w / 2 + 2.9, z: 0, yaw: Math.PI / 2 },
+    }[door];
+    bermSegment(ctx, {
+      x: away.x,
+      z: away.z,
+      yaw: away.yaw,
+      length: Math.min(w, d) * 0.82,
+      height: 1.15,
+    });
+  }
 
   // ---- exterior kit ------------------------------------------------------------
   exteriorProps(ctx, building, style, { w, d, h, door });
@@ -283,6 +319,24 @@ function buildRoof(ctx, building, style, { w, d, h }) {
     arc.castShadow = true;
     arc.receiveShadow = true;
     ctx.group.add(arc);
+
+    // End caps. A real surface module is a sealed horizontal cylinder, not an open canopy:
+    // both ends get a half-ellipse bulkhead at the springing line. The cap material is cloned
+    // so forcing DoubleSide here cannot change the winding of the rest of the shell.
+    const capMat = (style.roof === 'glass' ? mats.glass : style.roof === 'buried' ? mats.regolithClay : mats.hull).clone();
+    capMat.side = THREE.DoubleSide;
+    const capGeo = new THREE.CircleGeometry(1, 32, 0, Math.PI);
+    for (const z of [-d / 2, d / 2]) {
+      const cap = new THREE.Mesh(capGeo, capMat);
+      cap.scale.set(radius, rise, 1);
+      cap.position.set(0, WALL_H, z);
+      cap.castShadow = true;
+      cap.receiveShadow = true;
+      cap.name = 'vault-bulkhead';
+      ctx.group.add(cap);
+    }
+    // The vault is now a closed pressure shell: keep the commander from leaping through it.
+    ctx.solids.addBox(ctx.origin.x, WALL_H + rise * 0.5, ctx.origin.z, w, rise, d, { tag: 'vault-ceiling' });
 
     // Arch ribs: the strongest visual cue that this is a pressure structure.
     if (style.ribbed) {
