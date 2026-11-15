@@ -553,7 +553,7 @@ func _build_start_screen() -> void:
 	column.add_child(_label("", 10, DIM))
 
 	name_edit = LineEdit.new()
-	name_edit.text = "Mostafa"
+	name_edit.text = "Amara Okafor"
 	name_edit.placeholder_text = "Commander's name"
 	name_edit.custom_minimum_size = Vector2(360, 44)
 	name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER

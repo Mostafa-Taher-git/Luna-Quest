@@ -288,7 +288,7 @@ func _test_voice_pack() -> bool:
 
 func _test_save() -> void:
 	var sim := LQSim.new()
-	sim.player_name = "Mostafa"
+	sim.player_name = "Amara Okafor"
 	sim.step(600.0)
 	sim.try_action("clean_arrays")
 	sim.converse("npc_safaa", str(Content.topics_for("npc_safaa")[0].get("id", "")))
@@ -296,7 +296,7 @@ func _test_save() -> void:
 	var data: Dictionary = sim.capture_save({"playerName": sim.player_name, "arabic": true})
 	expect(int(data.get("schemaVersion", 0)) == LQSim.SAVE_SCHEMA,
 		"save: schema version should be %d" % LQSim.SAVE_SCHEMA)
-	expect(str(data.get("playerName", "")) == "Mostafa", "save: the commander's name was lost")
+	expect(str(data.get("playerName", "")) == "Amara Okafor", "save: the commander's name was lost")
 	expect(data.get("extras", {}).get("arabic", false) == true, "save: the language choice was lost")
 
 	var json := JSON.stringify(data)
@@ -311,7 +311,7 @@ func _test_save() -> void:
 	expect(absf(float(restored.state["batteryKwh"]) - float(sim.state["batteryKwh"])) < 0.01,
 		"save: the battery did not restore")
 	expect(restored.journal.size() == sim.journal.size(), "save: the journal did not restore")
-	expect(str(restored.player_name) == "Mostafa", "save: the name did not restore")
+	expect(str(restored.player_name) == "Amara Okafor", "save: the name did not restore")
 	var before: Dictionary = sim.npcs_state.get("npc_safaa", {})
 	var after: Dictionary = restored.npcs_state.get("npc_safaa", {})
 	expect(absf(float(before.get("trust", 0.0)) - float(after.get("trust", 0.0))) < 0.001,

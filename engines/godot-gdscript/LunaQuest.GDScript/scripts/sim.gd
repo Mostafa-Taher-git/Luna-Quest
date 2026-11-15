@@ -63,7 +63,7 @@ var incidents_active: Array = []
 var journal: Array = []
 var skills: Dictionary = {}
 var events: Array = []
-var player_name := "Mostafa"
+var player_name := "Amara Okafor"
 var arabic := false
 var extras: Dictionary = {}
 

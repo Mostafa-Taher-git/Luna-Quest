@@ -179,55 +179,83 @@ export class Hud {
     }
   }
 
+  /** The current shift. The board is a checklist, not a queue: no shift is mandatory. */
+  currentShift() {
+    const hour = this.sim.Clock.hourOfDay;
+    if (hour >= 6 && hour < 12) {
+      return { id: 'morning', en: 'Morning shift - power, water, air', ar: 'مناوبة الصباح - الطاقة والماء والهواء' };
+    }
+    if (hour >= 12 && hour < 18) {
+      return { id: 'afternoon', en: 'Afternoon shift - samples and crops', ar: 'مناوبة الظهيرة - العينات والمحاصيل' };
+    }
+    if (hour >= 18) {
+      return { id: 'evening', en: 'Evening shift - dust, comms, oxygen', ar: 'مناوبة المساء - الغبار والاتصالات والأكسجين' };
+    }
+    return { id: 'night', en: 'Night shift - rest and radiation watch', ar: 'مناوبة الليل - الراحة ومراقبة الإشعاع' };
+  }
+
+  /**
+   * What the commander can actually do this shift. Every learning objective in
+   * content/learning.json has a station task here, so the board is a real to-do list rather
+   * than a handful of milestones. Tasks for the current hour lead; the rest stay reachable.
+   */
   taskList() {
     const sim = this.sim;
     const clock = sim.Clock;
     const day = clock.day;
     const unlock = (id) => sim.Learning.hasEntry(id);
     const state = sim.State;
-    return [
-      {
+    const shift = this.currentShift().id;
+    const all = [
+      { id: 'obj_power_budget', shift: 'morning',
         label: L.arabic ? 'اقرأ لوحة المستعمرة في مركز التحكم' : 'Read the colony board in Mission Control',
-        done: unlock('obj_power_budget'),
-        hint: 'E at the board',
-      },
-      {
+        done: unlock('obj_power_budget'), hint: 'E at the board · Mission Control' },
+      { id: 'obj_solar_dust', shift: 'morning',
         label: L.arabic ? 'نظّف الألواح الشمسية' : 'Clean the solar array when dust cuts output',
-        done: unlock('obj_solar_dust'),
-        hint: 'Power farm',
-      },
-      {
+        done: unlock('obj_solar_dust'), hint: 'Power farm' },
+      { id: 'obj_water_filter', shift: 'morning',
         label: L.arabic ? 'افحص الماء والفلتر' : 'Check the water loop and back-flush the filter',
-        done: unlock('obj_water_filter'),
-        hint: 'Life support',
-      },
-      {
+        done: unlock('obj_water_filter'), hint: 'Life support' },
+      { id: 'obj_sample', shift: 'afternoon',
+        label: L.arabic ? 'اجمع عينة من التربة في موقع الجليد' : 'Collect a regolith sample at the ice site',
+        done: unlock('obj_sample'), hint: 'Ice site · sampler console' },
+      { id: 'obj_sensor_dust', shift: 'afternoon',
+        label: L.arabic ? 'نظّف رؤوس الحساسات والهوائي' : 'Brush the sensor heads and the antenna',
+        done: unlock('obj_sensor_dust'), hint: 'Comms tower' },
+      { id: 'obj_plant_care', shift: 'afternoon',
         label: L.arabic ? 'احصد المحصول' : 'Harvest the grow pod',
-        done: unlock('obj_plant_care') && Crop.readyToHarvest(state) === false,
-        hint: 'Greenhouse',
-      },
-      {
+        done: unlock('obj_plant_care') && Crop.readyToHarvest(state) === false, hint: 'Greenhouse' },
+      { id: 'obj_airlock_dust', shift: 'evening',
+        label: L.arabic ? 'نظّف غرفة المعادل قبل الخروج التالي' : 'Sweep the airlock dust before the next EVA',
+        done: unlock('obj_airlock_dust'), hint: 'Airlock' },
+      { id: 'obj_comms_relay', shift: 'evening',
+        label: L.arabic ? 'أعد ضبط مرحّل الاتصالات' : 'Realign the comms relay',
+        done: unlock('obj_comms_relay'), hint: 'Mission Control · comms desk' },
+      { id: 'obj_air_scrubber', shift: 'evening',
+        label: L.arabic ? 'أعد تشغيل التحليل الكهربائي وسجّل الغسّال' : 'Restart electrolysis and log the scrubber',
+        done: unlock('obj_air_scrubber'), hint: 'Life support' },
+      { id: 'obj_crew_rest', shift: 'night',
         label: L.arabic ? 'أعد خطة الراحة للطاقم' : "Rebalance the crew's rest plan",
-        done: unlock('obj_crew_rest'),
-        hint: 'Habitat',
-      },
-      {
+        done: unlock('obj_crew_rest'), hint: 'Habitat' },
+      { id: 'obj_radiation', shift: 'night',
         label: L.arabic ? 'احمِ الطاقم عند حدث الجسيمات' : 'Shelter the crew during a particle event',
-        done: unlock('obj_radiation'),
-        hint: 'Habitat',
-      },
-      {
+        done: unlock('obj_radiation'), hint: 'Habitat · shielded section' },
+      { id: 'mission', shift: 'any',
         label: L.arabic ? `أكمل المهمة — اليوم ${Math.min(day, 30)} من 30` : `Survive the mission — day ${Math.min(day, 30)} of 30`,
-        done: clock.day > 30,
-        hint: `${Math.round(clock.missionProgress * 100)}%`,
-      },
+        done: clock.day > 30, hint: `${Math.round(clock.missionProgress * 100)}%` },
     ];
+    return [...all].sort((a, b) => (a.shift === shift ? 0 : 1) - (b.shift === shift ? 0 : 1));
   }
 
   renderTasks() {
     const tasks = this.taskList();
+    const shift = this.currentShift();
     this.el.tasks.innerHTML = '';
-    for (const task of tasks.slice(0, 6)) {
+    const head = document.createElement('li');
+    head.className = 'shift-head';
+    head.textContent = L.arabic ? shift.ar : shift.en;
+    this.el.tasks.appendChild(head);
+    for (const task of tasks.slice(0, 5)) {
       const li = document.createElement('li');
       li.className = task.done ? 'done' : '';
       li.textContent = task.label;

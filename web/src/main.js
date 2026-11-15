@@ -68,7 +68,7 @@ class Game {
     this.sim = new Simulation(this.content);
     // A new mission starts at 06:00 so the first shift, meal and maintenance round are ahead.
     this.sim.Clock.setTotalMinutes(6 * 60);
-    this.sim.PlayerName = 'Mostafa';
+    this.sim.PlayerName = 'Amara Okafor';
 
     // ---- environment -------------------------------------------------------
     this.setProgress(0.16, 'Scanned regolith and the Earth…');
@@ -352,7 +352,7 @@ class Game {
 
   beginMission() {
     const nameInput = document.getElementById('commander-name');
-    const name = (nameInput?.value ?? '').trim().slice(0, 24) || 'Mostafa';
+    const name = (nameInput?.value ?? '').trim().slice(0, 24) || 'Amara Okafor';
     this.sim.PlayerName = name;
     document.getElementById('start').classList.add('hidden');
     this.hud.show();

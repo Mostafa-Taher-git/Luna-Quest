@@ -87,7 +87,7 @@ export class Simulation {
     const humans = content.npcs.filter((n) => !n.isRobot).length;
     if (content.npcs.length > 0) this.State.crewCount = 1 + humans;
 
-    this.PlayerName = 'Mostafa';
+    this.PlayerName = 'Amara Okafor';
     this.Language = 'en';
     this.seenEventIds = new Set();
     this.events = [];

@@ -17,7 +17,7 @@ var player: ColonyPlayer
 var crew: ColonyCrew
 var hud: LunaHud
 
-var commander_name := "Mostafa"
+var commander_name := "Amara Okafor"
 var playing := false
 var paused := false
 var arabic := false
