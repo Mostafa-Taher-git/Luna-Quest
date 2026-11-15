@@ -38,6 +38,7 @@ func build() -> void:
 	_make_rovers()
 	_make_landing_pad()
 	_make_power_farm()
+	_make_kit_dressing()
 	print("Luna-Quest (GDScript): colony built — %d buildings, %d consoles" % [
 		Content.buildings.size(), interactables.size()])
 
@@ -700,21 +701,103 @@ func _scanned_rock(index: int) -> Node3D:
 func _make_rovers() -> void:
 	var garage: Dictionary = Content.building("garage")
 	var base: Array = garage.get("position", [-16, -40])
+	var kit := _kit_module("open-rover-unpressuris-0da93181")
 	for i in range(3):
-		var rover := Node3D.new()
-		rover.position = Vector3(float(base[0]) + 9.0 + i * 3.4, 0.0, float(base[1]) + 12.0)
+		var px := float(base[0]) + 9.0 + i * 3.4
+		var pz := float(base[1]) + 12.0
+		var rover: Node3D
+		if kit != null:
+			rover = kit.duplicate() as Node3D
+		else:
+			rover = _box_rover()
+		rover.position = Vector3(px, 0.0, pz)
 		rover.rotation.y = 0.4 + i * 0.3
 		add_child(rover)
-		_box(rover, Vector3(3.0, 0.6, 1.7), Vector3(0, 0.9, 0), _mat("hull", Color(0.83, 0.86, 0.89), 0.62, 0.08))
-		_box(rover, Vector3(1.3, 0.5, 1.4), Vector3(-0.4, 1.35, 0), _mat("panel", Color(0.70, 0.74, 0.78), 0.7, 0.06))
-		_box(rover, Vector3(0.9, 0.06, 1.45), Vector3(-0.4, 1.62, 0), _mat("solar", Color(0.07, 0.11, 0.22), 0.25, 0.7))
-		for sx in [-1.0, 0.0, 1.0]:
-			for sz in [-1.0, 1.0]:
-				_cylinder(rover, 0.42, 0.34, Vector3(sx * 1.05, 0.42, sz * 0.85), _mat("rubber", Color(0.10, 0.10, 0.11), 0.95, 0.0)).rotation.x = PI * 0.5
-		_cylinder(rover, 0.06, 1.4, Vector3(1.1, 1.9, 0.4), _mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55))
-		_box(rover, Vector3(0.3, 0.22, 0.3), Vector3(1.1, 2.6, 0.4), _mat("dark", Color(0.16, 0.18, 0.21), 0.75, 0.15))
-		var lamp := _glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.93, 0.78), 1.4)
-		_box(rover, Vector3(0.18, 0.18, 0.18), Vector3(1.1, 2.74, 0.4), lamp)
+
+
+## The procedural fallback rover, kept so a fresh clone without the kit still shows a vehicle.
+func _box_rover() -> Node3D:
+	var rover := Node3D.new()
+	_box(rover, Vector3(3.0, 0.6, 1.7), Vector3(0, 0.9, 0), _mat("hull", Color(0.83, 0.86, 0.89), 0.62, 0.08))
+	_box(rover, Vector3(1.3, 0.5, 1.4), Vector3(-0.4, 1.35, 0), _mat("panel", Color(0.70, 0.74, 0.78), 0.7, 0.06))
+	_box(rover, Vector3(0.9, 0.06, 1.45), Vector3(-0.4, 1.62, 0), _mat("solar", Color(0.07, 0.11, 0.22), 0.25, 0.7))
+	for sx in [-1.0, 0.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			_cylinder(rover, 0.42, 0.34, Vector3(sx * 1.05, 0.42, sz * 0.85), _mat("rubber", Color(0.10, 0.10, 0.11), 0.95, 0.0)).rotation.x = PI * 0.5
+	_cylinder(rover, 0.06, 1.4, Vector3(1.1, 1.9, 0.4), _mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55))
+	_box(rover, Vector3(0.3, 0.22, 0.3), Vector3(1.1, 2.6, 0.4), _mat("dark", Color(0.16, 0.18, 0.21), 0.75, 0.15))
+	_box(rover, Vector3(0.18, 0.18, 0.18), Vector3(1.1, 2.74, 0.4), _glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.93, 0.78), 1.4))
+	return rover
+
+
+## Loads one CC0 "Moon Base Colony and Lunar Rovers" module, or null when it has not been synced.
+func _kit_module(stem: String) -> Node3D:
+	var path := "res://assets/models/lunar_colony/%s.glb" % stem
+	if not ResourceLoader.exists(path):
+		return null
+	var scene := load(path) as PackedScene
+	if scene == null:
+		return null
+	return scene.instantiate() as Node3D
+
+
+## The industrial hardware around the walkable colony: landers, haulers, the power yard, ISRU
+## skids, the motor pool and the relay mast. Same CC0 kit and same layout as the browser build,
+## placed as visual dressing (no colliders) so the scene audit's spawn / console / crew queries
+## are untouched. Skipped entirely when the kit has not been synced in.
+func _make_kit_dressing() -> void:
+	var layout := [
+		["cargo-lander-94227716", 0.0, 52.0, 0.0],
+		["approach-light-beacon-20fb9bc6", -11.0, 44.0, 0.0],
+		["approach-light-beacon-20fb9bc6", 9.0, 46.0, 0.0],
+		["approach-light-beacon-20fb9bc6", -11.0, 62.0, 0.0],
+		["approach-light-beacon-20fb9bc6", 11.0, 62.0, 0.0],
+		["blast-deflector-wall-51ed7365", -22.0, 52.0, PI * 0.5],
+		["blast-deflector-wall-51ed7365", 22.0, 52.0, -PI * 0.5],
+		["cargo-hauler-flatbed-76ce4ade", -14.0, 36.0, 0.35],
+		["equipment-sled-408c66bc", -10.0, 42.0, 0.5],
+		["propellant-tank-farm-3dcbfa21", -30.0, 50.0, PI * 0.5],
+		["cryo-transfer-arm-5d350240", -24.0, 40.0, 0.0],
+		["cargo-lander-94227716", 26.0, 62.0, 1.1],
+		["battery-container-9755ed67", -66.0, -14.0, PI * 0.5],
+		["battery-container-9755ed67", -66.0, -20.0, PI * 0.5],
+		["radiator-bank-0c1ce93e", -52.0, 16.0, 0.0],
+		["nuclear-power-unit-8239903e", -72.0, -32.0, 0.0],
+		["vertical-solar-tower-c58cca7d", -68.0, 10.0, 0.0],
+		["solar-array-row-tracke-e35a3b96", -84.0, -2.0, 0.5],
+		["oxygen-extraction-plan-002fb0ae", -46.0, 19.0, 0.0],
+		["regolith-excavator-64b4560f", -56.0, 22.0, 0.6],
+		["sintering-print-gantry-64cc192a", -40.0, 30.0, 0.0],
+		["water-processing-skid-27dcfe03", 42.0, 26.0, 0.0],
+		["greenhouse-module-b35be615", 46.0, -14.0, PI * 0.5],
+		["survey-marker-array-99d264a2", 58.0, -44.0, 0.0],
+		["regolith-hopper-screen-148a2c37", 63.0, -24.0, -0.5],
+		["crane-rover-d5a76830", -34.0, -30.0, 0.45],
+		["pressurised-long-range-35466e96", -28.0, -46.0, 0.55],
+		["small-survey-rover-f1fa6584", -24.0, -52.0, 0.0],
+		["eva-tool-cart-3f077d9d", -30.0, -38.0, 1.0],
+		["comms-relay-mast-4cdfe54f", 26.0, -30.0, 0.0],
+		["dust-berm-2dec8cfd", 62.0, 12.0, PI * 0.5],
+		["dust-berm-2dec8cfd", -62.0, 30.0, -PI * 0.5],
+		["blast-berm-segment-6e0ba7b3", 34.0, 44.0, 0.0],
+		["crater-rim-segment-fafd0277", -84.0, 44.0, 0.8],
+	]
+	var dressing := Node3D.new()
+	dressing.name = "KitDressing"
+	add_child(dressing)
+	var placed := 0
+	for item in layout:
+		var node := _kit_module(str(item[0]))
+		if node == null:
+			continue
+		var x := float(item[1])
+		var z := float(item[2])
+		node.position = Vector3(x, height_at(x, z), z)
+		node.rotation.y = float(item[3])
+		dressing.add_child(node)
+		placed += 1
+	if placed > 0:
+		print("Luna-Quest (GDScript): %d kit modules dressed the colony" % placed)
 
 
 func _make_landing_pad() -> void:
