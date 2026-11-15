@@ -236,6 +236,10 @@ func _on_mission_complete() -> void:
 # ---- the loop --------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	# --selftest and a failed startup quit before the colony exists; the frames that follow must
+	# not touch the simulation or the world.
+	if sim == null or world == null:
+		return
 	if playing and not paused:
 		var fast := Input.is_key_pressed(KEY_TAB) or Input.is_key_pressed(KEY_T)
 		var speed := 6.0 if fast else 1.0
