@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "comment": "Permanent media lock for Luna-Quest. See docs/design/Luna-Quest_Immutable_Assets_EN.md. Every tracked copy of the intro film and the Cute Astronaut is pinned by SHA-256. Generated copies are checked when present, but are build artefacts and are not required in a fresh clone.",
+  "policy": "docs/design/Luna-Quest_Immutable_Assets_EN.md",
+  "guard": "tools/check-immutable-assets.sh",
+  "locked": [
+    {
+      "path": "assets/astronaut/cute_astronaut.glb",
+      "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2",
+      "bytes": 957708,
+      "role": "authoritative astronaut model"
+    },
+    {
+      "path": "engines/godot/LunaQuest.Godot/assets/astronaut/cute_astronaut.glb",
+      "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2",
+      "bytes": 957708,
+      "role": "Godot .NET copy of the same model"
+    },
+    {
+      "path": "engines/unity/LunaQuest.Unity/Assets/Resources/Art/Astronaut/cute_astronaut_baked.obj",
+      "sha256": "230bd4c5a11595d111d9dc8590f026268845e01f9148300a7503d0bf9402fdb7",
+      "bytes": 694087,
+      "role": "static bake of the same model at the frozen idle pose, not a second model"
+    },
+    {
+      "path": "assets/video/intro.mp4",
+      "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a",
+      "bytes": 13290654,
+      "role": "authoritative intro film, H.264"
+    },
+    {
+      "path": "assets/video/intro.webm",
+      "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458",
+      "bytes": 12940082,
+      "role": "authoritative intro film, VP9"
+    },
+    {
+      "path": "assets/video/intro.ogv",
+      "sha256": "b498e5e4ac16fbe1d644118f4ed6788db548ed984981106a5130c6b9f358388d",
+      "bytes": 29050786,
+      "role": "authoritative intro film, Theora"
+    },
+    {
+      "path": "engines/godot/LunaQuest.Godot/assets/video/intro.ogv",
+      "sha256": "b498e5e4ac16fbe1d644118f4ed6788db548ed984981106a5130c6b9f358388d",
+      "bytes": 29050786,
+      "role": "Godot copy of the same film"
+    },
+    {
+      "path": "web/static/intro-poster.jpg",
+      "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf",
+      "bytes": 30535,
+      "role": "poster frame taken from the existing film"
+    }
+  ],
+  "derived": [
+    { "path": "web/public/models/astronaut/cute_astronaut.glb", "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2" },
+    { "path": "web/dist/models/astronaut/cute_astronaut.glb", "sha256": "86ae33158e9e7656410cde7c19db14ba8640ef808476afad4f50b4227a6841a2" },
+    { "path": "web/public/media/intro.mp4", "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a" },
+    { "path": "web/dist/media/intro.mp4", "sha256": "0736c28cadb771e6098daf880db874bbdb2bbae5f4d913ad91b803da4500023a" },
+    { "path": "web/public/media/intro.webm", "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458" },
+    { "path": "web/dist/media/intro.webm", "sha256": "c83164dac25875d18ce9db3cab87cbcff05a963ba5fa2699f165e0ba8e2bd458" },
+    { "path": "web/public/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
+    { "path": "web/public/media/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
+    { "path": "web/dist/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" },
+    { "path": "web/dist/media/intro-poster.jpg", "sha256": "f7aca0c60d9058f8eef26d735ed08bad261dc4bf32ea9037d7785f6c7949ebdf" }
+  ],
+  "rules": {
+    "intro": "The existing film is final. Never re-render, re-encode, trim, replace or regenerate it, and never create another intro video, even if the model, the game, the story or the engine changes. Only playback, skip and decode-failure handling may be edited.",
+    "astronaut": "The existing Cute Astronaut is the only human character model. Every astronaut must load it. Fixing it is allowed; replacing it, downloading another model or introducing a second astronaut model is not.",
+    "credit": "Cute Astronaut by haefu, Sketchfab, CC BY 4.0. Model id 816bd786fe8b4559a009de6a95582003. Attribution must stay in CREDITS.md.",
+    "unusedSecondSuit": "assets/models/lunar_colony/eva-suit-23f03707.glb is a decorative kit prop, not a character. It must never enter any character loading path.",
+    "newIntroFiles": "No file named intro*.{mp4,webm,ogv,mov,mkv,avi,m4v,mpg} may exist outside this lock file.",
+    "newAstronautFiles": "No new astronaut, suit or crew mesh file may be added to the repository."
+  }
+}
