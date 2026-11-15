@@ -220,6 +220,9 @@ func _build_nexo(root: Node3D, trim: Color) -> void:
 
 
 func _fit_height(node: Node3D, target_height: float) -> void:
+	# Measure in the model's own space: at this point the astronaut is still parented to the
+	# node being built and that node is not in the tree yet, so a global transform query is
+	# invalid (it logged "Condition !is_inside_tree() is true" for every crew member).
 	var box := _bounds(node)
 	var size := box.size
 	if size.y <= 0.001:
@@ -227,7 +230,7 @@ func _fit_height(node: Node3D, target_height: float) -> void:
 	var factor: float = target_height / size.y
 	node.scale = Vector3(factor, factor, factor)
 	var after := _bounds(node)
-	node.position.y -= after.position.y
+	node.position.y -= after.position.y * factor
 
 
 func _bounds(node: Node3D) -> AABB:
@@ -237,7 +240,7 @@ func _bounds(node: Node3D) -> AABB:
 		var mesh_node := child as MeshInstance3D
 		if mesh_node == null or mesh_node.mesh == null:
 			continue
-		var local: AABB = mesh_node.global_transform * mesh_node.get_aabb()
+		var local: AABB = mesh_node.transform * mesh_node.get_aabb()
 		if first:
 			total = local
 			first = false

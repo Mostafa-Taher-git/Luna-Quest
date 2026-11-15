@@ -135,7 +135,8 @@ func crew_fit(node: Node3D, target_height: float) -> void:
 		var mesh_node := child as MeshInstance3D
 		if mesh_node == null or mesh_node.mesh == null:
 			continue
-		var box: AABB = mesh_node.global_transform * mesh_node.get_aabb()
+		# The suit is measured before it joins the tree, so only the local transform is valid.
+		var box: AABB = mesh_node.transform * mesh_node.get_aabb()
 		if first:
 			bounds = box
 			first = false
