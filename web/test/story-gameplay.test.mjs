@@ -105,11 +105,15 @@ test('the board lists every learning objective plus mission progress', async () 
 
   const tasks = boardAt(9).taskList();
   const ids = tasks.map((task) => task.id);
-  assert.equal(tasks.length, 12, 'eleven objectives plus one mission line');
+  // The board carries the eleven learning objectives, the 30-day mission line, and two
+  // rover field tasks (take the LTV, drive it to the ice site). The rover tasks are movement
+  // milestones, not learning objectives, so learning.json stays at eleven.
+  assert.equal(tasks.length, 14, 'eleven objectives, one mission line and two rover field tasks');
   for (const id of objectiveIds) {
     assert.ok(ids.includes(id), `${id} has no station task on the board`);
   }
   assert.ok(ids.includes('mission'), 'the 30-day mission line is missing');
+  assert.ok(ids.includes('obj_rover_take') && ids.includes('obj_rover_ice'), 'the rover field tasks are missing');
   assert.equal(new Set(ids).size, ids.length, 'a task is listed twice');
 });
 
@@ -139,9 +143,9 @@ test('this shift leads the board, but no task ever becomes unreachable', async (
     const hud = boardAt(hour);
     assert.equal(hud.currentShift().id, shift);
     const tasks = hud.taskList();
-    assert.equal(tasks.length, 12, `${shift} lost a task`);
+    assert.equal(tasks.length, 14, `${shift} lost a task`);
     assert.equal(
-      new Set(tasks.map((task) => task.id)).size, objectiveIds.size + 1,
+      new Set(tasks.map((task) => task.id)).size, objectiveIds.size + 3,
       `${shift} dropped an objective`,
     );
     const leading = tasks.filter((task) => task.shift === shift);
