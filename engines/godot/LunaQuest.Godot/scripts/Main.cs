@@ -488,7 +488,7 @@ namespace LunaQuest.Godot
         /// </summary>
         public void TryRoverInteraction()
         {
-            if (!Started || Rover == null) return;
+            if (!Started || Rover == null || Player == null) return;
             if (Rover.Occupied)
             {
                 Rover.Exit(Player);
