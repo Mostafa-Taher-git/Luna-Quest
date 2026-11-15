@@ -15,6 +15,22 @@ const EXPECTED_OBJECTIVES := 11
 const EXPECTED_RESEARCH := 17
 const EXPECTED_TOPICS := 44
 
+## One Moon, numerically. LQTerrain (scripts/terrain.gd) is a hand port of the shared
+## LunaQuest.Core/Terrain/LunarTerrain.cs; these are the heights the shared algorithm produces for
+## seed 1337, and the self-test refuses to pass if the port drifts. tools/check-engine-parity.py
+## recomputes the same table from the C# algorithm on every push, so the numbers cannot be
+## "adjusted" to match a broken port: the table is the contract, and the engine must meet it.
+## (0, 23) and (52, -34) are inside the 88 m flat pad: exactly zero.
+const TERRAIN_PARITY := [
+	[0.0, 23.0, 0.0],
+	[52.0, -34.0, 0.0],
+	[95.0, 8.0, -0.066552338049],
+	[200.0, 200.0, -7.724299839182],
+	[-350.0, 120.0, 3.014551430629],
+	[300.0, -300.0, 0.332602820384],
+	[1000.0, 0.0, 4.653101754171],
+]
+
 const BEATS := ["welcome", "dust_front", "heavy_eva", "spe_onset", "comms_glitch", "dust_storm",
 	"crop_stress", "filter_clog", "insulation_fault", "mission_end"]
 
@@ -36,6 +52,7 @@ func expect(condition: bool, label: String) -> void:
 func run() -> bool:
 	print("Luna-Quest (GDScript) selftest — Godot %s" % Engine.get_version_info()["string"])
 	_test_content()
+	_test_terrain()
 	_test_clock()
 	var flown := _test_thirty_days()
 	_test_actions()
@@ -56,6 +73,30 @@ func _report(flown: Dictionary) -> bool:
 	for failure in failures:
 		print("  · %s" % failure)
 	return false
+
+
+# ---- terrain ---------------------------------------------------------------
+
+## The GDScript port must reproduce the shared heightfield exactly (to float precision).
+func _test_terrain() -> void:
+	var terrain := LQTerrain.new(1337)
+	for row in TERRAIN_PARITY:
+		var x: float = row[0]
+		var z: float = row[1]
+		var expected: float = row[2]
+		var actual := terrain.height(x, z)
+		var delta := absf(actual - expected)
+		expect(delta < 0.001, "terrain: (%.0f, %.0f) is %.6f in the engine, %.6f in the shared C#" % [
+			x, z, actual, expected])
+		if absf(expected) == 0.0:
+			expect(actual == 0.0, "terrain: (%.0f, %.0f) is inside the flat pad but the port says %.6f" % [
+				x, z, actual])
+	# The pad is flat by construction: a ring of points inside it must all read zero.
+	for i in range(8):
+		var angle := TAU * float(i) / 8.0
+		var x := 60.0 * cos(angle)
+		var z := 8.0 + 60.0 * sin(angle)
+		expect(terrain.height(x, z) == 0.0, "terrain: the flat pad is not flat at (%.1f, %.1f)" % [x, z])
 
 
 # ---- content ---------------------------------------------------------------
