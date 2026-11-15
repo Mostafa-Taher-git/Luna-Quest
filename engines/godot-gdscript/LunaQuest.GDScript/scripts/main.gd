@@ -69,6 +69,7 @@ func _ready() -> void:
 	rover.setup(world)
 	rover.position = Vector3(-11.0, 0.05, -28.0)
 	rover.rotation.y = 0.4
+	rover.settle()
 
 	sim = LQSim.new()
 	sim.clock.total_minutes = OPENING_MINUTE
@@ -220,6 +221,7 @@ func _restart_mission() -> void:
 		rover.odometer = 0.0
 		rover.steer = 0.0
 		rover.spin = 0.0
+		rover.settle()
 	for child in hud.toast_box.get_children():
 		child.queue_free()
 	_begin_session()

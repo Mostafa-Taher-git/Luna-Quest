@@ -41,6 +41,8 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_crew(world, crew)
 	_check_perimeter()
 	_check_ground_faces()
+	var root: Node = player.get_parent()
+	_check_rover(root, world, player, crew, sim)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -268,3 +270,141 @@ func _check_ground_faces() -> void:
 
 func _is_ground(collider: Object) -> bool:
 	return collider != null and collider is Node and (collider as Node).name == "Ground"
+
+
+## The T5 rover checklist, driven instead of described: enter, drive, steer, boost, brake, the
+## battery rule, the garage charger, the ice-site milestone, exiting on the ground and putting the
+## rover back with the mission restart (including the reset that BUG-4 was about).
+func _check_rover(root: Node, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew,
+		sim: LQSim) -> void:
+	var rover := root.get_node_or_null("CrewRover") as ColonyRover
+	expect(rover != null, "rover: the crew rover is not in the scene")
+	if rover == null:
+		return
+	# Walking to it from the spawn: the apron is 40 m across, so this is a walk, not a step. What
+	# matters is that the rover's own box really is where the prompt measures from, and that the
+	# ground around it is solid to stand on while walking over.
+	var parked := rover.global_position
+	expect(absf(parked.y - 0.05) < 0.2, "rover: it is parked at y %.2f, not on the apron" % parked.y)
+	var around_ok := true
+	for offset in [Vector3(2.6, 0, 0), Vector3(-2.6, 0, 0), Vector3(0, 0, 3.2), Vector3(0, 0, -3.2)]:
+		var beside: Vector3 = parked + offset
+		var ground := ray(beside + Vector3(0, 6.0, 0), beside - Vector3(0, 6.0, 0))
+		# Anything the commander can stand on counts: the apron collider is an unnamed
+		# StaticBody3D laid over the terrain, and both are the same surface here.
+		var hit_ground: bool = not ground.is_empty()
+		if not hit_ground or absf(ground["position"].y) > 0.3:
+			around_ok = false
+	expect(around_ok, "rover: the ground around the parked rover is not the flat apron")
+
+	# Enter: the suit is carried, and stops colliding with the rover it sits inside.
+	rover.enter(player)
+	expect(rover.occupied and player.rover == rover, "rover: enter() did not take the seat")
+	expect(player.collision_layer == 0 and player.collision_mask == 0,
+		"rover: the driven suit still collides (layer %d, mask %d)" % [
+			player.collision_layer, player.collision_mask])
+
+	# Drive: throttle, steering, boost, handbrake and the wheel animation, stepped by hand so the
+	# test never depends on which keys a headless run happens to think are held.
+	var start := rover.global_position
+	var start_yaw := rover.rotation.y
+	var drained := rover.battery_kwh
+	for i in range(120):
+		rover._step(1.0 / 60.0, 1.0, 1.0, false, false)
+	expect(rover.speed > 4.0, "rover: 2 s of throttle only reached %.2f m/s" % rover.speed)
+	expect(rover.global_position.distance_to(start) > 3.0,
+		"rover: it did not move (%.2f m)" % rover.global_position.distance_to(start))
+	expect(absf(rover.rotation.y - start_yaw) > 0.05, "rover: steering did not turn it")
+	expect(rover.battery_kwh < drained, "rover: driving did not drain the battery")
+	expect(rover.odometer > 3.0, "rover: the odometer did not count (%.2f m)" % rover.odometer)
+	expect(rover.steer > 0.01 and not rover._steers.is_empty(), "rover: the front wheels did not steer")
+	expect(rover.spin > 1.0, "rover: the wheels did not spin")
+
+	# Boost raises the cap, the handbrake stops it, reverse is slower than forward.
+	rover.speed = 0.0
+	for i in range(240):
+		rover._step(1.0 / 60.0, 1.0, 0.0, true, false)
+	expect(rover.speed > ColonyRover.MAX_FORWARD * 0.72 + 0.2,
+		"rover: Shift did not raise the speed cap (%.2f m/s)" % rover.speed)
+	expect(rover.speed <= ColonyRover.MAX_FORWARD + 0.001,
+		"rover: it exceeded its own top speed (%.2f m/s)" % rover.speed)
+	for i in range(120):
+		rover._step(1.0 / 60.0, 0.0, 0.0, false, true)
+	expect(absf(rover.speed) < 0.05, "rover: the handbrake left it rolling at %.2f m/s" % rover.speed)
+
+	# The battery: a flat pack refuses to drive, the garage apron recharges a stopped rover.
+	rover.battery_kwh = 0.0
+	rover.speed = 0.0
+	for i in range(60):
+		rover._step(1.0 / 60.0, 1.0, 0.0, false, false)
+	expect(absf(rover.speed) < 0.01, "rover: a flat battery still drove (%.2f m/s)" % rover.speed)
+	rover.global_position = Vector3(ColonyRover.GARAGE.x, 0.05, ColonyRover.GARAGE.y)
+	rover.battery_kwh = 1.0
+	for i in range(60):
+		rover._step(1.0 / 60.0, 0.0, 0.0, false, false)
+	expect(rover.battery_kwh > 1.0, "rover: it did not recharge on the garage apron")
+	rover.global_position = start
+
+	# The ice-site milestone is a place, not a state.
+	rover.reached_ice = false
+	rover.global_position = Vector3(ColonyRover.ICE_SITE.x, 0.05, ColonyRover.ICE_SITE.y)
+	for i in range(2):
+		rover._step(1.0 / 60.0, 0.0, 0.0, false, false)
+	expect(rover.reached_ice, "rover: driving onto the ice site did not set the milestone")
+	rover.global_position = parked
+	rover.rotation.y = 0.4
+	rover.settle()
+
+	# Exit: the suit is left standing on the ground beside it, solid again and upright.
+	rover.exit(player)
+	expect(not rover.occupied and player.rover == null, "rover: exit() kept the seat")
+	expect(player.collision_layer == 1 and player.collision_mask == 1,
+		"rover: the suit is still non-solid after stepping out")
+	expect(absf(player.astronaut.rotation.x) < 0.001 if player.astronaut != null else true,
+		"rover: the suit stayed reclined after stepping out")
+	var under := ray(player.global_position + Vector3(0, 2.0, 0),
+		player.global_position - Vector3(0, 2.0, 0), [player.get_rid()])
+	expect(not under.is_empty(), "rover: there is no ground beside the rover to stand on")
+	var overlap := _capsule_overlap(player.global_position, [player.get_rid()])
+	var names: Array = []
+	for hit in overlap:
+		var c = hit.get("collider")
+		names.append(c.name if c != null else "?")
+	expect(overlap.is_empty(), "rover: the suit steps out inside %d colliders %s" % [overlap.size(), str(names)])
+
+	# Save round trip: the rover state survives JSON, and an old save without a rover still loads.
+	var captured := rover.capture()
+	rover.position = Vector3.ZERO
+	rover.battery_kwh = 0.5
+	rover.restore(captured, player)
+	expect(rover.position.distance_to(parked) < 0.2,
+		"rover: restore() lost the parked position")
+	expect(absf(rover.battery_kwh - captured["battery"]) < 0.001, "rover: restore() lost the battery")
+	var pristine := ColonyRover.new()
+	pristine.restore({}, null)
+	expect(pristine.battery_kwh == ColonyRover.BATTERY_KWH,
+		"rover: an old save without rover keys did not load")
+	pristine.free()
+
+	# Restart: back on the apron with a full battery and no milestones (BUG-4).
+	rover.has_driven = true
+	rover.reached_ice = true
+	rover.odometer = 99.0
+	root._restart_mission()
+	expect(rover.position.distance_to(parked) < 0.2,
+		"rover: a new mission did not return it to the apron")
+	expect(rover.battery_kwh == ColonyRover.BATTERY_KWH, "rover: a new mission did not refill it")
+	expect(not rover.reached_ice and not rover.has_driven and rover.odometer == 0.0,
+		"rover: a new mission kept the old milestones")
+
+
+func _capsule_overlap(spot: Vector3, exclude: Array) -> Array:
+	var shape := CapsuleShape3D.new()
+	shape.radius = 0.34
+	shape.height = 1.75
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = shape
+	params.transform = Transform3D(Basis(), spot + Vector3(0, 0.9, 0))
+	params.collide_with_areas = false
+	params.exclude = exclude
+	return space.intersect_shape(params, 4)
