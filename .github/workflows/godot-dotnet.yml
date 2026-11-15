@@ -35,6 +35,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Annotation helper
+        # One annotation, newlines percent-encoded: the Actions log blob host is not reachable
+        # from every machine, and a check run only keeps ten annotations.
+        run: |
+          cat >> "$GITHUB_ENV" <<'HELPER'
+          annotate() {
+            local title="$1" body="${2//'%'/'%25'}"
+            body="${body//$'\r'/}"
+            body="${body//$'\n'/'%0A'}"
+            body="${body//$'\t'/' '}"
+            echo "::notice title=${title}::${body}"
+          }
+          HELPER
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -66,11 +80,9 @@ jobs:
           # The import pass is allowed to warn; a parse or script error is not.
           problems=$(grep -Ei "parse error|script error|failed to load script" import.log || true)
           tail -c 4000 import.log
-          tail -20 import.log | while IFS= read -r line; do
-            [ -n "$line" ] && echo "::notice::import.log: $line"
-          done
+          annotate "import.log tail" "$(tail -15 import.log)"
           if [ -n "$problems" ]; then
-            echo "$problems" | while read -r line; do echo "::error::import: $line"; done
+            annotate "import.log errors" "$problems"
             exit 1
           fi
 
@@ -80,13 +92,11 @@ jobs:
           ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 400 > run.log 2>&1 || true
           problems=$(grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" run.log || true)
           tail -c 4000 run.log
-          # Mirror the tail into the annotation channel: the log blob host is not always
-          # reachable from a reviewer's machine, annotations always are.
-          tail -40 run.log | while IFS= read -r line; do
-            [ -n "$line" ] && echo "::notice::run.log: $line"
-          done
+          # Mirror the tail into ONE annotation (GitHub caps a check run at 10 annotations, so
+          # one per line would be truncated after the first ten).
+          annotate "run.log tail" "$(tail -40 run.log)"
           if [ -n "$problems" ]; then
-            echo "$problems" | while read -r line; do echo "::error::run: $line"; done
+            annotate "run.log errors" "$problems"
             exit 1
           fi
           # A silent exit 0 proves nothing: the colony has to have actually been built.
