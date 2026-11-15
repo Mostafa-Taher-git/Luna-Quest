@@ -136,6 +136,16 @@ namespace LunaQuest.Unity
             float steerIn = (Input.GetKey(KeyCode.A) ? 1f : 0f) - (Input.GetKey(KeyCode.D) ? 1f : 0f);
             bool handbrake = Input.GetKey(KeyCode.Space);
             bool boost = Input.GetKey(KeyCode.LeftShift);
+            SimulateForTest(dt, throttle, steerIn, boost, handbrake, p);
+        }
+
+        /// <summary>
+        /// One physics step with the controls passed in — the keyboard supplies them in play, the
+        /// playtest supplies them headlessly. Keeps the vehicle testable without a keyboard.
+        /// </summary>
+        public void SimulateForTest(float dt, float throttle, float steerIn, bool boost, bool handbrake,
+            ColonyPlayer p)
+        {
             bool flat = BatteryKwh <= 0.05f;
             float maxF = flat ? 0f : MaxForward * (boost ? 1f : 0.72f);
 
@@ -147,7 +157,11 @@ namespace LunaQuest.Unity
 
             float steerTarget = steerIn * SteerMax * (0.55f + 0.45f / (1f + Mathf.Abs(Speed) * 0.35f));
             Steer = Mathf.Lerp(Steer, steerTarget, Mathf.Clamp(dt * 6f, 0f, 1f));
-            transform.Rotate(0f, (Speed / 2.3f) * Mathf.Tan(Steer) * dt * Mathf.Rad2Deg, 0f);
+            // Same bicycle model as the two Godot engines (yaw rate = speed / wheelbase * tan(steer))
+            // with one sign change: Unity's yaw is clockwise seen from above, Godot's is
+            // counter-clockwise, so a left steer turns the Unity rover by MINUS that angle. Without
+            // the minus the two editions drive mirrored: A steers right here and left in Godot.
+            transform.Rotate(0f, -(Speed / 2.3f) * Mathf.Tan(Steer) * dt * Mathf.Rad2Deg, 0f);
 
             if (_controller.isGrounded) _vertical = -2f;
             else _vertical -= Gravity * dt;

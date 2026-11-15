@@ -193,6 +193,42 @@ namespace LunaQuest.Unity
                 $"{Sim.PlayerName}، أنت على الكونسول. تجوّل في المستعمرة واقرأ الأرقام."), 8f);
         }
 
+        /// <summary>
+        /// Start the mission over with a fresh simulation and a rover back on its apron — the
+        /// equivalent of the Godot editions' "restart mission" (used by the playtest, and by the
+        /// end screen). Keeps the same colony and the same commander.
+        /// </summary>
+        public void RestartMission()
+        {
+            string commander = Sim.PlayerName;
+            Sim = new ColonySimulation(Sim.Content);
+            Sim.PlayerName = string.IsNullOrWhiteSpace(commander) ? "Amara Okafor" : commander;
+            Started = true;
+            Paused = false;
+            Time.timeScale = 1f;
+            _lastSavedDay = Sim.Clock.Day;
+            if (Rover != null)
+            {
+                if (Rover.Occupied && Player != null) Rover.Exit(Player);
+                Rover.transform.position = new Vector3(-11f, 0.05f, -28f);
+                Rover.transform.rotation = Quaternion.Euler(0f, 0.4f * Mathf.Rad2Deg, 0f);
+                Rover.BatteryKwh = CrewRover.BatteryKwhMax;
+                Rover.Speed = 0f;
+                Rover.Steer = 0f;
+                Rover.Spin = 0f;
+                Rover.Odometer = 0f;
+                Rover.HasDriven = false;
+                Rover.ReachedIce = false;
+                Rover.Settle();
+            }
+            if (Player != null)
+            {
+                Player.Teleport(new Vector3(0f, 0.4f, 23f));
+                Player.SetDriving(false);
+            }
+            Hud?.ShowSubtitle(L.T("New mission. The colony is reset.", "مهمة جديدة. أعيد ضبط المستعمرة."), 5f);
+        }
+
         private void Interact()
         {
             if (Player == null) return;

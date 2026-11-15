@@ -61,6 +61,9 @@ namespace LunaQuest.Unity
             }
         }
 
+        /// <summary>True while the suit's CharacterController is live (false at the wheel).</summary>
+        public bool ControllerEnabled => _controller != null && _controller.enabled;
+
         public bool NearIncident =>
             Game != null && Game.Sim.Incidents.Active.Exists(a => !a.Resolved && !a.Ignored);
 
