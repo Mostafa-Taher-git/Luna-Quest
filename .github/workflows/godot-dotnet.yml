@@ -62,10 +62,23 @@ jobs:
       - name: Build the project's C# against the engine API
         run: |
           set -euo pipefail
-          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release
-          # Godot.NET.Sdk writes the assembly into .godot/mono/temp/bin/<Configuration>/; prove
-          # it is there, because a missing assembly makes every script fail to instantiate.
-          find "${PROJECT_DIR}" -name "LunaQuest.Godot.dll" -printf "built: %p (%s bytes)\n"
+          # Debug is what a headless editor run loads from .godot/mono/temp/bin/Debug/; Release is
+          # what an exported game loads. Build both and prove the assemblies are there — a missing
+          # assembly is exactly what makes Godot report "associated class could not be found".
+          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Debug > build-debug.log 2>&1 || {
+            annotate "build (Debug)" "$(tail -40 build-debug.log)"; cat build-debug.log; exit 1; }
+          dotnet build "${PROJECT_DIR}/LunaQuest.Godot.csproj" -c Release > build-release.log 2>&1 || {
+            annotate "build (Release)" "$(tail -40 build-release.log)"; cat build-release.log; exit 1; }
+          grep -Ei "warning (CS|NU|MSB)" build-debug.log build-release.log | sort -u | while read -r line; do
+            echo "::warning::${line}"
+          done || true
+          found=$(find "${PROJECT_DIR}" -name "LunaQuest.Godot.dll" -printf "%p (%s bytes)\n")
+          echo "$found"
+          annotate "built assemblies" "${found:-none found}"
+          case "$found" in
+            *"mono/temp/bin/Debug"*) ;;
+            *) echo "::error::no Debug assembly: the editor run would not find the C# scripts"; exit 1 ;;
+          esac
 
       - name: Fetch Godot .NET ${GODOT_VERSION}
         run: |
