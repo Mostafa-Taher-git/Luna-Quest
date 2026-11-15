@@ -161,8 +161,10 @@ namespace LunaQuest.Godot
             p.Visual.Rotation = new Vector3(-0.32f, Mathf.Pi, 0);
         }
 
-        public void Restore(Dictionary<string, object> extras, PlayerController p)
+        public void Restore(Dictionary<string, object?> extras, PlayerController p)
         {
+            // SaveData.Extras is Dictionary<string, object?>; the Json helpers already accept a
+            // nullable payload (a missing or null extras key falls back to the default).
             float Num(string k, float d) => extras.TryGetValue(k, out var o) ? (float)LunaQuest.Core.Content.Json.Num(o, d) : d;
             bool Bool(string k, bool d) => extras.TryGetValue(k, out var o) && LunaQuest.Core.Content.Json.Bool(o, d);
             if (extras.ContainsKey("roverX"))
