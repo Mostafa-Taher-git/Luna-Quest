@@ -187,15 +187,13 @@ func _make_terrain() -> void:
 	node.material_override = _regolith_material()
 	add_child(node)
 
-	# Ground collision: the colony pad is graded flat, so a plain slab under it is exact and
-	# costs one shape instead of a height map.
+	# Ground collision is baked from the very mesh that is drawn, so physics and visuals are
+	# the same surface everywhere — the graded pad, crater bowls and highland swells alike.
+	# (The old flat slab left the commander walking through hills beyond the pad.)
 	var body := StaticBody3D.new()
 	body.name = "Ground"
 	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(TERRAIN_SIZE, 2.0, TERRAIN_SIZE)
-	shape.shape = box
-	shape.position = Vector3(0, -1.0, 0)
+	shape.shape = mesh.create_trimesh_shape()
 	body.add_child(shape)
 	add_child(body)
 
@@ -638,15 +636,16 @@ func _make_perimeter() -> void:
 		var angle := TAU * float(i) / float(segments)
 		var x := cos(angle) * radius
 		var z := sin(angle) * radius
-		var post := _cylinder(group, 0.12, 1.3, Vector3(x, 0.65, z),
+		var gy := height_at(x, z)
+		var post := _cylinder(group, 0.12, 1.3, Vector3(x, gy + 0.65, z),
 			_mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55))
 		post.name = "Marker_%d" % i
-		var cap := _box(group, Vector3(0.26, 0.26, 0.26), Vector3(x, 1.36, z),
+		var cap := _box(group, Vector3(0.26, 0.26, 0.26), Vector3(x, gy + 1.36, z),
 			_glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.93, 0.78), 1.8))
 		cap.name = "MarkerLight_%d" % i
 		# One flat barrier per segment: cheap, and it follows the circle well enough at 26 m.
 		var width := 2.0 * radius * sin(PI / float(segments)) + 1.0
-		var blocker := _blocker(group, Vector3(width, 2.4, 0.6), Vector3(x, 1.2, z))
+		var blocker := _blocker(group, Vector3(width, 2.4, 0.6), Vector3(x, gy + 1.2, z))
 		blocker.rotation.y = -angle + PI * 0.5
 
 
