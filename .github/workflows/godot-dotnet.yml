@@ -105,10 +105,10 @@ jobs:
             exit 1
           fi
 
-      - name: Run the game headlessly for 400 frames
+      - name: Run the game headlessly (600 frames, the colony must report itself built)
         run: |
           set -euo pipefail
-          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 400 > run.log 2>&1 || true
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 600 > run.log 2>&1 || true
           problems=$(grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" run.log || true)
           tail -c 4000 run.log
           # Mirror the tail into ONE annotation (GitHub caps a check run at 10 annotations, so
