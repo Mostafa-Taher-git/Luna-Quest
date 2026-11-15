@@ -102,6 +102,11 @@ func enter(player: ColonyPlayer) -> void:
 	occupied = true
 	has_driven = true
 	player.rover = self
+	# The commander rides inside the rover's own box collider, so the suit capsule must stop
+	# colliding while it is carried at the hand controller — otherwise move_and_slide pushes
+	# the two bodies apart every physics frame (jitter, and the rover shoves itself backwards).
+	player.collision_layer = 0
+	player.collision_mask = 0
 
 
 func exit(player: ColonyPlayer) -> void:
@@ -109,6 +114,9 @@ func exit(player: ColonyPlayer) -> void:
 	speed = 0.0
 	velocity = Vector3.ZERO
 	player.rover = null
+	# Walking again: the suit is solid once more.
+	player.collision_layer = 1
+	player.collision_mask = 1
 	var side := global_transform.basis.x.normalized()
 	var spot := global_position + side * 1.8
 	spot.y = world.height_at(spot.x, spot.z) if world != null else 0.0
