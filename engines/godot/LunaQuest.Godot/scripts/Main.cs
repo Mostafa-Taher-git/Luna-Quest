@@ -75,6 +75,7 @@ namespace LunaQuest.Godot
             AddChild(Rover);
             Rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
             Rover.Rotation = new Vector3(0, 0.4f, 0);
+            Rover.Settle();
 
             Hud = new Hud { Name = "Hud", ProcessMode = ProcessModeEnum.Always };
             AddChild(Hud);
