@@ -33,6 +33,8 @@ namespace LunaQuest.Unity
         private Material _rock;
         private Material _earthMat;
         private Material _suit;
+        private readonly LunaQuest.Core.Terrain.LunarTerrain _terrain =
+            new LunaQuest.Core.Terrain.LunarTerrain(1337);
 
         public void Init(LunaQuestGame game)
         {
@@ -207,12 +209,19 @@ namespace LunaQuest.Unity
             return mat;
         }
 
+        /// <summary>
+        /// The height of the shared lunar surface at a point, in metres. One Moon: this is the
+        /// same deterministic field (seed 1337) the ground mesh is built from, so gameplay code
+        /// never has to guess where the ground is.
+        /// </summary>
+        public float HeightAt(float x, float z) => (float)_terrain.Height(x, z);
+
         private void BuildGround()
         {
             // One Moon for every engine: the ground is generated from the shared deterministic
             // heightfield (LunaQuest.Core.Terrain.LunarTerrain) — the same surface Godot draws,
             // seed 1337, flat pad around (0, 8). Replaces the old flat 1600 m plane.
-            var terrain = new LunaQuest.Core.Terrain.LunarTerrain(1337);
+            var terrain = _terrain;
             const float size = 840f;
             const int cells = 210;
             float step = size / cells;
