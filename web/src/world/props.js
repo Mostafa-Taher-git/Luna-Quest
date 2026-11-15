@@ -201,7 +201,6 @@ export const KIT_LAYOUT = [
   { stem: 'small-survey-rover-f1fa6584', x: -24, z: -52, yaw: 0 },
   { stem: 'eva-tool-cart-3f077d9d', x: -30, z: -38, yaw: 1.0 },
   { stem: 'comms-relay-mast-4cdfe54f', x: 26, z: -30, yaw: 0 },
-  { stem: 'open-rover-unpressuris-0da93181', x: -12, z: 22, yaw: 2.8 },
   { stem: 'open-rover-unpressuris-3741288d', x: 9, z: 30, yaw: 0.4 },
   // Berms and edges
   { stem: 'dust-berm-2dec8cfd', x: 62, z: 12, yaw: Math.PI / 2 },
@@ -209,6 +208,11 @@ export const KIT_LAYOUT = [
   { stem: 'blast-berm-segment-6e0ba7b3', x: 34, z: 44, yaw: 0 },
   { stem: 'crater-rim-segment-fafd0277', x: -84, z: 44, yaw: 0.8 },
 ];
+
+/** The one rideable crew rover, parked on the garage apron. CrewRover places and drives it,
+ *  so it keeps a dynamic collider and is never baked into the static dressing merge. The
+ *  `stem` literal here is what sync-assets.mjs ships into web/public/models/kit. */
+export const CREW_ROVER = { stem: 'open-rover-unpressuris-0da93181', x: -16, z: -31, yaw: 0 };
 
 export async function dressColony(library, terrain, onProgress = () => {}) {
   let done = 0;

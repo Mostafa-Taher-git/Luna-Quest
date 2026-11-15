@@ -19,7 +19,8 @@ import { Materials } from './world/materials.js';
 import { createRenderer, createEnvironment, loadRegolithTextures } from './world/environment.js';
 import { createBuilding } from './world/buildings.js';
 import { SolidWorld } from './world/parts.js';
-import { PropLibrary, dressColony } from './world/props.js';
+import { PropLibrary, dressColony, CREW_ROVER } from './world/props.js';
+import { CrewRover } from './world/rover.js';
 import { AstronautFactory } from './world/astronaut.js';
 import { mergeStaticMeshes } from './world/merge.js';
 import { createPlaza } from './world/plaza.js';
@@ -118,6 +119,13 @@ class Game {
       castShadowFor: (material) => material.name !== 'rock',
     });
     this.allColliders = [...this.solids.boxes, ...this.props.colliders];
+
+    // ---- the rideable crew rover (real LTV kit mesh, dynamic) --------------
+    this.rover = new CrewRover({
+      scene: this.scene, terrain: this.env.terrain, colliders: this.allColliders,
+      materials: this.materials, baseUrl: BASE, spec: CREW_ROVER,
+    });
+    await this.rover.load();
     console.info(`Geometry merged: dressing ${propMerge.merged} materials from ${propMerge.removed} meshes (${propMerge.skipped} kept whole).`);
 
     // ---- the commander and the crew ---------------------------------------
@@ -165,6 +173,7 @@ class Game {
       },
     });
     this.hud.panelHandlers = {};
+    this.hud.rover = this.rover;
 
     this.audio = await new AudioManager({
       baseUrl: BASE,
@@ -479,7 +488,7 @@ class Game {
 
   save() {
     try {
-      const data = this.sim.captureSave({ player: this.player.serialize() });
+      const data = this.sim.captureSave({ player: this.player.serialize(), rover: this.rover?.serialize() });
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
       this.hud.toast(t('saved'), 3200);
     } catch (err) {
@@ -497,6 +506,9 @@ class Game {
       const data = JSON.parse(raw);
       this.sim.applySave(data);
       if (data.extras?.player) this.player.restore(data.extras.player);
+      if (data.extras?.rover) this.rover?.restore(data.extras.rover, this.player);
+      this._roverDrivenLogged = Boolean(this.rover?.hasDriven);
+      this._roverIceLogged = Boolean(this.rover?.reachedIce);
       this.hud.bindSim(this.sim);
       this.hud.renderTasks();
       this.hud.toast(t('loaded'), 3200);
@@ -608,6 +620,24 @@ class Game {
 
     // ---- world -------------------------------------------------------------
     this.player.update(dt, input);
+    if (this.rover?.occupied) {
+      const kmh = this.rover.speedKmh().toFixed(0);
+      const batt = Math.round(this.rover.batteryPercent() * 100);
+      this.hud.setSpeed(L.arabic ? `المركبة ${kmh} كم/س · البطارية ${batt}%` : `LTV ${kmh} km/h · battery ${batt}%`);
+      if (this.rover.hasDriven && !this._roverDrivenLogged) {
+        this._roverDrivenLogged = true;
+        this.hud.pushLog({ id: 'rover:first-drive', kind: 'discovery', titleEn: 'Crew rover mobile', titleAr: 'مركبة الطاقم تتحرك', bodyEn: 'You took the LTV off the garage apron. Four-corner steering, ballistic dust, and a battery that recharges back at the garage.', bodyAr: 'أخرجت المركبة من أرضية المرآب. توجيه رباعي، غبار قذفي، وبطارية تُشحن في المرآب.' }, { recordOnly: false });
+        this.hud.renderTasks();
+      }
+      if (this.rover.reachedIce && !this._roverIceLogged) {
+        this._roverIceLogged = true;
+        this.hud.pushLog({ id: 'rover:ice-site', kind: 'mission', titleEn: 'Ice site reached by rover', titleAr: 'وصلت المركبة إلى موقع الجليد', bodyEn: 'You drove the crew rover out to the ice prospecting site. Park, step out and recover a sample at the drill shack.', bodyAr: 'قدت مركبة الطاقم إلى موقع استكشاف الجليد. توقّف واخرج واستعد عينة من كوخ الحفر.' }, { recordOnly: false });
+        this.hud.toast(L.arabic ? 'وصلت إلى موقع الجليد. اخرج واجمع عينة.' : 'Ice site reached. Step out and collect a sample.', 5200);
+        this.hud.renderTasks();
+      }
+    } else {
+      this.hud.setSpeed(null);
+    }
     this.env.updateSun(this.sim.Clock);
     this.env.followShadow(this.player.position);
     this.crew.update(dt, { playerPosition: this.player.position, anyIncident: this.sim.Incidents.active.length > 0 });
@@ -635,6 +665,19 @@ class Game {
   updateFocus() {
     this.focus = null;
     this.nearCrew = null;
+    this.nearRover = false;
+
+    if (this.rover?.available) {
+      if (this.rover.occupied) {
+        this.hud.setPrompt(L.arabic ? 'توقّف واخرج من المركبة (E)' : 'Park and step out (E)');
+        return;
+      }
+      if (this.rover.distanceTo(this.player.position) < 4.2) {
+        this.nearRover = true;
+        this.hud.setPrompt(L.arabic ? 'قد مركبة الطاقم (E)' : 'Drive the crew rover (E)');
+        return;
+      }
+    }
 
     this.raycaster.setFromCamera(this.center, this.camera);
     this.raycaster.far = 3.6;
@@ -664,6 +707,20 @@ class Game {
   /** E: use the console in front of you, or talk to the crew member beside you. */
   interact() {
     if (this.overlayOpen || this.paused) return;
+    if (this.rover?.available) {
+      if (this.rover.occupied) {
+        this.rover.exit(this.player);
+        this.hud.setSpeed(null);
+        this.hud.toast(L.arabic ? 'خرجت من المركبة. هي تشحن على أرضية المرآب.' : 'Out of the rover. It recharges on the garage apron.', 3200);
+        return;
+      }
+      if (this.nearRover) {
+        this.rover.enter(this.player);
+        this.hud.toast(L.arabic ? 'أنت على المقعد. W للسائق، A/D للتوجيه، Space للفرملة، E للخروج.' : 'At the wheel. W drive, A/D steer, Space brake, E to step out.', 5200);
+        this.hud.renderTasks();
+        return;
+      }
+    }
     if (this.focus) {
       this.openConsole(this.focus);
       return;

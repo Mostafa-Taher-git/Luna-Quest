@@ -48,6 +48,7 @@ export class Player {
     this._targetYaw = this.yaw;
     this._walkTime = 0;
     this._verticalSpeed = 0;
+    this.vehicle = null; // set when the commander is driving the crew rover
   }
 
   setAstronaut(astronaut) {
@@ -87,6 +88,12 @@ export class Player {
     if (dt > 0.1) dt = 0.1;
     const { dx, dy } = input.takeMouse();
     if (input.locked) this.look(dx, dy);
+
+    // At the wheel: the rover owns movement, the seat pose and the camera this frame.
+    if (this.vehicle) {
+      this.vehicle.update(dt, input, this);
+      return;
+    }
 
     const wish = new THREE.Vector3();
     if (allowMove) {
