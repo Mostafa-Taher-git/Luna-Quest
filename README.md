@@ -1,11 +1,45 @@
-# Luna-Quest — The Living Moon Colony
+# Luna-Quest - The Living Moon Colony
 
 > **30 Earth days. Six crew, one commander and NEXO the robot. One shared simulation. Every kilogram and every second counted.**
 
-![Luna-Quest colony at Shackleton rim](docs/screenshots/colony.png)
+![Luna-Quest v3.3 - nine in-game views](docs/screenshots/preview-candidates.jpg)
+
+## Download and play
+
+**This is the latest release of the game.** Both downloads are single files with the whole
+game already baked in: no Godot, no .NET, no runtime, no installer wizard and nothing to
+unzip. Grab one file and you are playing.
+
+**[Download for Windows (.exe)](https://github.com/Mostafa-Taher-git/Luna-Quest/releases/latest/download/LunaQuest-Windows.exe)** - **[Download for Linux (.deb)](https://github.com/Mostafa-Taher-git/Luna-Quest/releases/latest/download/LunaQuest-Linux-amd64.deb)**
+
+| Platform | Download | How to play |
+|---|---|---|
+| Windows 10/11 | `LunaQuest-Windows.exe` (~183 MiB / 191 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
+| Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
+| Want to build it yourself? | [Browser edition - build from source](#browser-no-install) | Requires Node.js: `cd web && npm install && npm run dev`, then open the local URL. There is **no hosted online build** - GitHub Pages is not enabled for this repository. |
+
+Both files come from the **pure GDScript edition**, so no .NET runtime is needed. The asset
+names are fixed for every release, which is why the `releases/latest/download/` links above
+always point at the newest build.
+
+### Which one do I need?
+
+- **Windows says "Windows protected your PC" on the first run.** That is SmartScreen, not
+  an error: the `.exe` is not code-signed. Click **More info** -> **Run anyway**. This is
+  normal for an unsigned indie binary.
+- **You need nothing else.** No Godot, no .NET, no Java, no Python, no Steam, no launcher and
+  no ZIP to extract. The Windows build is one self-contained `.exe`; the Linux package
+  installs one self-contained binary.
+- **Your progress is safe.** Saves are written automatically to your user folder, so
+  reinstalling or upgrading to a newer release will not erase them. To check a download is
+  intact, grab `SHA256SUMS` from the same release page.
+- **Double-clicking the `.deb` opened a "Software Installer" window?** Just wait for it to
+  finish. The `apt` / `dpkg` command above is the more direct route.
+
+---
 
 Luna-Quest is a walkable, data-driven lunar colony game. You are the new commander on the
-**Shackleton rim at 89.9° S**. Walk the base, read every console, and keep nine people alive
+**Shackleton rim at 89.9 deg S**. Walk the base, read every console, and keep nine people alive
 with measured numbers instead of guesses. There is no combat and no permanent failure: the
 pressure comes from air, water, power, food, dust, radiation, sleep and time.
 
@@ -25,7 +59,7 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
 | **Browser edition (Three.js)** | **Complete; built with Vite, played and screenshotted in headless Chromium, 36 web checks passing** |
-| CI and releases | `ci.yml` (content + C# core + web), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `pages.yml` (browser build to Pages), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web) |
+| CI and releases | `ci.yml` (content + C# core + web), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `pages.yml` (browser build; Pages deployment not enabled), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -35,6 +69,8 @@ listen and move the player; the simulation is one deterministic core with a shar
 ---
 
 ## Play
+
+> **Just want to play?** Use the [Download and play](#download-and-play) links above - one file, one double-click. Everything below is for building from source.
 
 ### Browser (no install)
 
@@ -59,8 +95,7 @@ console or talk to a crew member, `V` for the helmet view, `J` for the journal, 
 `Esc` for the pause screen, `F5`/`F9` to save and load. Saves live in `localStorage` under
 `lunaquest-web-save-v2`.
 
-![Airlock and suit facility](docs/screenshots/web-airlock.png)
-![Crew member outside Life Support](docs/screenshots/web-crew.png)
+![Crew member outside Life Support, Luna-Quest v3.3](docs/screenshots/candidate-crew-b.jpg)
 
 ### Godot
 
@@ -77,10 +112,10 @@ dotnet build engines/godot/LunaQuest.Godot/LunaQuest.Godot.csproj
 Requirements: **Godot 4.7.2 .NET** and a .NET SDK that supports `netstandard2.1`
 (.NET 8 or newer is fine).
 
-### GDScript (stock Godot — no .NET anywhere)
+### GDScript (stock Godot - no .NET anywhere)
 
 A third project, `engines/godot-gdscript/LunaQuest.GDScript`, is the same game written in plain
-GDScript. It needs nothing but a standard Godot 4.7.2 editor, and — unlike the .NET project — it
+GDScript. It needs nothing but a standard Godot 4.7.2 editor, and - unlike the .NET project - it
 exports to the web, which is what CI ships as `LunaQuest-GDScript-Web.zip`.
 
 ```bash
@@ -138,7 +173,7 @@ station console mapping and a full simulated mission. Current result: **426 pass
 | Resource math | `G` | `G` |
 | Controls / help | `H` | `H` |
 | Save / load | `F5` / `F9` | `F5` / `F9` |
-| English / العربية | `L` | `L` |
+| Language | `L` | `L` |
 | Pause / resume | `Esc` | `Esc` |
 | Close a panel / release the mouse | `Esc` | `Esc` |
 
@@ -152,7 +187,7 @@ journal without restarting the simulation.
 - **First person on `V`.** The camera moves to the helmet, the astronaut mesh is hidden and
   a visor rim, glass reflection and centre crosshair appear. Head bob and a slightly wider
   field of view make the two modes feel different.
-- **Low-gravity movement.** Lunar gravity is `1.62 m/s²`. Ground acceleration, air control,
+- **Low-gravity movement.** Lunar gravity is `1.62 m/s^2`. Ground acceleration, air control,
   a `0.14 s` coyote window, a `0.16 s` jump buffer and floor snapping keep the suit from
   feeling floaty or unresponsive.
 - **Interaction needs line of sight.** A ray from the centre of the camera must hit the
@@ -178,8 +213,8 @@ current real-time step.
 | 30-day mission | `60` real minutes |
 | Lunar synodic month | `29.53059` Earth days |
 | Mission start | Day 1, 06:00 |
-| Sun at the pole | circles the horizon, roughly ±2° elevation |
-| Solar input | `0.80`–`0.96` of full irradiance; no hard day/night switch |
+| Sun at the pole | circles the horizon, roughly +/-2 deg elevation |
+| Solar input | `0.80`-`0.96` of full irradiance; no hard day/night switch |
 
 The site is modelled as a polar-summer Shackleton-rim location. The array is vertical and
 tracks azimuth, so a grazing Sun still lands close to normal incidence. This is a deliberate
@@ -189,15 +224,15 @@ simplification of terrain shadowing, not a claim that the pole is always lit.
 
 | Value | Number |
 |---|---|
-| Solar array | `30 kW` peak (≈100 m² at 22% efficiency) |
+| Solar array | `30 kW` peak (~100 m^2 at 22% efficiency) |
 | Battery | `120 kWh` capacity, starts at `96 kWh` |
 | Habitat base load | `12.4 kW` |
-| Heater | up to `1.8 kW`, thermostat at `21 °C` |
+| Heater | up to `1.8 kW`, thermostat at `21 deg C` |
 | Electrolysis | `2.4 kW` when running |
 | Grow lights | `2.0 kW` when on |
 | Load priority | life support first, lab and greenhouse shed first |
 
-Every step computes `solar − load`, charges or discharges the battery, and sheds the lab and
+Every step computes `solar - load`, charges or discharges the battery, and sheds the lab and
 greenhouse before life support. Dust on the array reduces output until it is cleaned.
 
 ### Air
@@ -205,13 +240,13 @@ greenhouse before life support. Dust on the array reduces output until it is cle
 | Value | Number |
 |---|---|
 | Oxygen use | `0.84 kg` per person per day |
-| CO₂ production | `1.00 kg` per person per day |
-| Cabin volume | `300 m³` |
-| CO₂ warning | above `4,000 ppm` |
-| Electrolysis | sized to `90%` of crew demand, so the O₂ reserve declines slowly |
-| Plants | consume cabin CO₂ and return O₂ at the `32/44` mass ratio of photosynthesis |
+| CO2 production | `1.00 kg` per person per day |
+| Cabin volume | `300 m^3` |
+| CO2 warning | above `4,000 ppm` |
+| Electrolysis | sized to `90%` of crew demand, so the O2 reserve declines slowly |
+| Plants | consume cabin CO2 and return O2 at the `32/44` mass ratio of photosynthesis |
 
-The CO₂ scrubber has health and can be replaced. The electrolysis stack can be repaired.
+The CO2 scrubber has health and can be replaced. The electrolysis stack can be repaired.
 The air model is a single well-mixed cabin, not a CFD model.
 
 ### Water
@@ -221,7 +256,7 @@ The air model is a single well-mixed cabin, not a CFD model.
 | Crew use | `11 L` per person per day gross |
 | Recycler | `93%` recovery (ISS-class) |
 | Filter health | degrades; cleaning restores it |
-| Grow pod | `24 m²`, `3 L/m²/day` |
+| Grow pod | `24 m^2`, `3 L/m^2/day` |
 | Condensate recovery | `90%` of crop water |
 | Tank | `1,200 L` capacity, starts at `900 L` |
 
@@ -234,14 +269,14 @@ but the loop is not free: filter health, water quality and power all matter.
 |---|---|
 | Crew intake | `2,800 kcal` per person per day |
 | Stored food | `620,000 kcal` (about 30 crew-days for nine people) |
-| Grow pod | `24 m²` in four 6 m² racks, sealed indoors |
+| Grow pod | `24 m^2` in four 6 m^2 racks, sealed indoors |
 | Crop cycle | `24` days (lettuce reference) |
-| Harvest | `450 kcal/m²` per cycle |
+| Harvest | `450 kcal/m^2` per cycle |
 | Light | `2.0 kW` from colony power, no direct Sun |
 
 Plants are **inside a sealed pod**. The lunar surface has no atmosphere and no useful
 radiation shielding, so direct Sun is not an option: the plants get artificial light from the
-colony's power budget, cabin CO₂ and stored water. The crop model tracks biomass, health,
+colony's power budget, cabin CO2 and stored water. The crop model tracks biomass, health,
 water stress and light hours.
 
 ### Habitat and crew
@@ -249,11 +284,11 @@ water stress and light hours.
 | Value | Number |
 |---|---|
 | Crew | 7 people (commander + 6 crew: Dr. Safaa, Noor, Dr. Alaa, Abdulaziz, Ahmed, Mostafa) + NEXO, the colony robot (no air, food or fatigue) |
-| Cabin target | `21 °C` |
-| External design temperature | `−55 °C` |
-| Surface dose | `13.2 µGy/h` (Chang'e-4 LND median) |
+| Cabin target | `21 deg C` |
+| External design temperature | `-55 deg C` |
+| Surface dose | `13.2 uGy/h` (Chang'e-4 LND median) |
 | SPE response | shelter the crew in the shielded section |
-| Fatigue / morale | affected by rest, CO₂, cold and food |
+| Fatigue / morale | affected by rest, CO2, cold and food |
 | Permanent death | none, by design |
 
 ### Dust, comms, incidents and learning
@@ -262,7 +297,7 @@ water stress and light hours.
   settles drifting readings.
 - **Comms** has link quality and relay health; the Earth link can degrade.
 - **Incidents** are 15 real-threshold rules: array dust, sensor drift, airlock dust, water
-  filter, low water, scrubber life, high CO₂, low O₂, crop stress, radiation, comms, fatigue,
+  filter, low water, scrubber life, high CO2, low O2, crop stress, radiation, comms, fatigue,
   low power, low food and an ice discovery.
 - **Learning** is evidence of work done, not a quiz. Eleven objectives record a concept and a
   skill in the field journal. Reading an observation station unlocks its objective; the
@@ -303,20 +338,20 @@ it. The clock changes presentation only; the resource arithmetic is the same in 
 
 ```text
                     content/*.json
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │  LunaQuest.Core       │  netstandard2.1, no engine types
-              │  clock · power · air  │
-              │  water · food · crops │
-              │  thermal · dust ·     │
-              │  radiation · comms    │
-              │  incidents · learning │
-              │  NPCs · save contract │
-              └───────────┬───────────┘
-                          │
-          ┌───────────────┴────────────────┐
-          ▼                                ▼
+                          |
+                          v
+              +-----------------------+
+              |  LunaQuest.Core       |  netstandard2.1, no engine types
+              |  clock - power - air  |
+              |  water - food - crops |
+              |  thermal - dust -     |
+              |  radiation - comms    |
+              |  incidents - learning |
+              |  NPCs - save contract |
+              +-----------+-----------+
+                          |
+          +---------------+----------------+
+          v                                v
   Godot 4.7.2 .NET adapter        Unity 6.3 adapter
   C# + procedural 3D              C# + procedural 3D
   GLB astronaut, frozen 0.4 s     baked OBJ astronaut
@@ -335,24 +370,24 @@ it. The clock changes presentation only; the resource arithmetic is the same in 
 
 ```text
 Luna-Quest-Game/
-├── assets/                  astronaut GLB, Earth texture, fonts, voice pack
-├── content/                 source-of-truth JSON: buildings, npcs, incidents,
-│                            crops, learning, research, voice manifest
-├── docs/                    design docs, research, screenshots, licenses
-├── engines/
-│   ├── godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
-│   ├── godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
-│   └── unity/LunaQuest.Unity/
-├── shared/
-│   ├── LunaQuest.Core/      simulation, content loader, save contract
-│   └── LunaQuest.Tests/     console test harness
-├── web/                     browser edition (Three.js + Vite): terrain, colony, crew,
-│                            intro film, HUD, dialogue, save/load
-├── tools/                   content sync, astronaut bake, voice-pack generator,
-│                            sync-gdscript-assets.sh
-├── README.md
-├── CREDITS.md
-└── LICENSE
++-- assets/                  astronaut GLB, Earth texture, fonts, voice pack
++-- content/                 source-of-truth JSON: buildings, npcs, incidents,
+|                            crops, learning, research, voice manifest
++-- docs/                    design docs, research, screenshots, licenses
++-- engines/
+|   +-- godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
+|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
+|   +-- unity/LunaQuest.Unity/
++-- shared/
+|   +-- LunaQuest.Core/      simulation, content loader, save contract
+|   +-- LunaQuest.Tests/     console test harness
++-- web/                     browser edition (Three.js + Vite): terrain, colony, crew,
+|                            intro film, HUD, dialogue, save/load
++-- tools/                   content sync, astronaut bake, voice-pack generator,
+|                            sync-gdscript-assets.sh
++-- README.md
++-- CREDITS.md
++-- LICENSE
 ```
 
 ---
@@ -466,9 +501,9 @@ one adapter can be loaded by the other after copying the file to the other engin
 
 ## Credits
 
-- **Cute Astronaut** by **haefu** on Sketchfab — CC BY 4.0. Repaired and dressed for this
+- **Cute Astronaut** by **haefu** on Sketchfab - CC BY 4.0. Repaired and dressed for this
   project; see `CREDITS.md`.
-- **Earth texture** from Solar System Scope — CC BY 4.0.
+- **Earth texture** from Solar System Scope - CC BY 4.0.
 - **DejaVu Sans** and **Noto Naskh Arabic** fonts under their respective free licenses.
 - Crew voice pack generated offline with **Piper** from open voice models; cast and licenses
   in `docs/licenses/piper-voices.md`.
