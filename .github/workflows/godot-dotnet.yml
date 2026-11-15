@@ -73,7 +73,11 @@ jobs:
             echo "$problems" | while read -r line; do echo "::error::run: $line"; done
             exit 1
           fi
-          grep -F "ready" run.log || true
+          # A silent exit 0 proves nothing: the colony has to have actually been built.
+          if ! grep -qF "Luna-Quest ready" run.log; then
+            echo "::error::run: the game never printed its ready line — the colony did not build"
+            exit 1
+          fi
 
       - name: Keep the logs
         if: always()
