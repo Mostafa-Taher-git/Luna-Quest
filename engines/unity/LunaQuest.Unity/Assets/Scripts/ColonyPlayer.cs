@@ -119,6 +119,18 @@ namespace LunaQuest.Unity
             return player;
         }
 
+        /// <summary>
+        /// Disables the suit's own CharacterController while the commander is at the wheel.
+        /// The rover carries the player's transform onto the seat, so a live suit capsule
+        /// inside the rover's own capsule would fight it every frame (jitter and push-out).
+        /// Teleport() re-enables the controller, so Exit calls this BEFORE the teleport — then
+        /// the final state is "controller enabled", exactly what walking needs.
+        /// </summary>
+        public void SetDriving(bool on)
+        {
+            if (_controller != null) _controller.enabled = !on;
+        }
+
         public void Teleport(Vector3 position)
         {
             if (_controller == null) return;
@@ -146,7 +158,9 @@ namespace LunaQuest.Unity
 
             if (Rover != null)
             {
-                Rover.Drive(dt, this);
+                // Dialogue and menus do not stop time, so the wheel itself has to be gated:
+                // without this the rover keeps driving behind an open dialogue box.
+                if (Game.InputActive) Rover.Drive(dt, this);
                 return;
             }
 
