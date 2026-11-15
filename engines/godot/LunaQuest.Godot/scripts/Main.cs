@@ -279,15 +279,14 @@ namespace LunaQuest.Godot
         /// </summary>
         public void RestartMission()
         {
-            string commander = Player != null && !string.IsNullOrWhiteSpace(Sim.PlayerName)
-                ? Sim.PlayerName : "Amara Okafor";
-            Sim = new LunaQuest.Core.Sim.ColonySimulation(Content);
+            string commander = Sim.PlayerName;
+            Sim = new LunaQuest.Core.Sim.ColonySimulation(Sim.Content);
             Sim.PlayerName = commander;
             Started = true;
             _lastSavedDay = Sim.Clock.Day;
             if (Rover != null)
             {
-                if (Rover.Occupied) Rover.Exit(Player);
+                if (Rover.Occupied && Player != null) Rover.Exit(Player);
                 Rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
                 Rover.Rotation = new Vector3(0, 0.4f, 0);
                 Rover.BatteryKwh = RoverController.BatteryKwhMax;
