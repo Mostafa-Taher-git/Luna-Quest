@@ -95,6 +95,10 @@ console or talk to a crew member, `V` for the helmet view, `J` for the journal, 
 `Esc` for the pause screen, `F5`/`F9` to save and load. Saves live in `localStorage` under
 `lunaquest-web-save-v2`.
 
+Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
+steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
+garage apron, and driving out to the ice prospecting site is an afternoon field task.
+
 ![Crew member outside Life Support, Luna-Quest v3.3](docs/screenshots/candidate-crew-b.jpg)
 
 ### Godot
@@ -168,6 +172,7 @@ station console mapping and a full simulated mission. Current result: **426 pass
 | Jump | `Space` | `Space` |
 | Look | Mouse | Mouse |
 | Use the station you face | `E` | `E` |
+| Drive the crew rover | `E` to enter, then `W A S D`, `Space` brake | `E` to enter, then `W A S D`, `Space` brake |
 | First / third person | `V` | `V` |
 | Field journal | `J` | `J` |
 | Resource math | `G` | `G` |

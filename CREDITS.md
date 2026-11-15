@@ -98,6 +98,33 @@ The game is fully playable with the sound off: every line also appears as a shor
 
 ---
 
+## Colony kit and scanned real-world art
+
+- **Moon Base Colony and Lunar Rovers** — 54 modular GLB modules: pressurised habitats, airlocks
+  with dust-lock vestibules, connecting tunnels, cargo and crew landers, haulers, rovers, the
+  power yard (vertical solar tower, radiators, battery containers), ISRU skids and the relay mast.
+  The rideable crew rover is the pack's open unpressurised rover, whose separated wheel / steer
+  sub-meshes drive the spinning and four-corner steering.
+  - Source: <https://3dassets.dev> — pack "Moon Base Colony and Lunar Rovers".
+  - License: **CC0 1.0 Universal** — <https://creativecommons.org/publicdomain/zero/1.0/>.
+  - Files: `assets/models/lunar_colony/*.glb` and the engine copies; manifest
+    `assets/models/lunar_colony/manifest.json`.
+
+- **Poly Haven regolith and Moon rocks** — photoscanned PBR art, **CC0 1.0 Universal**.
+  - `moon_02` regolith (albedo, OpenGL normal, roughness, AO, displacement; 2K):
+    <https://polyhaven.com/a/moon_02>.
+  - `moon_dusted_03` regolith (fallback set): <https://polyhaven.com/a/moon_dusted_03>.
+  - `moon_rock_01`–`moon_rock_07` photoscanned rocks (glTF, 1K): <https://polyhaven.com/models>.
+  - Files: `engines/godot/LunaQuest.Godot/assets/real/`, mirrored into the GDScript and browser
+    builds by `tools/sync-gdscript-assets.sh` and `web/scripts/sync-assets.mjs`.
+
+- **NASA Blue Marble Next Generation** — the Earth disc in the lunar sky.
+  - Source: NASA Earth Observatory, <https://eoimages.gsfc.nasa.gov/>.
+  - License: **Public domain** (NASA imagery).
+  - File: `engines/godot/LunaQuest.Godot/assets/real/earth/blue_marble_2048.jpg`.
+
+---
+
 ## Design documents and research
 
 - `docs/design/` — the Luna-Quest GDD v2.2 (Arabic), dual-engine architecture v2.2,
