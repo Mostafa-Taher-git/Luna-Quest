@@ -124,6 +124,18 @@ jobs:
             exit 1
           fi
 
+      - name: Rover playtest (enter, drive, brake, battery, exit, save, restart)
+        run: |
+          set -euo pipefail
+          ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" -- --rover-test > rover.log 2>&1 || true
+          tail -c 4000 rover.log
+          annotate "rover.log tail" "$(tail -40 rover.log)"
+          if ! grep -q "ROVER TEST OK" rover.log; then
+            annotate "rover test failures" "$(grep -E '·|ROVER TEST|SCRIPT ERROR' rover.log || true)"
+            echo "::error::the rover playtest did not pass"
+            exit 1
+          fi
+
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -132,4 +144,5 @@ jobs:
           path: |
             import.log
             run.log
+            rover.log
           retention-days: 7

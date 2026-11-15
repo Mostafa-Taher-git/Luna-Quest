@@ -138,6 +138,16 @@ namespace LunaQuest.Godot
             float steerIn = (Input.IsActionPressed("move_left") ? 1f : 0f) - (Input.IsActionPressed("move_right") ? 1f : 0f);
             bool handbrake = Input.IsActionPressed("jump");
             bool boost = Input.IsActionPressed("sprint");
+            Step(dt, throttle, steerIn, boost, handbrake, p);
+        }
+
+        /// <summary>
+        /// One physics step with the controls passed in — actions in play, the audit (--rover-test)
+        /// when it drives the vehicle itself. Keeps the vehicle testable without a keyboard.
+        /// </summary>
+        public void Step(float dt, float throttle, float steerIn, bool boost, bool handbrake,
+            PlayerController p)
+        {
             bool flat = BatteryKwh <= 0.05f;
             float maxF = flat ? 0f : MaxForward * (boost ? 1f : 0.72f);
 

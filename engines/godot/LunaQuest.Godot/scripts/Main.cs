@@ -103,6 +103,7 @@ namespace LunaQuest.Godot
             bool voiceDemo = false;
             bool cinematic = false;
             bool noIntro = false;
+            bool roverTest = false;
             string? testDialogueNpc = null;
             Vector3? spawn = null;
             float? lookYaw = null, lookPitch = null;
@@ -117,6 +118,7 @@ namespace LunaQuest.Godot
                 else if (arg == "--voice-demo") voiceDemo = true;
                 else if (arg == "--cinematic") cinematic = true;
                 else if (arg == "--no-intro") noIntro = true;
+                else if (arg == "--rover-test") roverTest = true;
                 else if (arg.StartsWith("--spawn=", StringComparison.Ordinal))
                 {
                     var parts = arg.Substring("--spawn=".Length).Split(',');
@@ -158,11 +160,13 @@ namespace LunaQuest.Godot
             if (voiceDemo) CallDeferred(nameof(VoiceDemo));
             if (cinematic) CallDeferred(nameof(StartCinematic));
             bool scripted = autoStart || cinematic || voiceCheck || voiceDemo || portrait || firstPerson ||
+                            roverTest ||
                             _screenshotTimer > 0 || !string.IsNullOrEmpty(testDialogueNpc);
             if (cinematic) { _menuCam?.QueueFree(); _menuCam = null; _music?.Stop(); }
             // The film plays on the first launch; afterwards the menu offers it on demand.
             if (!scripted && !noIntro && !FileAccess.FileExists(IntroSeenPath)) CallDeferred(nameof(PlayIntro));
             if (!string.IsNullOrEmpty(testDialogueNpc)) CallDeferred(nameof(TestDialogue), testDialogueNpc);
+            if (roverTest) CallDeferred(nameof(RunRoverTest));
         }
 
         // ---- intro film, menu backdrop and music ------------------------------
@@ -258,6 +262,50 @@ namespace LunaQuest.Godot
         }
 
         private void AutoStart() => BeginGame("Amara Okafor");
+
+        /// <summary>
+        /// `--rover-test`: drive the T5 rover checklist headlessly and exit non-zero if anything
+        /// fails. CI runs this on every push (see .github/workflows/godot-dotnet.yml).
+        /// </summary>
+        private void RunRoverTest()
+        {
+            bool passed = new RoverAudit().Run(this);
+            GetTree().Quit(passed ? 0 : 1);
+        }
+
+        /// <summary>
+        /// Start the mission over: a fresh simulation, the commander back at the spawn and the
+        /// rover back on its apron with full power and no milestones.
+        /// </summary>
+        public void RestartMission()
+        {
+            string commander = Player != null && !string.IsNullOrWhiteSpace(Sim.PlayerName)
+                ? Sim.PlayerName : "Amara Okafor";
+            Sim = new LunaQuest.Core.Sim.ColonySimulation(Content);
+            Sim.PlayerName = commander;
+            Started = true;
+            _lastSavedDay = Sim.Clock.Day;
+            if (Rover != null)
+            {
+                if (Rover.Occupied) Rover.Exit(Player);
+                Rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+                Rover.Rotation = new Vector3(0, 0.4f, 0);
+                Rover.BatteryKwh = RoverController.BatteryKwhMax;
+                Rover.Speed = 0f;
+                Rover.Steer = 0f;
+                Rover.Spin = 0f;
+                Rover.Odometer = 0f;
+                Rover.HasDriven = false;
+                Rover.ReachedIce = false;
+                Rover.Settle();
+            }
+            if (Player != null)
+            {
+                Player.GlobalPosition = new Vector3(0, 0.1f, 23);
+                Player.InputLocked = false;
+            }
+            Hud?.ShowSubtitle(L.T("New mission. The colony is reset.", "مهمة جديدة. أعيد ضبط المستعمرة."), 5.0);
+        }
 
         private void FirstPersonView() => Player.SetThirdPerson(false, false);
 

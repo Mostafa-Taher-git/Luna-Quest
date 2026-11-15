@@ -266,6 +266,16 @@ namespace LunaQuest.Godot
             _arm.Position = new Vector3(0, ThirdPerson ? 1.5f : 1.2f, 0);
         }
 
+        /// <summary>
+        /// The .NET player body is on collision layer 2 and the rover's mask is layer 1, so the
+        /// driven suit never fights the rover's shape. This only makes the intent explicit and
+        /// stops the suit's own movement while it is carried.
+        /// </summary>
+        public void SetDriving(bool on)
+        {
+            if (on) Velocity = Vector3.Zero;
+        }
+
         public void RestoreWalkCamera()
         {
             _arm.SpringLength = ThirdPerson ? 3.9f : 0.05f;
