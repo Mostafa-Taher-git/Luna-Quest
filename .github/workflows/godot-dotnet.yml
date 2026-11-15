@@ -58,6 +58,9 @@ jobs:
           # The import pass is allowed to warn; a parse or script error is not.
           problems=$(grep -Ei "parse error|script error|failed to load script" import.log || true)
           tail -c 4000 import.log
+          tail -20 import.log | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::notice::import.log: $line"
+          done
           if [ -n "$problems" ]; then
             echo "$problems" | while read -r line; do echo "::error::import: $line"; done
             exit 1
@@ -69,6 +72,11 @@ jobs:
           ./godot-dir/Godot_v* --headless --path "${PROJECT_DIR}" --quit-after 400 > run.log 2>&1 || true
           problems=$(grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" run.log || true)
           tail -c 4000 run.log
+          # Mirror the tail into the annotation channel: the log blob host is not always
+          # reachable from a reviewer's machine, annotations always are.
+          tail -40 run.log | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::notice::run.log: $line"
+          done
           if [ -n "$problems" ]; then
             echo "$problems" | while read -r line; do echo "::error::run: $line"; done
             exit 1
