@@ -16,7 +16,7 @@ unzip. Grab one file and you are playing.
 |---|---|---|
 | Windows 10/11 | `LunaQuest-Windows.exe` (~183 MiB / 191 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
 | Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
-| Want to build it yourself? | [Browser edition - build from source](#browser-no-install) | Requires Node.js: `cd web && npm install && npm run dev`, then open the local URL. There is **no hosted online build** - GitHub Pages is not enabled for this repository. |
+| Want to build it yourself? | Build from source (Godot / Unity) | Open `engines/godot/LunaQuest.Godot` (Godot 4.7.2 .NET), `engines/godot-gdscript/LunaQuest.GDScript` (stock Godot 4.7.2) or `engines/unity/LunaQuest.Unity` (Unity 6.3 LTS). The browser edition is retired. |
 
 Both files come from the **pure GDScript edition**, so no .NET runtime is needed. The asset
 names are fixed for every release, which is why the `releases/latest/download/` links above
@@ -58,8 +58,8 @@ listen and move the player; the simulation is one deterministic core with a shar
 | **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Web, Windows and Linux** |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
-| **Browser edition (Three.js)** | **Complete; built with Vite, played and screenshotted in headless Chromium, 36 web checks passing** |
-| CI and releases | `ci.yml` (content + C# core + web), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `pages.yml` (browser build; Pages deployment not enabled), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
+| Browser edition (Three.js) | **Retired (2026-11).** Kept in-tree only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
+| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -72,34 +72,17 @@ listen and move the player; the simulation is one deterministic core with a shar
 
 > **Just want to play?** Use the [Download and play](#download-and-play) links above - one file, one double-click. Everything below is for building from source.
 
-### Browser (no install)
+### Browser edition - retired
 
-The whole colony also runs in a browser. It is plain ES modules on **Three.js** (no engine
-download, no plugin), and it loads the same JSON content, runs the same simulation rules,
-plays the same intro film and reads the same save files as the C# builds.
-
-```bash
-cd web
-npm install
-npm run dev        # http://localhost:5173
-```
-
-```bash
-npm run build      # static site in web/dist, ~60 MB with the sketchfab kit models
-npm run preview    # serve the production build on http://localhost:4173
-npm test           # 36 headless checks: simulation, world build, content wiring
-```
-
-Drag the mouse to look, `W A S D` to walk, `Shift` to run, `Space` to jump, `E` to use a
-console or talk to a crew member, `V` for the helmet view, `J` for the journal, `H` for help,
-`Esc` for the pause screen, `F5`/`F9` to save and load. Saves live in `localStorage` under
-`lunaquest-web-save-v2`.
+The Three.js browser edition is no longer developed, built or deployed. Luna-Quest targets
+exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The `web/` folder
+stays in the tree only because `web/static/intro-poster.jpg` is a locked asset
+(`docs/design/asset-lock.json`) and the folder holds the historical test suite. Play the
+GDScript, Godot .NET or Unity builds instead.
 
 Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
 steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
 garage apron, and driving out to the ice prospecting site is an afternoon field task.
-
-![Crew member outside Life Support, Luna-Quest v3.3](docs/screenshots/candidate-crew-b.jpg)
 
 ### Godot
 
@@ -386,8 +369,8 @@ Luna-Quest-Game/
 +-- shared/
 |   +-- LunaQuest.Core/      simulation, content loader, save contract
 |   +-- LunaQuest.Tests/     console test harness
-+-- web/                     browser edition (Three.js + Vite): terrain, colony, crew,
-|                            intro film, HUD, dialogue, save/load
++-- web/                     RETIRED browser edition (kept for the locked intro poster
+|                            and historical tests; no new development)
 +-- tools/                   content sync, astronaut bake, voice-pack generator,
 |                            sync-gdscript-assets.sh
 +-- README.md
