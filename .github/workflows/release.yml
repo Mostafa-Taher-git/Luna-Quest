@@ -144,8 +144,13 @@ jobs:
           # The raw Linux binary plus the Debian package built from it (A7): a release can
           # be installed with dpkg or run directly, and both are checksummed below.
           tag="${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
+          ver="${tag#v}"
+          if [ -z "$ver" ]; then
+            # A dry-run dispatch carries no tag; still build a valid, clearly-marked package.
+            ver="0.0.0-dev"
+          fi
           cp "$base/linux/luna-quest-gdscript.x86_64" out/LunaQuest-GDScript-Linux-x86_64
-          bash tools/package-desktop.sh "$base/linux/luna-quest-gdscript.x86_64" "${tag#v}" \
+          bash tools/package-desktop.sh "$base/linux/luna-quest-gdscript.x86_64" "$ver" \
             out/LunaQuest-GDScript-Linux-amd64.deb
           ls -lh out
       - uses: actions/upload-artifact@v4
