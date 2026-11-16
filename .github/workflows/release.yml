@@ -4,20 +4,20 @@ name: Release
 #   git tag v3.1 && git push origin v3.1
 #
 # Outputs, all attached to one GitHub Release:
-#   · LunaQuest-v<tag>-Windows.zip — Godot .NET export for Windows
-#   · LunaQuest-v<tag>-Linux.zip   — Godot .NET export for Linux
+#   · LunaQuest-Windows.exe   — GDScript single self-contained Windows binary (one-click)
+#   · LunaQuest-Linux-amd64.deb — Debian/Ubuntu package of the same GDScript binary
+#   · LunaQuest-Linux-x86_64  — GDScript single self-contained Linux binary
+#   · LunaQuest-Windows.zip / LunaQuest-Linux.zip — Godot .NET exports (all files in the folder)
 #   · LunaQuest-GDScript-Windows.zip / -Linux.zip — the GDScript desktop exports
-#   · LunaQuest-GDScript-Linux-amd64.deb — Debian/Ubuntu package of the GDScript build
-#   · LunaQuest-GDScript-Linux-x86_64 — the raw Linux binary the .deb wraps
 #   · SHA256SUMS — the SHA-256 of every file attached to the release
 #   · the intro film as a shareable MP4
 #
 # There is no browser build of any kind (H1/A1): v3.4 ships three engines and desktop
 # artifacts only.
 #
-# The engine jobs are allowed to fail without sinking the release (continue-on-error): if the
-# Godot toolchain moves or the version needs bumping, only that job goes red and the release
-# still publishes the film and the archives that did build.
+# If an engine job fails, the workflow fails and nothing is published (the publish job also
+# requires every artifact below). The intro film is a pure copy of assets/video/intro.mp4 and
+# is never transcoded.
 
 on:
   push:
@@ -55,7 +55,6 @@ jobs:
   godot:
     name: Godot exports (Windows, Linux)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -98,12 +97,11 @@ jobs:
         with:
           name: godot-builds
           path: out/*.zip
-          if-no-files-found: warn
+          if-no-files-found: error
 
   gdscript:
     name: GDScript exports (Windows, Linux)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Sync the shared assets into the GDScript project
@@ -149,18 +147,20 @@ jobs:
             # A dry-run dispatch carries no tag; still build a valid, clearly-marked package.
             ver="0.0.0-1"
           fi
-          cp "$base/linux/luna-quest-gdscript.x86_64" out/LunaQuest-GDScript-Linux-x86_64
+          cp "$base/windows/luna-quest-gdscript.exe" out/LunaQuest-Windows.exe
+          cp "$base/linux/luna-quest-gdscript.x86_64" out/LunaQuest-Linux-x86_64
           bash tools/package-desktop.sh "$base/linux/luna-quest-gdscript.x86_64" "$ver" \
-            out/LunaQuest-GDScript-Linux-amd64.deb
+            out/LunaQuest-Linux-amd64.deb
           ls -lh out
       - uses: actions/upload-artifact@v4
         with:
           name: gdscript-builds
           path: |
             out/*.zip
-            out/LunaQuest-GDScript-Linux-amd64.deb
-            out/LunaQuest-GDScript-Linux-x86_64
-          if-no-files-found: warn
+            out/LunaQuest-Windows.exe
+            out/LunaQuest-Linux-amd64.deb
+            out/LunaQuest-Linux-x86_64
+          if-no-files-found: error
 
   checksums:
     name: Build SHA256SUMS
@@ -232,6 +232,31 @@ jobs:
           path: artifacts
       - name: Show what arrived
         run: find artifacts -type f -printf '%p  %s bytes\n' | sort
+      - name: Require the complete artifact set
+        # A release must never ship partially without failing loudly.
+        run: |
+          set -euo pipefail
+          required=(
+            artifacts/godot-builds/LunaQuest-Windows.zip
+            artifacts/godot-builds/LunaQuest-Linux.zip
+            artifacts/gdscript-builds/LunaQuest-GDScript-Windows.zip
+            artifacts/gdscript-builds/LunaQuest-GDScript-Linux.zip
+            artifacts/gdscript-builds/LunaQuest-Windows.exe
+            artifacts/gdscript-builds/LunaQuest-Linux-x86_64
+            artifacts/gdscript-builds/LunaQuest-Linux-amd64.deb
+            artifacts/intro-film/intro.mp4
+            artifacts/checksums/SHA256SUMS
+          )
+          missing=0
+          for f in "${required[@]}"; do
+            if [ -s "$f" ]; then
+              echo "present  $f  ($(stat -c %s "$f") bytes)"
+            else
+              echo "::error::required artifact missing: $f"
+              missing=1
+            fi
+          done
+          exit $missing
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
@@ -242,13 +267,15 @@ jobs:
           body: |
             **Luna-Quest — The Living Moon Colony**
 
-            Desktop builds are Godot 4 .NET exports. Unzip, then run `LunaQuest.exe` on Windows
-            or `./LunaQuest.x86_64` on Linux.
+            The one-click downloads — `LunaQuest-Windows.exe`, `LunaQuest-Linux-amd64.deb` and
+            `LunaQuest-Linux-x86_64` — are the **pure-GDScript build**: one self-contained
+            binary each, no Godot, no .NET runtime, nothing to unwrap. On Debian or Ubuntu run
+            `sudo apt install ./LunaQuest-Linux-amd64.deb` (or `sudo dpkg -i ...`), then click
+            **Luna-Quest** in the app menu. The raw Linux binary needs `chmod +x` first.
 
-            The `LunaQuest-GDScript-*` archives are the same game built from the pure-GDScript
-            project with stock Godot 4.7.2 — no .NET runtime needed anywhere. On Debian or
-            Ubuntu install it with `sudo dpkg -i LunaQuest-GDScript-Linux-amd64.deb`, or run
-            `LunaQuest-GDScript-Linux-x86_64` directly (it needs `chmod +x` first).
+            `LunaQuest-Windows.zip` and `LunaQuest-Linux.zip` are the **Godot .NET exports** —
+            unzip the folder and run the binary inside it. `LunaQuest-GDScript-*.zip` are the
+            same GDScript build wrapped in a zip for convenience.
 
             `SHA256SUMS` lists the SHA-256 of every other file attached to this release.
 
@@ -259,6 +286,7 @@ jobs:
           files: |
             artifacts/godot-builds/*.zip
             artifacts/gdscript-builds/*.zip
+            artifacts/gdscript-builds/*.exe
             artifacts/gdscript-builds/*.deb
             artifacts/gdscript-builds/*.x86_64
             artifacts/intro-film/*.mp4
