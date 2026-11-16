@@ -54,6 +54,7 @@ namespace LunaQuest.Unity
                 CheckExit(game);
                 CheckF0Controls(game);
                 CheckSaveRestore(game);
+                CheckBuildings(game);
                 CheckRestart(game);
             }
             catch (Exception error)
@@ -435,6 +436,32 @@ namespace LunaQuest.Unity
             rover.transform.position = new Vector3(-11f, 0.05f, -28f);
             rover.transform.rotation = Quaternion.Euler(0f, 0.4f * Mathf.Rad2Deg, 0f);
             rover.Settle();
+        }
+
+        /// <summary>
+        /// F2 — every functional building wears a primitive shell with MLI panels and a ribs-and-core
+        /// cylinder silhouette, and an airlock-style porch at its door. landing_pad is decorative.
+        /// </summary>
+        private static void CheckBuildings(LunaQuestGame game)
+        {
+            var world = game.World;
+            if (world == null) return;
+            Expect(world.ShellCount >= 15,
+                $"F2: only {world.ShellCount} building shells (expected at least 15)");
+            Expect(world.PorchCount >= 15,
+                $"F2: only {world.PorchCount} porches (expected at least 15)");
+            var hidden = 0;
+            foreach (var t in world.GetComponentsInChildren<Transform>())
+            {
+                if (t.gameObject.name is "FrontL" or "FrontR" or "Lintel" or "Back" or "BackL"
+                    or "BackR" or "BackLintel" or "SideL" or "SideR")
+                {
+                    var r = t.GetComponent<Renderer>();
+                    if (r != null && !r.enabled) hidden++;
+                }
+            }
+            Expect(hidden >= 9,
+                $"F2: {hidden} plain wall meshes were still enabled (expected at least 9 hidden)");
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>

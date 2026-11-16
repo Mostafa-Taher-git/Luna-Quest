@@ -18,6 +18,7 @@ var building_nodes: Dictionary = {}
 var sun: DirectionalLight3D
 var earth_mat: ShaderMaterial = null
 var star_mat: StandardMaterial3D = null
+var _attached_prop_count: Dictionary = {}
 var terrain := LQTerrain.new(1337)
 
 
@@ -351,7 +352,256 @@ func _make_sky() -> void:
 	add_child(earth)
 
 
-# ---- primitives ------------------------------------------------------------
+const SHELL_ASSET := {
+	"habitat": "rigid-cylinder-habitat-9b2fdbb4.glb",
+	"mission_control": "rigid-cylinder-habitat-2dec4448.glb",
+	"greenhouse": "greenhouse-module-b35be615.glb",
+	"workshop": "workshop-module-7729780d.glb",
+	"life_support": "oxygen-extraction-plan-002fb0ae.glb",
+	"lab": "medical-module-6d266b02.glb",
+	"medical": "medical-module-6d266b02.glb",
+	"garage": "inflatable-dome-habita-f86f5d7b.glb",
+	"storage": "battery-container-9755ed67.glb",
+	"comms_tower": "comms-relay-mast-4cdfe54f.glb",
+	"regolith_plant": "sintering-print-gantry-64cc192a.glb",
+	"storm_shelter": "inflatable-dome-habita-514822a4.glb",
+	"power_farm": "solar-array-row-e52454d9.glb",
+	"ice_site": "regolith-excavator-64b4560f.glb",
+	"airlock": "airlock-with-dust-lock-fe27e26c.glb",
+}
+
+func _aabb_of(node: Node3D, xform: Transform3D) -> AABB:
+	var aabb := AABB()
+	var found := false
+	var mine := xform * node.transform
+	if node is MeshInstance3D and node.mesh != null:
+		aabb = mine * node.mesh.get_aabb()
+		found = true
+	for child in node.get_children():
+		if child is Node3D:
+			var sub := _aabb_of(child, mine)
+			if sub.size.length() < 1e-6:
+				continue
+			if not found:
+				aabb = sub
+				found = true
+			else:
+				aabb = aabb.merge(sub)
+	return aabb
+
+## The exterior shell: match the building with a CC0 kit module scaled to its footprint.
+## The plain box wall colliders stay exactly where they are; only their meshes are hidden.
+func _make_shell(group: Node3D, id: String, w: float, d: float, h: float) -> void:
+	if not SHELL_ASSET.has(id):
+		return
+	var asset: String = str(SHELL_ASSET[id])
+	if asset == "":
+		return
+	var path := "res://assets/models/lunar_colony/" + asset
+	if not ResourceLoader.exists(path):
+		return
+	var scene := load(path) as PackedScene
+	if scene == null:
+		return
+	var node := scene.instantiate() as Node3D
+	if node == null:
+		return
+	node.name = "Shell_%s" % id
+	# Measure before scaling: the kit modules are not uniformly sized.
+	var aabb := _aabb_of(node, Transform3D(Basis(), Vector3.ZERO))
+	if aabb.size.length() > 1e-6:
+		var sx := clampf(w / maxf(aabb.size.x, 1e-3), 0.5, 2.5)
+		var sy := clampf(h / maxf(aabb.size.y, 1e-3), 0.5, 2.5)
+		var sz := clampf(d / maxf(aabb.size.z, 1e-3), 0.5, 2.5)
+		node.scale = Vector3(sx, sy, sz)
+		# Feet at y = 0, footprint centred on the building origin.
+		var min_after := Vector3(aabb.position.x * sx, aabb.position.y * sy, aabb.position.z * sz)
+		var centre_after := min_after + Vector3(aabb.size.x * sx * 0.5, 0.0, aabb.size.z * sz * 0.5)
+		node.position = Vector3(-centre_after.x, -min_after.y, -centre_after.z)
+	else:
+		node.scale = Vector3.ONE
+	group.add_child(node)
+
+## The porch: the airlock-style entrance every walkable module gets. Gold MLI collar, gold
+## foil panels, a hazard-stripe sill and handrails, all pointing at the door azimuth.
+func _add_porch(group: Node3D, door: int, w: float, d: float) -> void:
+	var off := Vector3.ZERO
+	var rot := 0.0
+	match door:
+		0: off = Vector3(0, 0, d * 0.5); rot = 0.0
+		1: off = Vector3(0, 0, -d * 0.5); rot = PI
+		2: off = Vector3(w * 0.5, 0, 0); rot = PI * 0.5
+		3: off = Vector3(-w * 0.5, 0, 0); rot = -PI * 0.5
+	var porch := Node3D.new()
+	porch.name = "Porch"
+	porch.position = off
+	porch.rotation.y = rot
+	group.add_child(porch)
+	var gold := _mat("mli_gold", Color(0.78, 0.55, 0.14), 0.35, 0.6)
+	var gold_glow := _glow("mli_gold_glow", Color(0.92, 0.66, 0.18), Color(0.98, 0.72, 0.22), 0.35)
+	var alloy := _mat("alloy", Color(0.55, 0.58, 0.62), 0.4, 0.55)
+	# Gold foil collar around the doorway.
+	_box(porch, Vector3(3.4, 0.6, 0.55), Vector3(0, 0.3, 0.35), gold_glow)
+	# Gold side panels, ribbed.
+	for side in [-1.0, 1.0]:
+		_box(porch, Vector3(0.5, 2.7, 0.62), Vector3(side * 1.35, 1.6, 0.15), gold)
+		_box(porch, Vector3(0.55, 0.09, 0.66), Vector3(side * 1.35, 1.05, 0.16), alloy)
+	# Handrails at both sides of the sill.
+	for side in [-1.0, 1.0]:
+		_cylinder(porch, 0.055, 1.15, Vector3(side * 1.05, 0.58, 0.62), alloy)
+	# Hazard-stripe sill: yellow between black blocks.
+	_box(porch, Vector3(2.4, 0.06, 0.34), Vector3(0, 0.03, 0.52),
+		_mat("hazard_yellow", Color(0.82, 0.66, 0.12), 0.7, 0.02))
+	_box(porch, Vector3(0.35, 0.07, 0.35), Vector3(-1.05, 0.035, 0.52),
+		_mat("hazard_black", Color(0.12, 0.11, 0.10), 0.8, 0.02))
+	_box(porch, Vector3(0.35, 0.07, 0.35), Vector3(1.05, 0.035, 0.52),
+		_mat("hazard_black", Color(0.12, 0.11, 0.10), 0.8, 0.02))
+
+## The extra dressing around the shell: rib rings, a gold MLI panel, a radiator pair on the
+## non-door side and a cable tray.
+func _dress_shell(group: Node3D, w: float, d: float, h: float, door: int, id: String) -> void:
+	var rib := _mat("rib", Color(0.42, 0.45, 0.5), 0.55, 0.35)
+	var gold := _mat("mli_gold", Color(0.78, 0.55, 0.14), 0.35, 0.6)
+	var radiator := _mat("radiator", Color(0.28, 0.30, 0.34), 0.7, 0.05)
+	# MLI gold foil patch on the side facing the plaza.
+	_box(group, Vector3(1.6, 1.6, 0.12), Vector3(0, h * 0.62, -d * 0.5 - 0.05) if door != 0 else Vector3(w * 0.5 + 0.05, h * 0.62, 0), gold, 0.0)
+	# Rib rings around the body at one third and two thirds of the height.
+	for frac in [0.33, 0.67]:
+		var ring := MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = minf(w, d) * 0.40
+		torus.outer_radius = torus.inner_radius + 0.18
+		torus.rings = 32
+		torus.ring_segments = 8
+		ring.mesh = torus
+		ring.material_override = rib
+		ring.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+		ring.position = Vector3(0, h * frac, 0)
+		group.add_child(ring)
+	# A radiator pair on the side opposite the door (dark panel).
+	if door == 3:
+		_box(group, Vector3(0.14, 1.9, d * 0.7), Vector3(w * 0.5 + 0.07, h * 0.5, 0), radiator)
+	elif door == 2:
+		_box(group, Vector3(0.14, 1.9, d * 0.7), Vector3(-w * 0.5 - 0.07, h * 0.5, 0), radiator)
+	elif door == 0:
+		_box(group, Vector3(w * 0.7, 1.9, 0.14), Vector3(0, h * 0.5, -d * 0.5 - 0.07), radiator)
+	else:
+		_box(group, Vector3(w * 0.7, 1.9, 0.14), Vector3(0, h * 0.5, d * 0.5 + 0.07), radiator)
+	# A cable tray running the length of the building, just below the roof line.
+	_box(group, Vector3(0.30, 0.16, d * 0.8), Vector3(-w * 0.5 - 0.15, h * 0.78, 0), rib)
+
+## Furnish the interior per building id. Everything inside sidereal bounds; props carry no
+## gameplay collisions so walking through them never blocks an egress route.
+func _furnish_interior(group: Node3D, id: String, w: float, d: float, h: float) -> void:
+	var count := 0
+	var steel := _mat("steel", Color(0.72, 0.74, 0.78), 0.4, 0.35)
+	var wood := _mat("worktop", Color(0.45, 0.38, 0.30), 0.7, 0.05)
+	var dark := _mat("panel_dark", Color(0.32, 0.34, 0.38), 0.6, 0.05)
+	var fabric := _mat("fabric", Color(0.55, 0.52, 0.47), 0.85, 0.02)
+
+	var _mk := func(prop_name: String, size: Vector3, pos: Vector3, mat: Material, rot_y := 0.0):
+		_box(group, size, pos, mat, rot_y)
+
+	if id == "habitat":
+		# Bunk beds in the quarters end, kitchen counter along the back wall, a table in the common room.
+		_box(group, Vector3(1.9, 0.55, 0.85), Vector3(-5.0, 0.55, -3.5), fabric)              # bunk 1 lower
+		_box(group, Vector3(1.9, 0.22, 0.85), Vector3(-5.0, 1.65, -3.5), wood)                 # bunk 1 upper
+		_cylinder(group, 0.07, 1.7, Vector3(-5.9, 0.85, -3.0), steel)                          # posts
+		_cylinder(group, 0.07, 1.7, Vector3(-4.1, 0.85, -4.0), steel)
+		_box(group, Vector3(1.9, 0.55, 0.85), Vector3(-5.0, 0.55, 3.5), fabric)                # bunk 2 lower
+		_box(group, Vector3(1.9, 0.22, 0.85), Vector3(-5.0, 1.65, 3.5), wood)                  # bunk 2 upper
+		_cylinder(group, 0.07, 1.7, Vector3(-5.9, 0.85, 3.0), steel)
+		_cylinder(group, 0.07, 1.7, Vector3(-4.1, 0.85, 4.0), steel)
+		_box(group, Vector3(4.5, 0.95, 0.7), Vector3(3.0, 0.5, -5.2), dark)                    # kitchen counter
+		_box(group, Vector3(4.5, 0.15, 0.75), Vector3(3.0, 1.0, -5.2), steel)
+		_cylinder(group, 0.9, 0.12, Vector3(0.5, 0.45, 1.0), steel, 20)                        # table top
+		_cylinder(group, 0.15, 0.45, Vector3(0.5, 0.22, 1.0), steel)
+		_box(group, Vector3(2.2, 0.5, 1.0), Vector3(0.5, 0.28, 2.6), fabric)                     # bench
+	elif id == "mission_control":
+		# Console desks ringing the operations floor + a map wall panel.
+		for x in [-3.0, 0.0, 3.0]:
+			_box(group, Vector3(2.4, 0.95, 0.8), Vector3(x, 0.5, -2.2), dark)
+			_box(group, Vector3(2.4, 0.4, 0.14), Vector3(x, 1.15, -2.35), _glow("screen_%d" % int(x + 4.0), Color(0.10, 0.22, 0.35), Color(0.45, 0.75, 1.0), 0.5))
+			_box(group, Vector3(2.4, 0.35, 0.8), Vector3(x, 0.18, -1.35), wood)
+		_box(group, Vector3(5.6, 2.4, 0.18), Vector3(0.0, 1.6, -5.1), steel)                   # map wall
+		_box(group, Vector3(5.0, 1.8, 0.05), Vector3(0.0, 1.65, -5.0), _glow("map", Color(0.08, 0.14, 0.24), Color(0.25, 0.45, 0.75), 0.35))
+		_box(group, Vector3(1.8, 2.2, 0.7), Vector3(-5.3, 1.1, 0.5), steel)                    # comms rack
+	elif id == "greenhouse":
+		# Grow racks with grow lights + water bar.
+		for x in [-4.5, -1.5, 1.5, 4.5]:
+			_box(group, Vector3(2.0, 1.9, 1.0), Vector3(x, 0.95, -2.0), steel)                  # rack
+			_box(group, Vector3(1.9, 0.10, 0.9), Vector3(x, 1.95, -2.0), _glow("growlight", Color(0.85, 0.95, 0.55), Color(0.75, 0.95, 0.45), 0.7))
+			_box(group, Vector3(2.1, 0.35, 1.1), Vector3(x, 0.2, -2.0), wood)                  # tray
+		_box(group, Vector3(1.2, 1.7, 1.2), Vector3(-5.6, 0.85, 1.6), steel)                    # water tank
+	elif id == "workshop":
+		_box(group, Vector3(3.6, 1.05, 1.15), Vector3(-3.4, 0.55, -3.6), dark)                  # workbench
+		_box(group, Vector3(3.6, 0.12, 1.25), Vector3(-3.4, 1.12, -3.6), wood)
+		_box(group, Vector3(3.2, 1.05, 1.15), Vector3(3.6, 0.55, -3.6), dark)
+		_box(group, Vector3(3.2, 0.12, 1.25), Vector3(3.6, 1.12, -3.6), wood)
+		_box(group, Vector3(3.6, 1.9, 0.16), Vector3(-3.5, 1.15, 4.0), dark)                    # tool board
+		_box(group, Vector3(1.0, 1.1, 1.0), Vector3(4.6, 0.55, 3.6), steel)                     # parts crate
+	elif id == "life_support":
+		_cylinder(group, 0.7, 2.3, Vector3(-2.6, 1.15, -1.6), steel, 20)                        # scrubber tank
+		_cylinder(group, 0.7, 2.3, Vector3(0.0, 1.15, -1.6), _mat("tank_yellow", Color(0.85, 0.75, 0.15), 0.55, 0.15), 20) # o2 tank
+		_cylinder(group, 0.7, 2.3, Vector3(2.6, 1.15, -1.6), steel, 20)                          # water tank
+		_box(group, Vector3(4.2, 1.0, 0.6), Vector3(0, 0.5, 0.4), dark)                         # control bank
+		_box(group, Vector3(4.2, 0.14, 0.1), Vector3(0, 1.05, 0.35), _glow("led", Color(0.05, 0.2, 0.08), Color(0.3, 1.0, 0.4), 0.6))
+		_box(group, Vector3(2.0, 2.0, 0.35), Vector3(5.0, 1.0, 1.5), steel)                     # filter rack
+	elif id == "lab":
+		_box(group, Vector3(3.2, 1.05, 1.1), Vector3(-2.6, 0.55, -2.8), dark)                   # sample bench
+		_box(group, Vector3(3.2, 0.12, 1.2), Vector3(-2.6, 1.12, -2.8), wood)
+		_box(group, Vector3(3.2, 1.05, 1.1), Vector3(2.7, 0.55, -2.8), dark)
+		_box(group, Vector3(3.2, 0.12, 1.2), Vector3(2.7, 1.12, -2.8), wood)
+		_cylinder(group, 0.09, 0.6, Vector3(-2.6, 1.4, -2.8), dark, 12)                         # microscope column
+		_box(group, Vector3(0.6, 0.28, 0.4), Vector3(-2.6, 1.72, -2.8), _glow("scope", Color(0.1, 0.18, 0.3), Color(0.4, 0.65, 1.0), 0.45))
+		_box(group, Vector3(2.4, 0.9, 0.5), Vector3(0.0, 0.45, 1.4), fabric)                    # sample crate
+	elif id == "medical":
+		_box(group, Vector3(1.9, 0.7, 0.85), Vector3(-2.0, 0.4, -2.5), dark)                    # bed base
+		_box(group, Vector3(1.9, 0.22, 0.95), Vector3(-2.0, 0.82, -2.5), fabric)                # mattress
+		_box(group, Vector3(0.4, 0.16, 0.5), Vector3(-2.75, 0.9, -2.5), fabric)                 # pillow
+		_box(group, Vector3(1.6, 1.7, 0.3), Vector3(2.0, 0.85, -5.2), steel)                    # cabinet
+		_box(group, Vector3(1.1, 0.7, 0.12), Vector3(2.0, 1.85, -5.1), _glow("monitor", Color(0.1, 0.16, 0.22), Color(0.35, 0.72, 0.95), 0.5))
+	elif id == "garage":
+		_box(group, Vector3(5.6, 0.08, 3.0), Vector3(0, 0.06, 1.2), _mat("bay_floor", Color(0.33, 0.34, 0.36), 0.7, 0.15)) # parking bay
+		_box(group, Vector3(0.35, 2.0, 0.35), Vector3(-1.9, 1.0, -2.4), steel)                  # charge post
+		_cylinder(group, 0.09, 2.1, Vector3(1.9, 1.05, -2.4), steel, 12)                         # charge cable
+		_box(group, Vector3(1.2, 1.05, 1.1), Vector3(4.4, 0.55, -2.6), dark)                     # tool crate
+		_box(group, Vector3(1.0, 0.8, 0.9), Vector3(-4.3, 0.4, -2.6), fabric)                    # suit crate
+	elif id == "storage":
+		for i in [0, 1, 2]:
+			_box(group, Vector3(1.4, 1.4, 1.4), Vector3(-3.4 + i * 2.1, 0.75, -3.3), wood)        # stack
+			_box(group, Vector3(1.4, 1.4, 1.4), Vector3(-3.4 + i * 2.1, 0.75, 3.3), steel)        # stack
+		_box(group, Vector3(6.8, 1.8, 0.4), Vector3(0.0, 0.95, 0.0), dark)                       # shelf
+		_box(group, Vector3(6.0, 0.14, 0.25), Vector3(0.0, 1.95, 0.0), steel)
+	elif id == "comms_tower":
+		_box(group, Vector3(2.6, 0.9, 0.7), Vector3(-2.2, 0.45, -2.6), dark)                     # monitor desk
+		_box(group, Vector3(2.6, 0.42, 0.12), Vector3(-2.2, 1.12, -2.6), _glow("screen_t", Color(0.09, 0.16, 0.3), Color(0.35, 0.75, 1.0), 0.5))
+		_cylinder(group, 0.09, 3.2, Vector3(1.6, 1.6, -1.8), steel, 12)                          # mast
+		_box(group, Vector3(4.5, 0.7, 0.7), Vector3(-2.0, 0.35, -3.5), dark)                     # equipment bench
+	elif id == "regolith_plant":
+		_cylinder(group, 1.1, 1.6, Vector3(-3.0, 0.8, -1.6), steel, 14)                          # hopper
+		_box(group, Vector3(3.6, 0.7, 0.8), Vector3(0.5, 0.35, -1.6), steel)                     # conveyor body
+		_box(group, Vector3(3.6, 0.08, 0.85), Vector3(0.5, 0.74, -1.6), dark)                    # conveyor belt
+		_box(group, Vector3(1.4, 1.5, 0.6), Vector3(3.6, 0.75, 0.4), dark)                       # control box
+	elif id == "storm_shelter":
+		_box(group, Vector3(1.9, 0.55, 0.85), Vector3(-2.4, 0.55, -2.6), fabric)                 # bunk
+		_box(group, Vector3(1.9, 0.22, 0.85), Vector3(-2.4, 1.55, -2.6), wood)
+		_box(group, Vector3(1.9, 0.55, 0.85), Vector3(2.4, 0.55, -2.6), fabric)
+		_box(group, Vector3(1.9, 0.22, 0.85), Vector3(2.4, 1.55, -2.6), wood)
+		_box(group, Vector3(2.4, 1.4, 0.5), Vector3(0.0, 0.7, 3.4), steel)                       # emergency box
+	elif id == "power_farm":
+		for x in [-4.2, -1.4, 1.4, 4.2]:
+			_box(group, Vector3(2.2, 1.5, 1.2), Vector3(x, 0.75, -3.0), dark)                     # battery bank
+			_box(group, Vector3(2.2, 0.28, 0.25), Vector3(x, 1.45, -3.0), _glow("b_led_%d" % int(x+6.0), Color(0.05, 0.2, 0.08), Color(0.3, 1.0, 0.4), 0.55))
+	elif id == "ice_site":
+		_cylinder(group, 0.32, 1.9, Vector3(-2.6, 0.95, -2.0), steel, 14)                        # drill mast
+		_cylinder(group, 0.16, 1.2, Vector3(-2.6, 2.2, -2.0), _mat("amber", Color(0.85, 0.6, 0.12), 0.5, 0.2), 12)
+		_box(group, Vector3(1.2, 1.0, 1.0), Vector3(2.0, 0.5, -2.4), dark)                       # sample crate
+		_box(group, Vector3(2.4, 0.9, 0.65), Vector3(0.0, 0.45, 2.4), wood)                      # console desk
+	elif id == "airlock":
+		_box(group, Vector3(1.1, 1.6, 0.15), Vector3(-1.8, 0.8, 0.0), steel)                     # suit rack
+		_box(group, Vector3(0.9, 0.35, 1.0), Vector3(1.9, 0.18, 0.2), dark)                      # tool box
+	_attached_prop_count[id] = group.get_child_count()
 
 func _box(parent: Node3D, size: Vector3, position: Vector3, material: Material,
 		rotation_y := 0.0) -> MeshInstance3D:
@@ -380,13 +630,13 @@ func _blocker(parent: Node3D, size: Vector3, position: Vector3, rotation_y := 0.
 
 
 func _cylinder(parent: Node3D, radius: float, height: float, position: Vector3,
-		material: Material) -> MeshInstance3D:
+		material: Material, radial_segments := 20) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
 	mesh.height = height
-	mesh.radial_segments = 20
+	mesh.radial_segments = radial_segments
 	node.mesh = mesh
 	node.material_override = material
 	node.position = position
@@ -472,6 +722,7 @@ func _make_building(building: Dictionary) -> void:
 	var door := _door_direction(building)
 	var door_width := 2.4
 	var door_height := 3.0
+	var wall_meshes: Array = []
 
 	# Walls. The door wall is built in two segments with a lintel above the opening.
 	var walls := [
@@ -509,9 +760,11 @@ func _make_building(building: Dictionary) -> void:
 				left_pos = offset + Vector3(0, 0, -(door_width * 0.5 + jamb * 0.5))
 				right_pos = offset + Vector3(0, 0, door_width * 0.5 + jamb * 0.5)
 			if jamb > 0.05:
-				_box(group, jamb_size, left_pos, wall_mat)
+				var jamb_mesh_a := _box(group, jamb_size, left_pos, wall_mat)
+				wall_meshes.append(jamb_mesh_a)
 				_blocker(group, jamb_size, left_pos)
-				_box(group, jamb_size, right_pos, wall_mat)
+				var jamb_mesh_b := _box(group, jamb_size, right_pos, wall_mat)
+				wall_meshes.append(jamb_mesh_b)
 				_blocker(group, jamb_size, right_pos)
 			var lintel_h: float = h - door_height
 			if lintel_h > 0.05:
@@ -522,11 +775,22 @@ func _make_building(building: Dictionary) -> void:
 				else:
 					lintel_size = Vector3(thickness, lintel_h, door_width)
 				lintel_pos.y = door_height + lintel_h * 0.5
-				_box(group, lintel_size, lintel_pos, wall_mat)
+				var lintel_mesh := _box(group, lintel_size, lintel_pos, wall_mat)
+				wall_meshes.append(lintel_mesh)
 				_blocker(group, lintel_size, lintel_pos)
 		else:
-			_box(group, size, offset, wall_mat)
+			wall_meshes.append(_box(group, size, offset, wall_mat))
 			_blocker(group, size, offset)
+
+	# Shell + dressing + interior. The colliders for the plain box walls stay untouched.
+	_make_shell(group, id, w, d, h)
+	_add_porch(group, door, w, d)
+	_dress_shell(group, w, d, h, door, id)
+	_furnish_interior(group, id, w, d, h)
+	# Hide only the plain wall MESHES; their blockers stay in place.
+	for m in wall_meshes:
+		if m != null:
+			m.visible = false
 
 	# Interior floor and ceiling.
 	_box(group, Vector3(w - WALL_T * 2.0, 0.08, d - WALL_T * 2.0), Vector3(0, 0.1, 0),

@@ -262,7 +262,7 @@ namespace LunaQuest.Godot
                 float x = -w * 0.5f + 0.35f + i * (w - 0.7f) / ribs;
                 if (Mathf.Abs(x) < gap * 0.5f + 0.5f) continue;
                 Solid(root, new Vector3(x, (h - 1.35f) * 0.5f + 0.18f, front),
-                    new Vector3(0.12f, h - 1.45f, 0.10f), trim);
+                    new Vector3(0.12f, h - 1.45f, 0.10f), trim, hideMesh: true);
             }
             float side = (w - gap) * 0.5f;
             if (side > 1.4f)
@@ -270,8 +270,8 @@ namespace LunaQuest.Godot
                 for (int s = -1; s <= 1; s += 2)
                 {
                     float cx = s * (gap * 0.5f + side * 0.5f);
-                    Solid(root, new Vector3(cx, h * 0.55f, front), new Vector3(side * 0.86f, 0.07f, 0.10f), trim);
-                    Solid(root, new Vector3(cx, h * 0.31f, front), new Vector3(side * 0.86f, 0.045f, 0.10f), trim);
+                    Solid(root, new Vector3(cx, h * 0.55f, front), new Vector3(side * 0.86f, 0.07f, 0.10f), trim, hideMesh: true);
+                    Solid(root, new Vector3(cx, h * 0.31f, front), new Vector3(side * 0.86f, 0.045f, 0.10f), trim, hideMesh: true);
                 }
             }
             if (w > 8.5f)
@@ -485,6 +485,155 @@ namespace LunaQuest.Godot
 
         // ---- buildings -------------------------------------------------------
 
+        private static readonly Dictionary<string, string> ShellAsset = new()
+        {
+            ["habitat"] = "rigid-cylinder-habitat-9b2fdbb4.glb",
+            ["mission_control"] = "rigid-cylinder-habitat-2dec4448.glb",
+            ["greenhouse"] = "greenhouse-module-b35be615.glb",
+            ["workshop"] = "workshop-module-7729780d.glb",
+            ["life_support"] = "oxygen-extraction-plan-002fb0ae.glb",
+            ["lab"] = "medical-module-6d266b02.glb",
+            ["medical"] = "medical-module-6d266b02.glb",
+            ["garage"] = "inflatable-dome-habita-f86f5d7b.glb",
+            ["storage"] = "battery-container-9755ed67.glb",
+            ["comms_tower"] = "comms-relay-mast-4cdfe54f.glb",
+            ["regolith_plant"] = "sintering-print-gantry-64cc192a.glb",
+            ["storm_shelter"] = "inflatable-dome-habita-514822a4.glb",
+            ["power_farm"] = "solar-array-row-e52454d9.glb",
+            ["ice_site"] = "regolith-excavator-64b4560f.glb",
+            ["airlock"] = "airlock-with-dust-lock-fe27e26c.glb",
+        };
+        private readonly List<Node3D> _wallMeshes = new();
+        private readonly Dictionary<string, int> _attachedProps = new();
+
+        public int ShellCount { get; private set; }
+        public int PorchCount { get; private set; }
+
+        /// <summary>F2: wrap the module in a CC0 kit shell scaled to its footprint, and hide the
+        /// plain box wall meshes (their blockers stay put).</summary>
+        private void BuildShell(Node3D root, BuildingDefinition b, float w, float d, float h)
+        {
+            // Hide the window strips and the foil blanket — the shell carries the exterior.
+            foreach (Node mesh in root.FindChildren("*", "MeshInstance3D", true, false))
+            {
+                var nm = mesh.Name.ToString();
+                if (nm == "WallMesh" || nm == "CableTray") continue;
+                if (nm.StartsWith("Window", StringComparison.Ordinal) || nm == "GoldBlanket")
+                    ((MeshInstance3D)mesh).Visible = false;
+            }
+            string key = ShellAsset.TryGetValue(b.Id, out var k) ? k : "";
+            if (key.Length == 0) return;
+            string path = "res://assets/models/lunar_colony/" + key;
+            if (!ResourceLoader.Exists(path) || GD.Load<PackedScene>(path) is not { } scene) return;
+            var node = scene.Instantiate<Node3D>();
+            if (node == null) return;
+            node.Name = "Shell_" + b.Id;
+            var aabb = MeasureAabb(node);
+            if (aabb.Size.LengthSquared() > 1e-6f)
+            {
+                float sx = Mathf.Clamp(w / Mathf.Max(aabb.Size.X, 1e-3f), 0.5f, 2.5f);
+                float sy = Mathf.Clamp(h / Mathf.Max(aabb.Size.Y, 1e-3f), 0.5f, 2.5f);
+                float sz = Mathf.Clamp(d / Mathf.Max(aabb.Size.Z, 1e-3f), 0.5f, 2.5f);
+                node.Scale = new Vector3(sx, sy, sz);
+                var min = new Vector3(aabb.Position.X * sx, aabb.Position.Y * sy, aabb.Position.Z * sz);
+                var centre = min + new Vector3(aabb.Size.X * sx * 0.5f, 0f, aabb.Size.Z * sz * 0.5f);
+                node.Position = new Vector3(-centre.X, -min.Y, -centre.Z);
+            }
+            root.AddChild(node);
+            var ribMat = Mat(new Color(0.42f, 0.45f, 0.50f), 0.55f, 0.35f);
+            foreach (float f in new[] { 0.34f, 0.67f })
+            {
+                var ring = new MeshInstance3D
+                {
+                    Name = "RibRing",
+                    Mesh = new TorusMesh { InnerRadius = Mathf.Min(w, d) * 0.42f, OuterRadius = Mathf.Min(w, d) * 0.42f + 0.18f, Rings = 32, RingSegments = 8 },
+                    MaterialOverride = ribMat,
+                    Rotation = new Vector3(Mathf.Pi * 0.5f, 0f, 0f),
+                    Position = new Vector3(0, h * f, 0),
+                };
+                root.AddChild(ring);
+            }
+            var radiator = new MeshInstance3D
+            {
+                Name = "Radiator",
+                Mesh = new BoxMesh { Size = new Vector3(w * 0.7f, 1.9f, 0.14f) },
+                MaterialOverride = Mat(new Color(0.28f, 0.30f, 0.34f), 0.7f, 0.05f),
+                Position = new Vector3(0, h * 0.52f, -d * 0.5f - 0.2f),
+            };
+            root.AddChild(radiator);
+            ShellCount++;
+        }
+
+        private static Aabb MeasureAabb(Node3D node)
+        {
+            Aabb? aabb = null;
+            void Walk(Node3D n3, Transform3D xform)
+            {
+                var next = xform * n3.Transform;
+                if (n3 is MeshInstance3D mi && mi.Mesh != null)
+                {
+                    var local = next * mi.Mesh.GetAabb();
+                    aabb = aabb == null ? local : aabb.Value.Merge(local);
+                }
+                foreach (Node child in n3.GetChildren())
+                    if (child is Node3D c3) Walk(c3, next);
+            }
+            Walk(node, Transform3D.Identity);
+            return aabb ?? new Aabb(Vector3.Zero, Vector3.One);
+        }
+
+        /// <summary>An airlock-style porch at each door: gold MLI collar, gold foil side panels,
+        /// a hazard-stripe sill and two handrails.</summary>
+        private void BuildPorch(Node3D root, float w, float d, float h)
+        {
+            // The door faces the colony centre, so it is local +Z of the root by construction.
+            var porch = new Node3D { Name = "Porch", Position = new Vector3(0, 0, d * 0.5f) };
+            root.AddChild(porch);
+            var goldGlow = Mat(new Color(0.98f, 0.70f, 0.22f), 0.85f, 0.3f, 0.9f);
+            var goldMat = Mat(new Color(0.78f, 0.55f, 0.14f), 0.35f, 0.6f);
+            var alloy = Mat(new Color(0.55f, 0.58f, 0.62f), 0.4f, 0.55f);
+
+            var collar = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(3.4f, 0.6f, 0.55f) }, MaterialOverride = goldGlow };
+            collar.Position = new Vector3(0, 0.3f, 0.35f);
+            porch.AddChild(collar);
+            foreach (int side in new[] { -1, 1 })
+            {
+                var mlishield = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.5f, 2.7f, 0.62f) }, MaterialOverride = goldMat };
+                mlishield.Position = new Vector3(side * 1.35f, 1.6f, 0.15f);
+                porch.AddChild(mlishield);
+                var rib = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.55f, 0.09f, 0.66f) }, MaterialOverride = alloy };
+                rib.Position = new Vector3(side * 1.35f, 1.05f, 0.16f);
+                porch.AddChild(rib);
+                var rail = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.055f, BottomRadius = 0.055f, Height = 1.15f }, MaterialOverride = alloy };
+                rail.Position = new Vector3(side * 1.05f, 0.58f, 0.62f);
+                porch.AddChild(rail);
+            }
+            var hazard = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(2.4f, 0.06f, 0.34f) }, MaterialOverride = Mat(new Color(0.82f, 0.66f, 0.12f), 0.7f, 0.02f) };
+            hazard.Position = new Vector3(0, 0.03f, 0.52f);
+            porch.AddChild(hazard);
+            var hazardBlack = Mat(new Color(0.12f, 0.11f, 0.10f), 0.8f, 0.02f);
+            foreach (int side in new[] { -1, 1 })
+            {
+                var end = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.35f, 0.07f, 0.35f) }, MaterialOverride = hazardBlack };
+                end.Position = new Vector3(side * 1.05f, 0.035f, 0.52f);
+                porch.AddChild(end);
+            }
+            PorchCount++;
+        }
+
+        /// <summary>A cable tray along each building, below the roof line.</summary>
+        private void BuildCableTray(Node3D root, float w, float d, float h)
+        {
+            var tray = new MeshInstance3D
+            {
+                Mesh = new BoxMesh { Size = new Vector3(0.30f, 0.16f, d * 0.8f) },
+                MaterialOverride = Mat(new Color(0.42f, 0.45f, 0.50f), 0.55f, 0.35f),
+                Position = new Vector3(-w * 0.5f - 0.15f, h * 0.78f, 0),
+                Name = "CableTray",
+            };
+            root.AddChild(tray);
+        }
+
         private void BuildBuilding(BuildingDefinition b)
         {
             var root = new Node3D { Name = b.Id, Position = new Vector3(b.PositionX, 0, b.PositionZ) };
@@ -519,26 +668,29 @@ namespace LunaQuest.Godot
             float gap = 2.8f;
             float side = (w - gap) * 0.5f;
             // Front wall (door side, local +Z)
-            Solid(root, new Vector3(-(gap * 0.5f + side * 0.5f), (h - 0.3f) * 0.5f + 0.1f, d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat);
-            Solid(root, new Vector3(gap * 0.5f + side * 0.5f, (h - 0.3f) * 0.5f + 0.1f, d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat);
-            Solid(root, new Vector3(0, h - 0.55f, d * 0.5f), new Vector3(gap, 0.9f, wallH), wallMat);
+            Solid(root, new Vector3(-(gap * 0.5f + side * 0.5f), (h - 0.3f) * 0.5f + 0.1f, d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat, hideMesh: true);
+            Solid(root, new Vector3(gap * 0.5f + side * 0.5f, (h - 0.3f) * 0.5f + 0.1f, d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat, hideMesh: true);
+            Solid(root, new Vector3(0, h - 0.55f, d * 0.5f), new Vector3(gap, 0.9f, wallH), wallMat, hideMesh: true);
             // Back and sides. The airlock is a passage, so its back wall opens too.
             if (b.Id == "airlock")
             {
-                Solid(root, new Vector3(-(gap * 0.5f + side * 0.5f), (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat);
-                Solid(root, new Vector3(gap * 0.5f + side * 0.5f, (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat);
-                Solid(root, new Vector3(0, h - 0.55f, -d * 0.5f), new Vector3(gap, 0.9f, wallH), wallMat);
+                Solid(root, new Vector3(-(gap * 0.5f + side * 0.5f), (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat, hideMesh: true);
+                Solid(root, new Vector3(gap * 0.5f + side * 0.5f, (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(side, h - 0.3f, wallH), wallMat, hideMesh: true);
+                Solid(root, new Vector3(0, h - 0.55f, -d * 0.5f), new Vector3(gap, 0.9f, wallH), wallMat, hideMesh: true);
                 BuildDoorFrame(root, d, h, gap, trimMat, true);
             }
             else
             {
-                Solid(root, new Vector3(0, (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(w, h - 0.3f, wallH), wallMat);
+                Solid(root, new Vector3(0, (h - 0.3f) * 0.5f + 0.1f, -d * 0.5f), new Vector3(w, h - 0.3f, wallH), wallMat, hideMesh: true);
             }
-            Solid(root, new Vector3(-w * 0.5f, (h - 0.3f) * 0.5f + 0.1f, 0), new Vector3(wallH, h - 0.3f, d), wallMat);
-            Solid(root, new Vector3(w * 0.5f, (h - 0.3f) * 0.5f + 0.1f, 0), new Vector3(wallH, h - 0.3f, d), wallMat);
+            Solid(root, new Vector3(-w * 0.5f, (h - 0.3f) * 0.5f + 0.1f, 0), new Vector3(wallH, h - 0.3f, d), wallMat, hideMesh: true);
+            Solid(root, new Vector3(w * 0.5f, (h - 0.3f) * 0.5f + 0.1f, 0), new Vector3(wallH, h - 0.3f, d), wallMat, hideMesh: true);
 
             BuildDoorFrame(root, d, h, gap, trimMat, false);
             BuildFacadeRibs(root, w, d, h, gap, trimMat);
+            BuildShell(root, b, w, d, h);
+            BuildPorch(root, w, d, h);
+            BuildCableTray(root, w, d, h);
 
             // Window strips and gold-foil thermal blanket on the shaded side. The greenhouse
             // has no transparent aperture: plants are lit by colony power inside a sealed pod,
@@ -548,7 +700,7 @@ namespace LunaQuest.Godot
                 var glass = Mat(new Color(0.28f, 0.55f, 0.75f), 0.6f, 0.15f, 0.25f);
                 for (int i = -1; i <= 1; i++)
                 {
-                    var win = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(1.5f, 0.7f, 0.06f) }, MaterialOverride = glass };
+                    var win = new MeshInstance3D { Name = "Window", Mesh = new BoxMesh { Size = new Vector3(1.5f, 0.7f, 0.06f) }, MaterialOverride = glass };
                     win.Position = new Vector3(i * (w * 0.24f), h * 0.62f, -d * 0.5f - 0.19f);
                     root.AddChild(win);
                 }
@@ -556,7 +708,7 @@ namespace LunaQuest.Godot
             if (b.Id != "airlock")
             {
                 var foil = Mat(new Color(0.92f, 0.68f, 0.22f), 0.85f, 0.3f);
-                var blanket = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(w * 0.94f, 0.7f, 0.05f) }, MaterialOverride = foil };
+                var blanket = new MeshInstance3D { Name = "GoldBlanket", Mesh = new BoxMesh { Size = new Vector3(w * 0.94f, 0.7f, 0.05f) }, MaterialOverride = foil };
                 blanket.Position = new Vector3(0, 0.55f, -d * 0.5f - 0.2f);
                 root.AddChild(blanket);
             }
@@ -1249,7 +1401,7 @@ namespace LunaQuest.Godot
             return m;
         }
 
-        private static StaticBody3D Solid(Node3D parent, Vector3 pos, Vector3 size, Material mat)
+        private static StaticBody3D Solid(Node3D parent, Vector3 pos, Vector3 size, Material mat, bool hideMesh = false)
         {
             var body = new StaticBody3D { Position = pos, CollisionLayer = 1, CollisionMask = 0 };
             parent.AddChild(body);
@@ -1257,8 +1409,17 @@ namespace LunaQuest.Godot
             body.AddChild(mesh);
             var col = new CollisionShape3D { Shape = new BoxShape3D { Size = size } };
             body.AddChild(col);
+            if (hideMesh)
+            {
+                mesh.Name = "WallMesh";
+                mesh.Visible = false;
+                WallMeshes.Add(mesh);
+            }
             return body;
         }
+
+        /// <summary>All hidden plain-wall meshes, collected for diagnostics.</summary>
+        public static readonly List<Node3D> WallMeshes = new();
 
         private Label3D MakeLabel(string text, Vector3 pos, int size, Color color)
             => new Label3D

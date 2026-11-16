@@ -45,6 +45,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_ground_faces()
 	_check_rover(root, world, player, crew, sim)
 	_check_f0_controls(root, world, player)
+	_check_buildings(root, world)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -423,6 +424,32 @@ func _check_f0_controls(root: Node, world: ColonyWorld, player: ColonyPlayer) ->
 	rover.global_position = Vector3(-11.0, 0.05, -28.0)
 	rover.rotation.y = 0.4
 	rover.settle()
+
+
+## F2 — every walkable building wears a matching CC0 kit shell and reads as furnished.
+## The procedural box-wall meshes are hidden; the colliders (doors and consoles) are untouched.
+func _check_buildings(root: Node, world: ColonyWorld) -> void:
+	var shell_ids := [
+		"habitat", "mission_control", "greenhouse", "workshop", "life_support", "lab", "medical",
+		"storage", "comms_tower", "regolith_plant", "storm_shelter", "power_farm", "ice_site",
+		"garage", "airlock",
+	]
+	for id in shell_ids:
+		var group := world.building_nodes.get(id) as Node3D
+		expect(group != null, "buildings: %s group is missing" % id)
+		if group == null:
+			continue
+		var shell := group.find_child("Shell_%s" % id, true, false)
+		expect(shell != null, "buildings: %s has no CC0 kit shell" % id)
+		var props := int(world._attached_prop_count.get(id, 0))
+		expect(props >= 5, "buildings: %s reads unfurnished (%d children)" % [id, props])
+		var porch := group.find_child("Porch", true, false)
+		expect(porch != null, "buildings: %s has no airlock porch at the door" % id)
+		var hidden := 0
+		for child in group.get_children():
+			if child is MeshInstance3D and not child.visible:
+				hidden += 1
+		expect(hidden >= 2, "buildings: %s wall meshes were not hidden (%d)" % [id, hidden])
 
 
 ## rover back with the mission restart (including the reset that BUG-4 was about).

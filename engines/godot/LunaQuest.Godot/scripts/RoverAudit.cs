@@ -145,7 +145,34 @@ namespace LunaQuest.Godot
                 "a new mission kept the old rover milestones");
 
             CheckF0Controls(rover, player);
+            CheckBuildings(main);
             return Report();
+        }
+
+        /// <summary>
+        /// F2 — every functional building wears a CC0 kit shell scaled to its footprint and has a
+        /// matching airlock-style porch at its door. landing_pad is decorative and gets neither.
+        /// </summary>
+        private void CheckBuildings(Main main)
+        {
+            var shellIds = new[]
+            {
+                "habitat", "mission_control", "greenhouse", "workshop", "life_support", "lab", "medical",
+                "storage", "comms_tower", "regolith_plant", "storm_shelter", "power_farm", "ice_site",
+                "garage", "airlock",
+            };
+            foreach (var id in shellIds)
+            {
+                var root = main.World.FindChild(id, recursive: true, owned: false);
+                Expect(root != null, $"buildings: {id} root is missing");
+                if (root == null) continue;
+                var shell = root.FindChild("Shell_" + id, recursive: true, owned: false);
+                Expect(shell != null, $"buildings: {id} has no CC0 kit shell");
+                var porch = root.FindChild("Porch", recursive: true, owned: false);
+                Expect(porch != null, $"buildings: {id} has no airlock porch at its door");
+            }
+            Expect(main.World.ShellCount >= shellIds.Length,
+                $"buildings: only {main.World.ShellCount} kit shells (expected {shellIds.Length})");
         }
 
         /// <summary>

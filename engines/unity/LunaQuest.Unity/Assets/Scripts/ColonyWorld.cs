@@ -109,6 +109,92 @@ namespace LunaQuest.Unity
             return material;
         }
 
+        private readonly List<string> _shells = new List<string>();
+        private readonly List<string> _porches = new List<string>();
+        public int ShellCount => _shells.Count;
+        public int PorchCount => _porches.Count;
+
+        /// <summary>
+        /// F2: wrap the module in a high-fidelity primitive shell — Unity cannot load .glb kit
+        /// modules (no glTFast without a real editor), so the shell is built to the kit
+        /// silhouettes: a cylinder hull, vertical ribs, gold MLI flank panels and a cable tray.
+        /// Colliders stay live; only the plain box wall meshes are disabled.
+        /// </summary>
+        private void BuildShell(Transform root, BuildingDefinition b, float w, float d, float h)
+        {
+            var shell = new GameObject("Shell_" + b.Id);
+            shell.transform.SetParent(root, false);
+
+            Color baseColor;
+            if (!ColorUtility.TryParseHtmlString(b.ColorHex, out baseColor))
+                baseColor = new Color(0.78f, 0.81f, 0.85f);
+            var hull = Mat(baseColor * 0.92f, 0.05f, 0.30f);
+            var dark = Mat(new Color(0.28f, 0.30f, 0.35f), 0.30f, 0.35f);
+            var gold = Mat(new Color(0.92f, 0.62f, 0.18f), 0.35f, 0.55f,
+                new Color(0.95f, 0.66f, 0.2f), 0.25f);
+
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            body.name = "ShellCore";
+            Destroy(body.GetComponent<Collider>());
+            body.transform.SetParent(shell.transform, false);
+            body.transform.localPosition = new Vector3(0f, h * 0.5f - 0.08f, 0f);
+            body.transform.localScale = new Vector3(w, h * 0.5f - 0.16f, d);
+            body.GetComponent<Renderer>().sharedMaterial = hull;
+
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = i * Mathf.PI * 2f / 6f;
+                Vector3 dir = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
+                Vector3 pos = new Vector3(dir.x * w * 0.46f, h * 0.5f, dir.z * d * 0.46f);
+                var rib = Box(shell.transform, "Rib_" + i, pos, new Vector3(0.28f, h * 0.86f, 0.28f), dark);
+                rib.transform.SetParent(shell.transform, true);
+                rib.transform.localRotation = Quaternion.Euler(0f, angle * Mathf.Rad2Deg, 0f);
+            }
+            for (int s = -1; s <= 1; s += 2)
+            {
+                Box(shell.transform, "GoldPanel_" + s, new Vector3(s * w * 0.34f, h * 0.56f, -d * 0.46f),
+                    new Vector3(w * 0.22f, h * 0.34f, 0.07f), gold);
+            }
+            Box(shell.transform, "CableTray", new Vector3(w * 0.5f + 0.14f, h * 0.74f, 0f),
+                new Vector3(0.24f, 0.15f, d * 0.82f), dark);
+            _shells.Add(b.Id);
+        }
+
+        /// <summary>An airlock-style porch: gold collar, gold foil panels, handrails and a
+        /// hazard-stripe sill, on the door side.</summary>
+        private void BuildPorch(Transform root, float w, float d, float h)
+        {
+            var porch = new GameObject("Porch");
+            porch.transform.SetParent(root, false);
+            porch.transform.localPosition = new Vector3(0f, 0f, d * 0.5f);
+            var gold = Mat(new Color(0.95f, 0.68f, 0.20f), 0.45f, 0.55f,
+                new Color(0.98f, 0.72f, 0.24f), 0.3f);
+            var alloy = Mat(new Color(0.55f, 0.58f, 0.62f), 0.35f, 0.55f);
+            var hazard = Mat(new Color(0.84f, 0.68f, 0.14f), 0.75f, 0.1f);
+            var black = Mat(new Color(0.12f, 0.11f, 0.10f), 0.85f, 0.05f);
+
+            Box(porch.transform, "GoldCollar", new Vector3(0f, 0.3f, 0.35f),
+                new Vector3(3.6f, 0.6f, 0.55f), gold);
+            foreach (int s in new[] { -1, 1 })
+            {
+                Box(porch.transform, "GoldEdge_" + s, new Vector3(s * 1.42f, 1.62f, 0.16f),
+                    new Vector3(0.5f, 2.8f, 0.64f), gold);
+                var rail = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                rail.name = "Handrail_" + s;
+                Destroy(rail.GetComponent<Collider>());
+                rail.transform.SetParent(porch.transform, false);
+                rail.transform.localPosition = new Vector3(s * 1.08f, 0.58f, 0.62f);
+                rail.transform.localScale = new Vector3(0.11f, 0.575f, 0.11f);
+                rail.GetComponent<Renderer>().sharedMaterial = alloy;
+            }
+            Box(porch.transform, "HazardSill", new Vector3(0f, 0.028f, 0.54f),
+                new Vector3(2.4f, 0.06f, 0.34f), hazard);
+            foreach (int s in new[] { -1, 1 })
+                Box(porch.transform, "HazardEnd_" + s, new Vector3(s * 1.05f, 0.04f, 0.54f),
+                    new Vector3(0.35f, 0.07f, 0.35f), black);
+            _porches.Add(root.name);
+        }
+
         // ---- environment -----------------------------------------------------
 
         private void BuildEnvironment()
@@ -522,6 +608,19 @@ namespace LunaQuest.Unity
             // Interior: room mats, low partitions, a table and a light strip.
             BuildInterior(root.transform, b, wall, floor, dark);
             BuildStations(root.transform, b);
+            // F2: hide the plain box wall meshes (colliders stay live inside the kit shell).
+            foreach (var t in root.GetComponentsInChildren<Transform>())
+            {
+                if (t.gameObject.name is "FrontL" or "FrontR" or "Lintel" or "Back" or "BackL" or "BackR"
+                    or "BackLintel" or "SideL" or "SideR")
+                {
+                    var r = t.GetComponent<Renderer>();
+                    if (r != null) r.enabled = false;
+                }
+            }
+            BuildShell(root.transform, b, w, d, h);
+            BuildPorch(root.transform, w, d, h);
+
             BuildInteriorLight(root.transform, b);
 
             // Warm porch light at the important doors.
