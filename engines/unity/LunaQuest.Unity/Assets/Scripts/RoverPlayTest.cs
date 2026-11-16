@@ -45,7 +45,9 @@ namespace LunaQuest.Unity
                 Physics.Simulate(0.02f);
 
                 CheckGround(game);
+                CheckBoard(game);
                 CheckDriving(game);
+                CheckBoardAfterDrive(game);
                 CheckPauseGate(game);
                 CheckExit(game);
                 CheckRestart(game);
@@ -90,6 +92,80 @@ namespace LunaQuest.Unity
                 "the ground is solid from underneath: its triangles face down");
         }
 
+        /// <summary>
+        /// The shift task board at mission start: fourteen rows mirroring learning.json, the
+        /// header and the leading row matching the clock, the mission line last, the rover
+        /// rows still pending, and a board that speaks both languages.
+        /// </summary>
+        private static void CheckBoard(LunaQuestGame game)
+        {
+            var hud = game.Hud;
+            hud.UpdateBoard();
+
+            Expect(ColonyHud.BoardRows.Length == 14,
+                $"expected 14 row specs, found {ColonyHud.BoardRows.Length}");
+            Expect(hud.BoardTexts.Length == ColonyHud.BoardRows.Length,
+                $"{hud.BoardTexts.Length} texts for {ColonyHud.BoardRows.Length} specs");
+            Expect(hud.BoardOrder.Length == ColonyHud.BoardRows.Length,
+                "the draw order does not have one slot per row");
+
+            // Kind counts: the journal rows mirror learning.json, two belong to the rover,
+            // one is the mission line. learning.json itself stays at 11 objectives (H9).
+            int journal = 0, rovers = 0, missions = 0;
+            foreach (var row in ColonyHud.BoardRows)
+            {
+                if (row.Kind == "journal") journal++;
+                else if (row.Kind == "mission") missions++;
+                else rovers++;
+            }
+            Expect(journal == game.Sim.Content.Learning.Count,
+                $"board: {journal} journal rows for {game.Sim.Content.Learning.Count} objectives");
+            Expect(rovers == 2, $"board: expected 2 rover rows, found {rovers}");
+            Expect(missions == 1, $"board: expected 1 mission row, found {missions}");
+            foreach (var objective in game.Sim.Content.Learning)
+                Expect(Array.Exists(ColonyHud.BoardRows, r => r.Id == objective.Id),
+                    $"board: {objective.Id} has no row on the board");
+
+            // No blank rows, and the mission line counts the days.
+            for (int i = 0; i < hud.BoardTexts.Length; i++)
+                Expect(!string.IsNullOrEmpty(hud.BoardTexts[i]), $"board: row {i} is blank");
+            Expect(hud.BoardTexts[13].Contains("30"),
+                $"board: the mission line reads '{hud.BoardTexts[13]}'");
+
+            // Both sides of every shift boundary.
+            Expect(ColonyHud.CurrentShift(0.0).Id == "night", "board: 00:00 is not the night shift");
+            Expect(ColonyHud.CurrentShift(5.99).Id == "night", "board: 05:59 is not the night shift");
+            Expect(ColonyHud.CurrentShift(6.0).Id == "morning", "board: 06:00 is not the morning shift");
+            Expect(ColonyHud.CurrentShift(11.99).Id == "morning", "board: 11:59 is not the morning shift");
+            Expect(ColonyHud.CurrentShift(12.0).Id == "afternoon", "board: 12:00 is not the afternoon shift");
+            Expect(ColonyHud.CurrentShift(17.99).Id == "afternoon", "board: 17:59 is not the afternoon shift");
+            Expect(ColonyHud.CurrentShift(18.0).Id == "evening", "board: 18:00 is not the evening shift");
+            Expect(ColonyHud.CurrentShift(23.99).Id == "evening", "board: 23:59 is not the evening shift");
+
+            // The header names the shift the clock says it is, and the row leading the board
+            // belongs to that shift; the mission line always sits last.
+            var shift = ColonyHud.CurrentShift(game.Sim.Clock.HourOfDay);
+            Expect(hud.BoardHeader == L.T(shift.En, shift.Ar),
+                $"board: the header reads '{hud.BoardHeader}', expected '{L.T(shift.En, shift.Ar)}'");
+            int lead = hud.BoardOrder[0];
+            Expect(ColonyHud.BoardRows[lead].Shift == shift.Id,
+                $"board: the {ColonyHud.BoardRows[lead].Shift} row leads but the clock says {shift.Id}");
+            Expect(hud.BoardOrder[13] == 13, "board: the mission line does not sit last");
+
+            // The rover milestones are not finished at mission start.
+            Expect(!hud.BoardDone[4] && !hud.BoardDone[5],
+                "board: the rover rows are already marked at mission start");
+
+            // Bilingual: the board swaps to Arabic and back.
+            bool wasArabic = L.Arabic;
+            L.Arabic = true;
+            hud.UpdateBoard();
+            Expect(hud.BoardTexts[0].Contains("لوحة"),
+                $"board: the Arabic board reads '{hud.BoardTexts[0]}'");
+            L.Arabic = wasArabic;
+            hud.UpdateBoard();
+        }
+
         /// <summary>Enter, drive, steer, drain; the wheels and the odometer move with it.</summary>
         private static void CheckDriving(LunaQuestGame game)
         {
@@ -129,6 +205,36 @@ namespace LunaQuest.Unity
                 $"the driver is not leaning back against the seat (X {lean:F1}°, expected +18)");
             Expect(player.Visual.localPosition.y > rover.SeatGlobal.y - 0.6f,
                 "the suit is not sitting at the hand controller");
+        }
+
+        /// <summary>
+        /// The board follows the rover: taking the seat marks the garage row, and driving out
+        /// to the ice site latches the second milestone and marks that row too — both drawn
+        /// in the calm teal DONE colour (the colour is applied from BoardDone when drawing).
+        /// </summary>
+        private static void CheckBoardAfterDrive(LunaQuestGame game)
+        {
+            var hud = game.Hud;
+            var rover = game.Rover;
+            if (rover == null) return;
+
+            hud.UpdateBoard();
+            Expect(hud.BoardDone[4], "board: taking the rover did not mark the garage row");
+            Expect(!hud.BoardDone[5], "board: the ice row is marked without reaching the ice");
+
+            // Out to the ice site: teleport the way RestartMission does, take one step, and
+            // the milestone latches from the rover's own distance check.
+            Vector3 home = rover.transform.position;
+            rover.transform.position = new Vector3(52f, home.y, -34f);
+            rover.SimulateForTest(1f / 60f, 0f, 0f, false, false, game.Player);
+            Expect(rover.ReachedIce, "the ice-site milestone did not latch");
+
+            hud.UpdateBoard();
+            Expect(hud.BoardDone[5], "board: reaching the ice did not mark the ice row");
+            Expect(hud.BoardTexts[4].StartsWith("✓") && hud.BoardTexts[5].StartsWith("✓"),
+                "board: the finished rover rows are not marked with the check");
+
+            rover.transform.position = home;
         }
 
         /// <summary>BUG-1: an open dialogue must not let the wheel keep driving.</summary>

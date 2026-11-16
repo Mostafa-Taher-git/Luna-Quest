@@ -50,6 +50,23 @@ namespace LunaQuest.Unity
         private float _baseWidth = 1600f;
         private float _baseHeight = 900f;
 
+        // ---- shift task board ------------------------------------------------
+        // Canonical index in drawn order, rebuilt only when the shift changes — the same
+        // "move the nodes, keep the labels" rule the Godot editions follow with MoveChild.
+        private readonly int[] _boardOrder = new int[BoardRows.Length];
+        private readonly string[] _boardTexts = new string[BoardRows.Length];
+        private readonly bool[] _boardDone = new bool[BoardRows.Length];
+        private string _boardShift = "";
+
+        /// <summary>Computed board state, readable by the playtest: the header names the
+        /// shift, BoardTexts[i] is the finished line for BoardRows[i], BoardDone[i] says
+        /// whether it is marked (and therefore drawn in <see cref="DoneColor"/>), and
+        /// BoardOrder lists canonical indices in the order they are drawn.</summary>
+        public string BoardHeader { get; private set; } = "";
+        public string[] BoardTexts => _boardTexts;
+        public bool[] BoardDone => _boardDone;
+        public int[] BoardOrder => _boardOrder;
+
         public bool OverlayOpen => _journalOpen || _helpOpen || _mathOpen || _dialogueOpen;
 
         public ColonyHud(LunaQuestGame game)
@@ -163,6 +180,167 @@ namespace LunaQuest.Unity
             _firstPerson = firstPerson;
         }
 
+        // ---- shift task board spec ------------------------------------------
+
+        /// <summary>A finished row reads as a calm teal rather than a highlight: a done task is
+        /// settled, not urgent. The same teal as the other two engines.</summary>
+        public static readonly Color DoneColor = new Color(0.45f, 0.80f, 0.72f);
+        private static readonly Color RowColor = new Color(0.82f, 0.90f, 1f);
+        private static readonly Color RowHeadColor = new Color(0.55f, 0.72f, 0.90f);
+
+        /// <summary>
+        /// One row of the shift task board. <c>Kind</c> says how done is read (a journal entry,
+        /// one of the rover's own milestones, or the mission line), <c>Shift</c> says where the
+        /// row leads. The eleven objectives match content/learning.json exactly; learning.json
+        /// itself stays at 11 objectives — the board is 14 rows.
+        /// </summary>
+        public readonly struct BoardRowSpec
+        {
+            public readonly string Id, Kind, Shift, En, Ar, Hint;
+            public BoardRowSpec(string id, string kind, string shift, string en, string ar, string hint)
+            {
+                Id = id; Kind = kind; Shift = shift; En = en; Ar = ar; Hint = hint;
+            }
+        }
+
+        /// <summary>Which shift the clock is in, with its bilingual header.</summary>
+        public readonly struct ShiftSpec
+        {
+            public readonly string Id, En, Ar;
+            public ShiftSpec(string id, string en, string ar) { Id = id; En = en; Ar = ar; }
+        }
+
+        /// <summary>
+        /// The shift task board — 14 rows. Eleven are the learning objectives from
+        /// content/learning.json (done = a journal entry), two are the crew rover's own
+        /// milestones, and one is the mission line. Ported from the browser edition's
+        /// web/src/ui/hud.js taskList(); wording identical to the Godot editions' hud.gd and
+        /// Hud.cs. learning.json itself stays at 11 objectives (H9).
+        /// </summary>
+        public static readonly BoardRowSpec[] BoardRows =
+        {
+            new BoardRowSpec("obj_power_budget", "journal", "morning",
+                "Read the colony board in Mission Control", "اقرأ لوحة المستعمرة في مركز التحكم",
+                "E at the board · Mission Control"),
+            new BoardRowSpec("obj_solar_dust", "journal", "morning",
+                "Clean the solar array when dust cuts output", "نظّف الألواح الشمسية",
+                "Power farm"),
+            new BoardRowSpec("obj_water_filter", "journal", "morning",
+                "Check the water loop and back-flush the filter", "افحص الماء والفلتر",
+                "Life support"),
+            new BoardRowSpec("obj_sample", "journal", "afternoon",
+                "Collect a regolith sample at the ice site", "اجمع عينة من التربة في موقع الجليد",
+                "Ice site · sampler console"),
+            new BoardRowSpec("obj_rover_take", "rover_driven", "afternoon",
+                "Take the crew rover from the garage apron", "خذ مركبة الطاقم من أرضية المرآب",
+                "Garage · E to drive"),
+            new BoardRowSpec("obj_rover_ice", "rover_ice", "afternoon",
+                "Drive the crew rover out to the ice prospecting site",
+                "قد المركبة إلى موقع استكشاف الجليد", "Ice site · 52, -34"),
+            new BoardRowSpec("obj_sensor_dust", "journal", "afternoon",
+                "Brush the sensor heads and the antenna", "نظّف رؤوس الحساسات والهوائي",
+                "Comms tower"),
+            new BoardRowSpec("obj_plant_care", "journal", "afternoon",
+                "Harvest the grow pod", "احصد المحصول", "Greenhouse"),
+            new BoardRowSpec("obj_airlock_dust", "journal", "evening",
+                "Sweep the airlock dust before the next EVA", "نظّف غرفة المعادل قبل الخروج التالي",
+                "Airlock"),
+            new BoardRowSpec("obj_comms_relay", "journal", "evening",
+                "Realign the comms relay", "أعد ضبط مرحّل الاتصالات",
+                "Mission Control · comms desk"),
+            new BoardRowSpec("obj_air_scrubber", "journal", "evening",
+                "Restart electrolysis and log the scrubber",
+                "أعد تشغيل التحليل الكهربائي وسجّل الغسّال", "Life support"),
+            new BoardRowSpec("obj_crew_rest", "journal", "night",
+                "Rebalance the crew's rest plan", "أعد خطة الراحة للطاقم", "Habitat"),
+            new BoardRowSpec("obj_radiation", "journal", "night",
+                "Shelter the crew during a particle event", "احمِ الطاقم عند حدث الجسيمات",
+                "Habitat · shielded section"),
+            new BoardRowSpec("mission", "mission", "any",
+                "Survive the mission — day %d of 30", "أكمل المهمة — اليوم %d من 30",
+                ""),
+        };
+
+        /// <summary>
+        /// Which shift the clock is in, with its bilingual header. Six to twelve is morning,
+        /// twelve to eighteen is afternoon, eighteen and later is evening, everything before
+        /// six is night.
+        /// </summary>
+        public static ShiftSpec CurrentShift(double hour)
+        {
+            if (hour >= 6.0 && hour < 12.0)
+                return new ShiftSpec("morning", "Morning shift - power, water, air",
+                    "مناوبة الصباح - الطاقة والماء والهواء");
+            if (hour >= 12.0 && hour < 18.0)
+                return new ShiftSpec("afternoon", "Afternoon shift - samples and crops",
+                    "مناوبة الظهيرة - العينات والمحاصيل");
+            if (hour >= 18.0)
+                return new ShiftSpec("evening", "Evening shift - dust, comms, oxygen",
+                    "مناوبة المساء - الغبار والاتصالات والأكسجين");
+            return new ShiftSpec("night", "Night shift - rest and radiation watch",
+                "مناوبة الليل - الراحة ومراقبة الإشعاع");
+        }
+
+        /// <summary>
+        /// Resolve the board against the live simulation: the header names the shift, the row
+        /// that leads is the one for the shift the clock says it is, and a finished row is
+        /// marked and recoloured. The labels keep their canonical identity — BoardTexts[i]
+        /// always describes BoardRows[i] — so only their drawn order ever changes with the
+        /// shift, and a per-frame refresh is a text swap.
+        /// </summary>
+        public void UpdateBoard()
+        {
+            var sim = _game.Sim;
+            if (sim == null) return;
+            var shift = CurrentShift(sim.Clock.HourOfDay);
+            BoardHeader = L.T(shift.En, shift.Ar);
+
+            if (shift.Id != _boardShift)
+            {
+                _boardShift = shift.Id;
+                // The current shift leads and everything behind it keeps its canonical order,
+                // so pulling the leading rows to the front in a single pass leaves the whole
+                // board sorted — the same move the Godot editions make with MoveChild.
+                int at = 0;
+                for (int i = 0; i < BoardRows.Length; i++)
+                    if (BoardRows[i].Shift == shift.Id) _boardOrder[at++] = i;
+                for (int i = 0; i < BoardRows.Length; i++)
+                    if (BoardRows[i].Shift != shift.Id) _boardOrder[at++] = i;
+            }
+
+            var rover = _game.Rover;
+            int day = Mathf.Min(sim.Clock.Day, 30);
+            for (int i = 0; i < BoardRows.Length; i++)
+            {
+                var row = BoardRows[i];
+                string label = L.T(row.En, row.Ar);
+                string hint = row.Hint;
+                bool done;
+                switch (row.Kind)
+                {
+                    case "journal":
+                        done = sim.Learning.HasEntry(row.Id);
+                        break;
+                    case "rover_driven":
+                        done = rover != null && rover.HasDriven;
+                        break;
+                    case "rover_ice":
+                        done = rover != null && rover.ReachedIce;
+                        break;
+                    default: // mission
+                        done = sim.Clock.Day > 30;
+                        label = L.T($"Survive the mission — day {day} of 30",
+                            $"أكمل المهمة — اليوم {day} من 30");
+                        hint = $"{sim.Clock.MissionProgress * 100.0:0}%";
+                        break;
+                }
+                string text = hint.Length > 0 ? $"{label}  ·  {hint}" : label;
+                if (done) text = "✓ " + text;
+                _boardTexts[i] = text;
+                _boardDone[i] = done;
+            }
+        }
+
         // ---- drawing ---------------------------------------------------------
 
         public void Draw()
@@ -188,6 +366,7 @@ namespace LunaQuest.Unity
             DrawVisor(w, h);
             DrawTopBar(w);
             DrawStatusPanel();
+            DrawBoard();
             DrawLogPanel(w);
             DrawPromptAndSubtitles(w, h);
 
@@ -495,6 +674,37 @@ namespace LunaQuest.Unity
             Bar(new Rect(panel.x + 14f, panel.y + 16f, panel.width - 28f, 7f),
                 value / Math.Max(0.0001, max), color, warn);
             y += 33f;
+        }
+
+        // ---- board -----------------------------------------------------------
+
+        /// <summary>
+        /// The shift task board: a panel between the status panel and the colony log, under
+        /// the toast band and clear of the crosshair — the same spot the other two engines
+        /// use. The header names the current shift, the row that leads belongs to that shift,
+        /// and a finished row reads in the calm teal DONE colour. The rows are computed by
+        /// <see cref="UpdateBoard"/>, which the playtest can call without a frame.
+        /// </summary>
+        private void DrawBoard()
+        {
+            UpdateBoard();
+
+            var panel = new Rect(342f, 172f, 670f, 260f);
+            Panel(panel, new Color(0.025f, 0.043f, 0.068f, 0.84f),
+                new Color(0.2f, 0.35f, 0.5f, 0.45f));
+
+            Text(new Rect(panel.x + 14f, panel.y + 8f, panel.width - 28f, 16f),
+                BoardHeader, 12, RowHeadColor, TextAnchor.MiddleLeft, true);
+
+            float y = panel.y + 28f;
+            for (int slot = 0; slot < _boardOrder.Length; slot++)
+            {
+                int i = _boardOrder[slot];
+                Text(new Rect(panel.x + 14f, y, panel.width - 28f, 15f),
+                    _boardTexts[i], 11, _boardDone[i] ? DoneColor : RowColor,
+                    TextAnchor.MiddleLeft);
+                y += 16f;
+            }
         }
 
         // ---- log -------------------------------------------------------------
