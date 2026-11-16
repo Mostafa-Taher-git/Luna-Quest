@@ -25,9 +25,14 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to create (for example v3.1)'
-        required: true
-        default: 'v3.1'
+        description: 'Existing release tag to publish (for example v3.4); required only when dry_run is false'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Build and checksum the artifacts WITHOUT publishing a GitHub Release'
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -155,10 +160,31 @@ jobs:
   publish:
     name: Publish the release
     needs: [film, godot, gdscript]
-    if: always()
+    # A manual dispatch is a rehearsal by default: it builds and checks every artifact but
+    # never creates a real release. Only an explicit dry_run=false or a real tag push publishes.
+    if: always() && !inputs.dry_run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate the dispatch tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="$TAG"
+          if [ -z "$tag" ]; then
+            echo "::error::inputs.tag is required when dry_run is false"
+            exit 1
+          fi
+          case "$tag" in
+            v*) ;;
+            *) echo "::error::inputs.tag must start with 'v' (got '$tag')"; exit 1 ;;
+          esac
+          git rev-parse -q --verify "refs/tags/$tag" >/dev/null || {
+            echo "::error::tag $tag does not exist in this repository"
+            exit 1
+          }
       - name: Collect artifacts
         uses: actions/download-artifact@v4
         with:
