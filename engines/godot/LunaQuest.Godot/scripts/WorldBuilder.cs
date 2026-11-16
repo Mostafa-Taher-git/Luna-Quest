@@ -372,7 +372,7 @@ namespace LunaQuest.Godot
 
         private void BuildEarth()
         {
-            var sphere = new SphereMesh { Radius = 13f, Height = 26f, RadialSegments = 48, Rings = 24 };
+            var sphere = new SphereMesh { Radius = 6f, Height = 12f, RadialSegments = 64, Rings = 32 };
             var mat = new StandardMaterial3D
             {
                 ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
@@ -389,8 +389,20 @@ namespace LunaQuest.Godot
             {
                 var em = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/earth.gdshader") };
                 em.SetShaderParameter("surface", tex);
+                // The initial value is replaced each frame in UpdateSun(); this is its seed.
                 em.SetShaderParameter("sun_dir", new Vector3(0.75f, 0.25f, 0.6f));
                 earthMat = em;
+            }
+            else if (tex != null)
+            {
+                // Fresh clone without the shader: still a lit rock in the sun, never a glowing ball.
+                var lit = new StandardMaterial3D
+                {
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
+                    AlbedoTexture = tex,
+                    Roughness = 1.0f,
+                };
+                earthMat = lit;
             }
             _earth = new MeshInstance3D
             {
@@ -949,6 +961,11 @@ namespace LunaQuest.Godot
                 // point away from the Sun you can see.
                 _sunDisc.Position = -(rot * new Vector3(0, 0, -1)) * 420f;
             }
+            // Keep the Earth's phase in step with the colony's sun (same light, same direction).
+            if (_earth?.MaterialOverride is ShaderMaterial em && em.Shader?.GetPath() == "res://shaders/earth.gdshader")
+                em.SetShaderParameter("sun_dir", _sunDisc != null
+                    ? _sunDisc.Position.Normalized()
+                    : new Vector3(0.75f, 0.25f, 0.6f));
         }
 
         private void UpdateLiveLabels()

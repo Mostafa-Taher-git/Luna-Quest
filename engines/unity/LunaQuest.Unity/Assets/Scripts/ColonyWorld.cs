@@ -146,10 +146,13 @@ namespace LunaQuest.Unity
             NoCollider(disc);
 
             // Earth: the real day map from Solar System Scope, credited in CREDITS.md.
+            // Standard (lit) material: the directional LowSun lights the day side and the side
+            // away from it goes dark — no glowing ball. Sized to read ~2 degrees across (the Moon
+            // sees Earth about 1.9 degrees wide), essentially fixed over the ridge.
             var texture = Resources.Load<Texture2D>("Textures/earth");
-            _earthMat = Unlit(Color.white, texture);
+            _earthMat = new Material(Shader.Find("Standard")) { mainTexture = texture };
             var earth = Sphere(transform, "Earth", new Vector3(95f, 118f, -305f),
-                new Vector3(26f, 26f, 26f), _earthMat);
+                new Vector3(12f, 12f, 12f), _earthMat);
             earth.transform.rotation = Quaternion.Euler(8f, 160f, -12f);
             NoCollider(earth);
             var earthLight = earth.AddComponent<Light>();

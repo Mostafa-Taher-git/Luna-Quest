@@ -16,6 +16,7 @@ var materials: Dictionary = {}
 var interactables: Array = []
 var building_nodes: Dictionary = {}
 var sun: DirectionalLight3D
+var earth_mat: ShaderMaterial = null
 var terrain := LQTerrain.new(1337)
 
 
@@ -123,6 +124,9 @@ func point_sun(clock: LQClock) -> void:
 	var dir := Vector3(sin(azimuth) * cos(elevation), sin(elevation), cos(azimuth) * cos(elevation))
 	sun.look_at_from_position(dir * 200.0, Vector3.ZERO, Vector3.UP)
 	sun.light_energy = 1.6 + 0.6 * clock.solar_irradiance_fraction()
+	# The Earth is lit from the same sun as the colony: the phase and terminator stay in step.
+	if earth_mat != null:
+		earth_mat.set_shader_parameter("sun_dir", dir)
 
 
 func height_at(x: float, z: float) -> float:
@@ -280,22 +284,32 @@ func _make_sky() -> void:
 	add_child(stars)
 
 	# Earth, low over the ridge the way it hangs over the Shackleton rim in the intro film.
+	# The real Blue Marble surface, lit from the same sun as the colony (see point_sun): the
+	# phase and the terminator match the ground, and a thin atmosphere hugs the lit limb.
 	var earth := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
-	sphere.radius = 22.0
-	sphere.height = 44.0
-	sphere.radial_segments = 32
-	sphere.rings = 16
+	sphere.radius = 19.0
+	sphere.height = 38.0
+	sphere.radial_segments = 64
+	sphere.rings = 32
 	earth.mesh = sphere
-	var earth_mat := StandardMaterial3D.new()
-	earth_mat.albedo_color = Color(0.20, 0.42, 0.72)
-	earth_mat.emission_enabled = true
-	earth_mat.emission = Color(0.24, 0.48, 0.80)
-	earth_mat.emission_energy_multiplier = 1.1
-	earth_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	earth.material_override = earth_mat
+	var earth_texture: Texture2D = load("res://assets/real/earth/blue_marble_2048.jpg")
+	if ResourceLoader.exists("res://shaders/earth.gdshader"):
+		var shader := load("res://shaders/earth.gdshader") as Shader
+		earth_mat = ShaderMaterial.new()
+		earth_mat.shader = shader
+		earth_mat.set_shader_parameter("surface", earth_texture)
+		earth_mat.set_shader_parameter("sun_dir", Vector3(0.35, 0.2, 0.8))
+		earth.material_override = earth_mat
+	else:
+		var fallback := StandardMaterial3D.new()
+		fallback.albedo_texture = earth_texture
+		fallback.roughness = 1.0
+		earth.material_override = fallback
 	earth.position = Vector3(-620, 210, -900)
+	earth.rotation = Vector3(0.35, -1.9, 0.41)
 	earth.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	earth.name = "Earth"
 	add_child(earth)
 
 
