@@ -40,7 +40,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_interface(hud, sim, rover)
 	_check_doors(world)
 	_check_consoles(world)
-	_check_crew(world, crew)
+	_check_crew(world, crew, player)
 	_check_perimeter()
 	_check_ground_faces()
 	_check_rover(root, world, player, crew, sim)
@@ -276,7 +276,7 @@ func _check_consoles(world: ColonyWorld) -> void:
 			entry["building_id"], entry["interaction_id"]])
 
 
-func _check_crew(world: ColonyWorld, crew: ColonyCrew) -> void:
+func _check_crew(world: ColonyWorld, crew: ColonyCrew, player: ColonyPlayer) -> void:
 	expect(crew.members.size() == 7, "crew: expected 7, built %d" % crew.members.size())
 	for member in crew.members:
 		var root: Node3D = member["root"]
@@ -293,6 +293,23 @@ func _check_crew(world: ColonyWorld, crew: ColonyCrew) -> void:
 			member["id"], inside_a_building])
 		var ground := ray(spot + Vector3(0, 1.2, 0), spot - Vector3(0, 1.2, 0))
 		expect(not ground.is_empty(), "crew: %s is standing over a hole" % member["id"])
+
+		# F3: the suit is created at exactly 1.75 / 2.311 scale in every edition (the same pose
+		# height the C# audit asserts). A bind-pose AABB would span far beyond the posed silhouette.
+		if member["is_robot"]:
+			continue
+		var suit := root.get_child(0) if root.get_child_count() > 0 else null
+		var expected := 1.75 / 2.311
+		if suit != null:
+			expect(absf(suit.scale.x - expected) < 0.01,
+				"crew: %s suit scale %.3f, expected %.3f (1.75 m)" % [member["id"], suit.scale.x, expected])
+
+	# The player's own suit must read the same.
+	var player_suit := player.get_child(player.get_child_count() - 1) if player.get_child_count() > 0 else null
+	var expected_player := 1.75 / 2.311
+	if player_suit != null:
+		expect(absf(player_suit.scale.x - expected_player) < 0.01,
+			"player: suit scale %.3f, expected %.3f (1.75 m)" % [player_suit.scale.x, expected_player])
 
 
 func _check_perimeter() -> void:

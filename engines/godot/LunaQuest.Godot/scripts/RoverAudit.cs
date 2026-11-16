@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace LunaQuest.Godot
@@ -146,7 +147,38 @@ namespace LunaQuest.Godot
 
             CheckF0Controls(rover, player);
             CheckBuildings(main);
+            CheckCrew(main);
             return Report();
+        }
+
+        /// <summary>
+        /// F3 — every human suit exists as the pose the game shipped: built from the shared
+        /// 2.311 m visor-to-sole pose height, scale 0.757 (1.75 m), with a non-empty hierarchy.
+        /// A bind-pose AABB here is 6 m across (Object_9/10 are rig meshes the posed rig never
+        /// reaches), so assert the scale the suit was actually built with — the GDScript
+        /// edition audits the same figure.
+        /// </summary>
+        private void CheckCrew(Main main)
+        {
+            const float suitHeight = 1.75f;
+            const float posedHeight = 2.311f;
+            const float expectedScale = suitHeight / posedHeight;
+
+            var suits = new List<(Node3D suit, string label)>
+            {
+                (main.Player.Visual, "player"),
+            };
+            foreach (var npc in main.World.Npcs)
+                if (!npc.Profile.IsRobot)
+                    suits.Add((npc.Visual, npc.Profile.Id));
+
+            foreach (var (suit, label) in suits)
+            {
+                if (suit == null) { Expect(false, $"crew: {label} has no suit visual"); continue; }
+                Expect(suit.GetChildCount() > 0, $"crew: {label} has an empty suit hierarchy");
+                Expect(Mathf.Abs(suit.Scale.Y - expectedScale) < 0.01f,
+                    $"crew: {label} suit scale {suit.Scale.Y:F3} is not {expectedScale:F3} (the 1.75 m pose)");
+            }
         }
 
         /// <summary>

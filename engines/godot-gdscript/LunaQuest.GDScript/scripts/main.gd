@@ -9,7 +9,8 @@ extends Node3D
 const INTRO_STREAM := "res://assets/video/intro.ogv"
 const SAVE_PATH := "user://lunaquest-save.json"
 const OPENING_MINUTE := 8 * 60
-const SPAWN := Vector3(0.0, 0.3, -14.0)
+const SPAWN_X := 0.0
+const SPAWN_Z := -14.0
 
 var sim: LQSim
 var world: ColonyWorld
@@ -71,7 +72,7 @@ func _ready() -> void:
 
 	player = ColonyPlayer.new()
 	player.name = "Commander"
-	player.position = SPAWN
+	player.global_position = Vector3(SPAWN_X, world.height_at(SPAWN_X, SPAWN_Z), SPAWN_Z)
 	player.rotation.y = PI
 	player.can_move = false
 	add_child(player)
@@ -124,22 +125,9 @@ func crew_astronaut() -> Node3D:
 
 
 func crew_fit(node: Node3D, target_height: float) -> void:
-	var bounds := AABB()
-	var first := true
-	for child in node.find_children("*", "MeshInstance3D", true, false):
-		var mesh_node := child as MeshInstance3D
-		if mesh_node == null or mesh_node.mesh == null:
-			continue
-		# The suit is measured before it joins the tree, so only the local transform is valid.
-		var box: AABB = mesh_node.transform * mesh_node.get_aabb()
-		if first:
-			bounds = box
-			first = false
-		else:
-			bounds = bounds.merge(box)
-	if first or bounds.size.y < 0.001:
-		return
-	var factor := target_height / bounds.size.y
+	# All three editions share the 2.311 m posed-height contract; the suit ends at 1.75 m.
+	const POSED_HEIGHT := 2.311
+	var factor := target_height / POSED_HEIGHT
 	node.scale = Vector3(factor, factor, factor)
 
 
@@ -158,7 +146,7 @@ func _begin_session() -> void:
 	paused = false
 	mission_complete = false
 	player.can_move = true
-	player.position = SPAWN
+	player.global_position = Vector3(SPAWN_X, world.height_at(SPAWN_X, SPAWN_Z), SPAWN_Z)
 	player.rotation.y = PI
 	player.set_third_person(false)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

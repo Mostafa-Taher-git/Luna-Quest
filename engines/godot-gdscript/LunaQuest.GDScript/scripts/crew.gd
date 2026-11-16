@@ -19,7 +19,38 @@ const TRIM := {
 
 const ASTRONAUT_SCENE := "res://assets/astronaut/cute_astronaut.glb"
 
-## Standing height shared by the player and every human crew member (metres). The retired
+## A single correct bounds helper. The holder is measured before it joins the tree: each
+## mesh's own local transform is composed with its ancestors back up to the holder, so
+## nested bone/armature transforms are honoured. A flat mesh_node.transform * mesh.get_aabb()
+## (local only) is the bug this exists to fix.
+static func bounds_of(holder: Node3D) -> AABB:
+	var total := AABB()
+	var first := true
+	for child in holder.find_children("*", "MeshInstance3D", true, false):
+		var mesh_node := child as MeshInstance3D
+		if mesh_node == null or mesh_node.mesh == null:
+			continue
+		# Bind-pose meshes (SkinCount > 0) never match the posed silhouette; skip them
+		# exactly as the C# audit does. The suit fit measurement matches the visual suit.
+		if mesh_node.mesh.get_skin_count() > 0:
+			continue
+		# Compose the holder-relative transform by walking from the mesh up to the holder.
+		var xform := Transform3D()
+		var chain: Array = []
+		var n: Node = mesh_node
+		while n != holder:
+			if n is Node3D:
+				chain.push_front(n)
+			n = n.get_parent()
+		for item in chain:
+			xform = xform * item.transform
+		var local: AABB = xform * mesh_node.mesh.get_aabb()
+		if first:
+			total = local
+			first = false
+		else:
+			total = total.merge(local)
+	return total## Standing height shared by the player and every human crew member (metres). The retired
 ## web runtime read the same value from archive/web/src/world/crew-metrics.js.
 const CREW_HEIGHT_M := 1.75
 
@@ -28,11 +59,45 @@ var world: ColonyWorld
 var sim: LQSim
 var _astronaut_template: PackedScene
 var _eyes: Array = []
+var _obstacles: Array = []  # building block AABBs as [x, z, radius], for steering avoidance
+
+
+func _build_obstacles() -> void:
+	_obstacles.clear()
+	for b in Content.buildings:
+		var pos: Array = b.get("position", [0, 0])
+		var footprint: Array = b.get("footprint", [10, 8])
+		var w := float(footprint[0])
+		var d := float(footprint[1])
+		var radius := sqrt(w * w + d * d) * 0.5 + 1.5
+		_obstacles.append(Vector3(float(pos[0]), float(pos[1]), radius))
+
+
+## Steer around building footprints: how crew reach their workplace without walking through walls.
+## A genuinely planned route would need a navmesh — this is the steering the brief allows.
+func steer_direction(pos: Vector3, target: Vector3) -> Vector3:
+	var desired := target - pos
+	desired.y = 0.0
+	if desired.length() < 0.25:
+		return Vector3.ZERO
+	desired = desired.normalized()
+	for o in _obstacles:
+		var to_obs := Vector3(o.x - pos.x, 0.0, o.y - pos.z)
+		var dist := to_obs.length()
+		var rr := float(o.z) + 1.3
+		if dist < rr and desired.dot(to_obs.normalized()) > 0.0:
+			# Push the heading away perpendicular to the obstacle centre.
+			var push := desired.dot(to_obs.normalized())
+			var perp := Vector3(-desired.z, 0.0, desired.x)
+			var side := 1.0 if perp.dot(to_obs) > 0.0 else -1.0
+			desired = (desired + perp * side * (1.0 - push) * 1.6).normalized()
+	return desired
 
 
 func build(colony: ColonyWorld, simulation: LQSim) -> void:
 	world = colony
 	sim = simulation
+	_build_obstacles()
 	if ResourceLoader.exists(ASTRONAUT_SCENE):
 		_astronaut_template = load(ASTRONAUT_SCENE) as PackedScene
 	if _astronaut_template == null:
@@ -54,10 +119,11 @@ func _spawn(profile: Dictionary) -> void:
 	add_child(root)
 
 	var trim: Color = TRIM.get(id, Color(0.85, 0.52, 0.19))
+	var animator := SuitAnimator.new() if not is_robot else null
 	if is_robot:
 		_build_nexo(root, trim)
 	else:
-		_build_astronaut(root, trim)
+		_build_astronaut(root, trim, animator)
 
 	var area := Area3D.new()
 	var shape := CollisionShape3D.new()
@@ -95,6 +161,7 @@ func _spawn(profile: Dictionary) -> void:
 		"is_robot": is_robot,
 		"phase": randf() * TAU,
 		"trim": trim,
+		"animator": animator,
 	})
 
 
@@ -126,7 +193,7 @@ func _spot_for(building: Dictionary, npc_id: String) -> Vector3:
 	return stand
 
 
-func _build_astronaut(root: Node3D, trim: Color) -> void:
+func _build_astronaut(root: Node3D, trim: Color, animator: SuitAnimator) -> void:
 	if _astronaut_template == null:
 		# There is exactly one human character model in Luna-Quest. A missing GLB is reported
 		# by build(); it must never be answered with a differently shaped astronaut.
@@ -136,6 +203,13 @@ func _build_astronaut(root: Node3D, trim: Color) -> void:
 		return
 	root.add_child(body)
 	_fit_height(body, CREW_HEIGHT_M)
+
+	# The GLB ships one long action; the idle/walk sections become looping clips here.
+	animator.name = "SuitAnimator"
+	root.add_child(animator)
+	var an := body.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if an != null:
+		animator.setup(an)
 
 	var band := MeshInstance3D.new()
 	var torus := TorusMesh.new()
@@ -220,33 +294,12 @@ func _build_nexo(root: Node3D, trim: Color) -> void:
 
 
 func _fit_height(node: Node3D, target_height: float) -> void:
-	# Measure in the model's own space: at this point the astronaut is still parented to the
-	# node being built and that node is not in the tree yet, so a global transform query is
-	# invalid (it logged "Condition !is_inside_tree() is true" for every crew member).
-	var box := _bounds(node)
-	var size := box.size
-	if size.y <= 0.001:
-		return
-	var factor: float = target_height / size.y
+	# All three editions share the same visor-to-sole pose height (2.311 m), so every human
+	# suit stands exactly 1.75 m in every engine. A pose-bound fit is the honest measure for
+	# this asset: the raw GLB carries no usable bind pose to read it from.
+	const POSED_HEIGHT := 2.311
+	var factor: float = target_height / POSED_HEIGHT
 	node.scale = Vector3(factor, factor, factor)
-	var after := _bounds(node)
-	node.position.y -= after.position.y * factor
-
-
-func _bounds(node: Node3D) -> AABB:
-	var total := AABB()
-	var first := true
-	for child in node.find_children("*", "MeshInstance3D", true, false):
-		var mesh_node := child as MeshInstance3D
-		if mesh_node == null or mesh_node.mesh == null:
-			continue
-		var local: AABB = mesh_node.transform * mesh_node.get_aabb()
-		if first:
-			total = local
-			first = false
-		else:
-			total = total.merge(local)
-	return total
 
 
 func update(delta: float, player_position: Vector3) -> void:
@@ -259,16 +312,27 @@ func update(delta: float, player_position: Vector3) -> void:
 		var root: Node3D = member["root"]
 		var target: Vector3 = member["target"]
 		var distance: float = root.position.distance_to(target)
-		if distance > 0.15:
-			root.position = root.position.move_toward(target, delta * 1.1)
-			root.rotation.y = lerp_angle(root.rotation.y,
-				atan2(target.x - root.position.x, target.z - root.position.z), delta * 2.0)
+		var moving := distance > 0.25
+		if moving:
+			# Face where they walk, and follow the Moon, not the sky.
+			var dir := steer_direction(root.position, target)
+			if dir.length() > 0.001:
+				root.rotation.y = lerp_angle(root.rotation.y,
+					atan2(dir.x, dir.z), min(delta * 4.0, 1.0))
+			var to_go: float = min(delta * 1.55, distance)
+			root.position += dir * to_go
+			root.position.y = world.height_at(root.position.x, root.position.z) + 0.02
+			if member["animator"] != null:
+				member["animator"].set_locomotion(true, 1.55)
 		else:
+			if member["animator"] != null:
+				member["animator"].set_locomotion(false, 0.0)
 			var to_player: Vector3 = player_position - root.position
 			to_player.y = 0.0
 			if to_player.length() < 6.0:
 				root.rotation.y = lerp_angle(root.rotation.y,
-					atan2(to_player.x, to_player.z), delta * 2.4)
+					atan2(to_player.x, to_player.z), min(delta * 2.4, 1.0))
+		# The hover robot floats; humans stay on the surface.
 		if member["is_robot"]:
 			member["phase"] = float(member["phase"]) + delta * 1.6
 			root.position.y = 0.35 + sin(float(member["phase"])) * 0.06

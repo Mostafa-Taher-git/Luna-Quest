@@ -55,6 +55,7 @@ namespace LunaQuest.Unity
                 CheckF0Controls(game);
                 CheckSaveRestore(game);
                 CheckBuildings(game);
+                CheckSuitScale(game);
                 CheckRestart(game);
             }
             catch (Exception error)
@@ -462,6 +463,33 @@ namespace LunaQuest.Unity
             }
             Expect(hidden >= 9,
                 $"F2: {hidden} plain wall meshes were still enabled (expected at least 9 hidden)");
+        }
+
+        /// <summary>
+        /// F3 — every suit is built from the shared 2.311 m visor-to-sole pose height, which
+        /// puts every human at exactly 1.75 m in the baked pose. The Unity bake carries no clip,
+        /// so the procedural 1.6 Hz hover/step offsets are the locomotion cue by design.
+        /// </summary>
+        private static void CheckSuitScale(LunaQuestGame game)
+        {
+            const float expectedScale = 1.75f / 2.311f;
+            Expect(game.Player != null && game.Player.Visual != null, "F3: the player suit is missing");
+            if (game.Player?.Visual != null)
+                Expect(Mathf.Abs(game.Player.Visual.localScale.x - expectedScale) < 0.01f,
+                    $"F3: the player suit's scale is {game.Player.Visual.localScale.x:F3}, expected {expectedScale:F3} (1.75 m)");
+
+            int humans = 0;
+            foreach (var agent in game.World.Crew)
+            {
+                if (agent.transform.childCount == 0) { Expect(false, $"F3: {agent.NpcId} has no visual"); continue; }
+                var suit = agent.transform.GetChild(0);
+                if (suit.name == "NEXO") continue;   // NEXO is the one robot — not human, not 1.75 m
+                humans++;
+                Expect(suit.childCount > 0, $"F3: {agent.NpcId}'s suit is empty");
+                Expect(Mathf.Abs(suit.localScale.x - expectedScale) < 0.01f,
+                    $"F3: {agent.NpcId}'s suit scale is {suit.localScale.x:F3}, expected {expectedScale:F3} (1.75 m)");
+            }
+            Expect(humans == 6, $"F3: expected 6 human crew visuals, found {humans}");
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>
