@@ -51,9 +51,11 @@ Astronaut are pinned by SHA-256 in `docs/design/asset-lock.json`, guarded by
 
 ### Release artifacts
 
-The GitHub Release attaches the Godot .NET Windows/Linux archives, the GDScript Windows/Linux
-archives, the raw Linux binary, a Debian package built by `tools/package-desktop.sh`,
-`SHA256SUMS` covering every attached file, and the unchanged intro film MP4.
+The GitHub Release attaches the one-click **GDScript build** — `LunaQuest-Windows.exe`, the raw
+Linux binary `LunaQuest-Linux-x86_64`, and the Debian package `LunaQuest-Linux-amd64.deb`
+(built by `tools/package-desktop.sh` from the GDScript project; no .NET runtime needed), plus
+the Godot .NET Windows/Linux archives (the `.NET` builds) and the GDScript Windows/Linux
+archives. `SHA256SUMS` covers every attached file, and the intro film MP4 is attached unchanged.
 
 ### Verification
 
@@ -114,9 +116,11 @@ Cute Astronaut مثبّتان بـ SHA-256 في `docs/design/asset-lock.json`، 
 
 ### قطع الإصدار
 
-يُرفِق إصدار GitHub أرشيفات Godot .NET لـ Windows/Linux، وأرشيفات GDScript لـ Windows/Linux،
-وثنائية Linux الخام، وحزمة Debian التي يبنيها `tools/package-desktop.sh`، و`SHA256SUMS` لكل
-ملف مرفق، وفيلم الافتتاحية MP4 دون تغيير.
+يُرفِق إصدار GitHub بناء **GDScript** بنقرة واحدة — `LunaQuest-Windows.exe` والثنائية الخام
+`LunaQuest-Linux-x86_64` وحزمة Debian `LunaQuest-Linux-amd64.deb` (تُبنى من مشروع GDScript عبر
+`tools/package-desktop.sh`؛ ولا تحتاج إلى .NET)، إضافةً إلى أرشيفات Godot .NET لـ Windows/Linux
+(بنيات `.NET`) وأرشيفات GDScript لـ Windows/Linux. ويغطي `SHA256SUMS` كل ملف مرفق، وفيلم
+الافتتاحية MP4 مرفق دون تغيير.
 
 ### التحقق
 

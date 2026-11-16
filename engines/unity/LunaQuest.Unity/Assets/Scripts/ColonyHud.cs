@@ -519,8 +519,8 @@ namespace LunaQuest.Unity
                 16, new Color(0.6f, 0.78f, 0.94f), TextAnchor.MiddleCenter);
 
             Text(new Rect(panel.x + 48f, panel.y + 126f, panel.width - 96f, 44f),
-                L.T("30 Earth days. Nine crew. Every kilogram and every second counted.",
-                    "٣٠ يومًا أرضيًا. تسعة أفراد. كل كيلوغرام وكل ثانية محسوبة."),
+                L.T("30 Earth days. Seven people and NEXO. Every kilogram and every second counted.",
+                    "٣٠ يومًا أرضيًا. سبعة أفراد وNEXO. كل كيلوغرام وكل ثانية محسوبة."),
                 14, new Color(0.72f, 0.82f, 0.92f), TextAnchor.MiddleCenter, false, true);
 
             Text(new Rect(panel.x + 48f, panel.y + 192f, panel.width - 96f, 24f),
@@ -936,8 +936,8 @@ namespace LunaQuest.Unity
                     $"١٢ دقيقة لعب لكل ثانية حقيقية · يوم اللعب = ١٢٠ ثانية · ٣٠ يومًا = ٦٠ دقيقة"),
                 new Color(0.68f, 0.8f, 0.92f), 11, 26f);
 
-            Line(L.T("CREW · nine people, per Earth day and per real second",
-                    "الطاقم · تسعة أفراد، لكل يوم أرضي ولكل ثانية حقيقية"),
+            Line(L.T("CREW · seven people, per Earth day and per real second",
+                    "الطاقم · سبعة أفراد، لكل يوم أرضي ولكل ثانية حقيقية"),
                 new Color(0.55f, 0.95f, 0.65f), 12, 22f);
             Line(L.T($"oxygen  {o2Day:0.00} kg/day  →  {o2Day * dayFraction:0.0000} kg/s",
                     $"أكسجين  {o2Day:0.00} كغ/يوم  →  {o2Day * dayFraction:0.0000} كغ/ث"),

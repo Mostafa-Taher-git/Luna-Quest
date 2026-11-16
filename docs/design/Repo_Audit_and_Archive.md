@@ -360,8 +360,9 @@ between old and new frames are expected rather than regressions: the live game r
 **7 CREW + NEXO** (`content/npcs.json` = six named humans + NEXO) while the retired web material
 still describes **nine people** (`README.md:42`, `packaging/control.template:11`), and the art
 pass has changed since those frames were rendered. In some frames the suit renders very bright
-against bloom; that is a Compatibility-renderer capture artefact, not a game defect. T6 fixes
-the stale "nine people" text.
+against bloom; that is a Compatibility-renderer capture artefact, not a game defect. The stale
+"nine people" text was subsequently fixed in T6 (README.md, the engines' help/title screens, the
+.NET project description, and `packaging/control.template`).
 
 ### 11.4 Open decision for the owner — `moon_02` import sidecars
 

@@ -6,7 +6,7 @@
 
 ## Download and play
 
-**This is the latest release of the game.** Both downloads are single files with the whole
+**This is the latest release of the game.** The one-click downloads are single files with the whole
 game already baked in: no Godot, no .NET, no runtime, no installer wizard and nothing to
 unzip. Grab one file and you are playing.
 
@@ -14,11 +14,14 @@ unzip. Grab one file and you are playing.
 
 | Platform | Download | How to play |
 |---|---|---|
-| Windows 10/11 | `LunaQuest-Windows.exe` (~183 MiB / 191 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
-| Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
-| Want to build it yourself? | Build from source (Godot / Unity) | Open `engines/godot/LunaQuest.Godot` (Godot 4.7.2 .NET), `engines/godot-gdscript/LunaQuest.GDScript` (stock Godot 4.7.2) or `engines/unity/LunaQuest.Unity` (Unity 6.3 LTS). The browser edition is retired. |
+| Windows 10/11 | `LunaQuest-Windows.exe` (~196 MiB / 205 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
+| Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` (~111 MiB / 117 MB) | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
+| Want to build it yourself? | Build from source (Godot / Unity) | Open `engines/godot/LunaQuest.Godot` (Godot 4.7.2 .NET), `engines/godot-gdscript/LunaQuest.GDScript` (stock Godot 4.7.2) or `engines/unity/LunaQuest.Unity` (Unity 6000.3.0f1). The browser edition is retired. |
 
-Both files come from the **pure GDScript edition**, so no .NET runtime is needed. The asset
+The one-click `.exe`, the `.deb` and the raw `LunaQuest-Linux-x86_64` binary (~161 MiB / 169 MB)
+are the **pure GDScript build**, built from `engines/godot-gdscript/LunaQuest.GDScript` with
+`tools/package-desktop.sh` — no .NET runtime needed. The `.NET` builds are the ZIPs
+(`LunaQuest-Windows.zip`, `LunaQuest-Linux.zip`), built from the shared C# core. The asset
 names are fixed for every release, which is why the `releases/latest/download/` links above
 always point at the newest build.
 

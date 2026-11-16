@@ -664,7 +664,7 @@ func _build_start_screen() -> void:
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(subtitle)
 	var brief := _label("Shackleton rim, 89.9° S. Thirty Earth days. Six crew, one commander and NEXO.\n"
-		+ "Read every console, keep nine people alive, and finish the mission with the colony still running.",
+		+ "Read every console, keep seven people alive, and finish the mission with the colony still running.",
 		15, DIM)
 	brief.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	brief.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -7,7 +7,7 @@ config_version=5
 [application]
 
 config/name="Luna-Quest"
-config/description="A walkable lunar colony on the Shackleton rim. 30 Earth days, nine crew, one shared simulation core."
+config/description="A walkable lunar colony on the Shackleton rim. 30 Earth days, a commander, six crew and NEXO the robot, one shared simulation core."
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
