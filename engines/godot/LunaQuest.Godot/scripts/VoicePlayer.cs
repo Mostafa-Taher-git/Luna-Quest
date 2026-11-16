@@ -38,6 +38,41 @@ namespace LunaQuest.Godot
 
         public void Bind(Hud hud) => _hud = hud;
 
+        /// <summary>F10: NEXO's happy chirp — the colony finished something, it delights.
+        /// Runtime-generated two-note sweep; downloads nothing.</summary>
+        public void PlayChirp()
+        {
+            const int sampleRate = 22050;
+            var frames = sampleRate * 38 / 100;
+            var data = new byte[frames * 2];
+            for (int i = 0; i < frames; i++)
+            {
+                float t = i / (float)sampleRate;
+                float p = t / 0.38f;
+                float f = 1180f + 1900f * p;
+                float v = Mathf.Sin(t * Mathf.Tau * f + Mathf.Sin(t * Mathf.Tau * 13f) * 1.1f) * 0.72f * Mathf.Sin(p * Mathf.Pi) * (1f - p * 0.35f);
+                short s = (short)(v * 9200f);
+                data[i * 2] = (byte)(s & 0xFF);
+                data[i * 2 + 1] = (byte)((s >> 8) & 0xFF);
+            }
+            var player = new AudioStreamPlayer3D
+            {
+                Name = "NexoChirp",
+                MaxDistance = 16f,
+                VolumeDb = -6f,
+                Stream = new AudioStreamWav
+                {
+                    Format = AudioStreamWav.FormatEnum.Format16Bits,
+                    MixRate = sampleRate,
+                    Stereo = false,
+                    Data = data,
+                },
+            };
+            Main.Instance?.AddChild(player);
+            player.Play();
+            player.Finished += player.QueueFree;
+        }
+
         public bool IsPlaying => _voice != null && _voice.Playing;
 
         public void SetAmbientPaused(bool paused)

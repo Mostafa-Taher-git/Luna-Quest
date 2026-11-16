@@ -91,6 +91,28 @@ namespace LunaQuest.Unity
             SpeakFile(file, text, 6f);
         }
 
+        /// <summary>F10: NEXO's happy chirp — the colony finished something, it delights.
+        /// Runtime-generated two-note sweep; downloads nothing.</summary>
+        public void PlayChirp()
+        {
+            if (!Enabled) return;
+            const int sampleRate = 22050;
+            int frames = sampleRate * 38 / 100;
+            var samples = new float[frames];
+            for (int i = 0; i < frames; i++)
+            {
+                float t = i / (float)sampleRate;
+                float p = t / 0.38f;
+                float f = 1180f + 1900f * p;
+                samples[i] = Mathf.Sin(t * Mathf.PI * 2f * f + Mathf.Sin(t * Mathf.PI * 2f * 13f) * 1.1f)
+                    * 0.72f * Mathf.Sin(p * Mathf.PI) * (1f - p * 0.35f);
+            }
+            var clip = AudioClip.Create("nexo_chirp", samples.Length, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            _source.spatialBlend = 0f;
+            _source.PlayOneShot(clip);
+        }
+
         public void SpeakFile(string file, string subtitle, float seconds = 5f)
         {
             if (!Enabled) return;

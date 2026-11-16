@@ -950,28 +950,137 @@ namespace LunaQuest.Unity
             }
         }
 
-        /// <summary>NEXO: a hovering white sphere robot with a blue band and a dark screen face.</summary>
+        /// <summary>NEXO v2: rounded white shell, cyan accent ring, antenna with orange tip,
+        /// solar fins, dark curved visor, two glowing eyes (warned-by-signals).</summary>
         private GameObject CreateRobot()
         {
             var root = new GameObject("NEXO");
-            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(body.GetComponent<Collider>());
-            body.transform.SetParent(root.transform, false);
-            body.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-            body.transform.localScale = new Vector3(0.52f, 0.46f, 0.52f);
-            body.GetComponent<Renderer>().material.color = new Color(0.95f, 0.96f, 0.98f);
-            var face = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(face.GetComponent<Collider>());
-            face.transform.SetParent(body.transform, false);
-            face.transform.localPosition = new Vector3(0f, 0.06f, 0.22f);
-            face.transform.localScale = new Vector3(0.75f, 0.55f, 0.6f);
-            face.GetComponent<Renderer>().material.color = new Color(0.03f, 0.06f, 0.1f);
-            var band = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(band.GetComponent<Collider>());
-            band.transform.SetParent(body.transform, false);
-            band.transform.localPosition = new Vector3(0f, -0.15f, 0f);
-            band.transform.localScale = new Vector3(1.04f, 0.06f, 1.04f);
-            band.GetComponent<Renderer>().material.color = new Color(0.16f, 0.45f, 0.86f);
+
+            var shellMat = Mat(new Color(0.88f, 0.90f, 0.92f), 0.3f, 0.15f);
+            var darkTrim = Mat(new Color(0.28f, 0.30f, 0.33f), 0.55f, 0f);
+            var cyan = Mat(new Color(0.10f, 0.55f, 0.70f), 0.2f, 0.2f,
+                new Color(0.25f, 0.85f, 1.0f), 1.5f);
+            var finMat = Mat(new Color(0.10f, 0.16f, 0.30f), 0.55f, 0.25f,
+                new Color(0.07f, 0.16f, 0.38f), 0.5f);
+
+            var shell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            shell.name = "Shell";
+            Destroy(shell.GetComponent<Collider>());
+            shell.transform.SetParent(root.transform, false);
+            shell.transform.localPosition = new Vector3(0f, 1.12f, 0f);
+            shell.transform.localScale = new Vector3(0.88f, 0.86f, 0.86f);
+            shell.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            foreach (float frac in new[] { -0.17f, 0.16f })
+            {
+                var seam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                seam.name = "PanelSeam";
+                Destroy(seam.GetComponent<Collider>());
+                seam.transform.SetParent(root.transform, false);
+                seam.transform.localPosition = new Vector3(0f, 1.12f + frac, 0f);
+                seam.transform.localScale = new Vector3(0.87f, 0.02f, 0.87f);
+                seam.GetComponent<Renderer>().sharedMaterial = darkTrim;
+            }
+
+            var visor = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            visor.name = "Visor";
+            Destroy(visor.GetComponent<Collider>());
+            visor.transform.SetParent(root.transform, false);
+            visor.transform.localPosition = new Vector3(0f, 1.14f, 0.29f);
+            visor.transform.localScale = new Vector3(0.66f, 0.50f, 0.24f);
+            visor.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.02f, 0.025f, 0.035f), 0.4f, 0.08f);
+
+            var eyes = new GameObject("NEXO_Eyes");
+            eyes.transform.SetParent(root.transform, false);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var eye = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                eye.name = side < 0 ? "EyeL" : "EyeR";
+                Destroy(eye.GetComponent<Collider>());
+                eye.transform.SetParent(eyes.transform, false);
+                eye.transform.localPosition = new Vector3(side * 0.135f, 1.18f, 0.42f);
+                eye.transform.localScale = new Vector3(0.115f, 0.115f, 0.115f);
+                eye.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.05f, 0.30f, 0.38f), 0.2f, 0.1f,
+                    new Color(0.30f, 0.85f, 1.0f), 2.2f);
+            }
+
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "WaistRing";
+            Destroy(ring.GetComponent<Collider>());
+            ring.transform.SetParent(root.transform, false);
+            ring.transform.localPosition = new Vector3(0f, 1.03f, 0f);
+            ring.transform.localScale = new Vector3(0.875f, 0.035f, 0.875f);
+            ring.GetComponent<Renderer>().sharedMaterial = cyan;
+
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var fin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                fin.name = side < 0 ? "FinL" : "FinR";
+                Destroy(fin.GetComponent<Collider>());
+                fin.transform.SetParent(root.transform, false);
+                fin.transform.localPosition = new Vector3(side * 0.48f, 1.34f, 0f);
+                fin.transform.localScale = new Vector3(0.02f, 0.22f, 0.34f);
+                fin.transform.localRotation = Quaternion.Euler(0f, 0f, side * 12f);
+                fin.GetComponent<Renderer>().sharedMaterial = finMat;
+            }
+
+            var stalk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            stalk.name = "Antenna";
+            Destroy(stalk.GetComponent<Collider>());
+            stalk.transform.SetParent(root.transform, false);
+            stalk.transform.localPosition = new Vector3(0f, 1.66f, 0f);
+            stalk.transform.localScale = new Vector3(0.026f, 0.12f, 0.026f);
+            stalk.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            var tip = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            tip.name = "AntennaTip";
+            Destroy(tip.GetComponent<Collider>());
+            tip.transform.SetParent(root.transform, false);
+            tip.transform.localPosition = new Vector3(0f, 1.80f, 0f);
+            tip.transform.localScale = new Vector3(0.065f, 0.065f, 0.065f);
+            tip.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.9f, 0.45f, 0.08f), 0.2f, 0.1f,
+                new Color(1.0f, 0.6f, 0.2f), 1.8f);
+
+            var skirt = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            skirt.name = "Skirt";
+            Destroy(skirt.GetComponent<Collider>());
+            skirt.transform.SetParent(root.transform, false);
+            skirt.transform.localPosition = new Vector3(0f, 0.72f, 0f);
+            skirt.transform.localScale = new Vector3(0.72f, 0.21f, 0.48f);
+            skirt.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            var thruster = new GameObject("ThrusterGlow");
+            thruster.transform.SetParent(root.transform, false);
+            thruster.transform.localPosition = new Vector3(0f, 0.34f, 0f);
+            var glow = thruster.AddComponent<Light>();
+            glow.type = LightType.Point;
+            glow.color = new Color(0.35f, 0.78f, 0.91f);
+            glow.range = 2.0f;
+            glow.intensity = 1.6f;
+            glow.shadows = LightShadows.None;
+
+            var pointer = new GameObject("ObjectivePointer");
+            pointer.transform.SetParent(root.transform, false);
+            pointer.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+            var cone = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            cone.name = "PointerTip";
+            Destroy(cone.GetComponent<Collider>());
+            cone.transform.SetParent(pointer.transform, false);
+            cone.transform.localScale = new Vector3(0.09f, 0.115f, 0.09f);
+            cone.transform.localRotation = Quaternion.Euler(70f, 0f, 0f);
+            cone.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.18f, 0.55f, 0.62f), 0.2f, 0.1f,
+                new Color(0.25f, 0.85f, 1.0f), 1.5f);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                blade.name = side < 0 ? "PointerL" : "PointerR";
+                Destroy(blade.GetComponent<Collider>());
+                blade.transform.SetParent(pointer.transform, false);
+                blade.transform.localPosition = new Vector3(side * 0.115f, 0.14f, 0.07f);
+                blade.transform.localScale = new Vector3(0.11f, 0.04f, 0.05f);
+                blade.transform.localRotation = Quaternion.Euler(0f, side * 41f, 0f);
+                blade.GetComponent<Renderer>().sharedMaterial = cone.GetComponent<Renderer>().sharedMaterial;
+            }
             return root;
         }
         public bool DoorPoint(string buildingId, out Vector3 point)

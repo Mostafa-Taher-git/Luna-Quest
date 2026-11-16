@@ -66,6 +66,37 @@ func _play(path: String, key: String) -> bool:
 	return true
 
 
+## F10: the happy chirp NEXO makes when the colony completes a task. Runtime-generated —
+## a quick two-note sweep that reads as delight and downloads nothing.
+func play_chirp() -> void:
+	if not enabled:
+		return
+	var sample_rate := 22050
+	var duration := 0.38
+	var frames := int(sample_rate * duration)
+	var tdata := PackedByteArray()
+	for i in range(frames):
+		var t := float(i) / float(sample_rate)
+		var p := t / duration
+		var f := 1180.0 + 1900.0 * p
+		var v := sin(t * TAU * f + sin(t * TAU * 13.0) * 1.1) * 0.72 * sin(p * PI) * (1.0 - p * 0.35)
+		tdata.append(int(v * 9200.0) & 0xFF)
+		tdata.append((int(v * 9200.0) >> 8) & 0xFF)
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = sample_rate
+	wav.stereo = false
+	wav.loop_mode = AudioStreamWAV.LOOP_DISABLED
+	wav.data = tdata
+	var chirp := AudioStreamPlayer.new()
+	chirp.bus = "Master"
+	chirp.volume_db = -6.0
+	chirp.stream = wav
+	add_child(chirp)
+	chirp.finished.connect(chirp.queue_free)
+	chirp.play()
+
+
 func stop() -> void:
 	_queue.clear()
 	player.stop()

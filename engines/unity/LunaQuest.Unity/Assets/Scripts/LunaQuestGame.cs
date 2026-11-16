@@ -382,6 +382,7 @@ namespace LunaQuest.Unity
             string message = L.T(en, ar);
             Hud.ShowToast(message, ok ? 4f : 3f);
             Hud.ShowSubtitle(message, 4.5f);
+            if (ok) Voice.PlayChirp();
 
             var owner = FindOwnerAt(station.BuildingId);
             if (ok && owner != null)

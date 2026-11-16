@@ -121,6 +121,18 @@ The game is fully playable with the sound off: every line also appears as a shor
     `engines/unity/LunaQuest.Unity/Assets/Resources/Textures/moon_dusted_03_albedo.jpg`
     (used as the Unity ground's scan albedo; same CC0 licence, same source).
 
+- **Low-poly Animated Robot** — NEXO's body geometry in the Godot editions.
+  - Source: Quaternius — <https://quaternius.com/packs/animatedrobot.html> (also
+    distributed by Poly Pizza — <https://poly.pizza/m/QCm7qe9uNJ>).
+  - License: **CC0 1.0** — Public Domain.
+  - File: `engines/godot-gdscript/LunaQuest.GDScript/assets/models/nexo_robot/nexo_robot.glb`
+    (and the same copy in `engines/godot/LunaQuest.Godot/assets/models/nexo_robot/nexo_robot.glb`).
+  - Raw download: `https://static.poly.pizza/7d95dbce-8c73-489b-8298-f430b1f0dbdf.glb`
+    (GLB, FBX2glTF v0.9.7, 401 KB, 14 clips). The Unity edition has no GLB loader, so its
+    NEXO is the in-engine procedural body — same silhouettes, same behaviour, built from primitives.
+  - Credit: **Quaternius** (no attribution required under CC0; credited anyway).
+
+- **Pavel Aristov / Levani 'AdventurER'**
 - **NASA Blue Marble Next Generation** — the Earth disc in the lunar sky.
   - Source: NASA Earth Observatory, <https://eoimages.gsfc.nasa.gov/>.
   - License: **Public domain** (NASA imagery).

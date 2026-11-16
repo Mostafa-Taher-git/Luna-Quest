@@ -459,6 +459,7 @@ func _run_console_action(target: Dictionary) -> void:
 	hud.refresh(sim, rover)
 	if result.get("ok", false):
 		Voice.play_key("ui.confirm")
+		Voice.play_chirp()
 
 
 func _interact() -> void:

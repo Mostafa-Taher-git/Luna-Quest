@@ -580,6 +580,7 @@ namespace LunaQuest.Godot
             Hud.ShowToast(message, ok ? 4.0 : 3.0);
             Hud.ShowSubtitle(message, 4.5);
             Hud.SetPrompt("");
+            if (ok) Voice.PlayChirp();
 
             // The crew member who owns this building reacts to work done in it.
             var owner = FindOwnerAt(it.BuildingId);
