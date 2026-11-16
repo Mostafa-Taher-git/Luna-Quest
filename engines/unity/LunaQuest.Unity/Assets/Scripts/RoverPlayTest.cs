@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -12,11 +13,12 @@ namespace LunaQuest.Unity
     ///   Unity -batchmode -projectPath engines/unity/LunaQuest.Unity \
     ///         -executeMethod LunaQuest.Unity.RoverPlayTest.Run -quit -logFile rover.log
     ///
-    /// It plays the T5 checklist for real — enters the rover, drives it, steps out — and checks the
-    /// things the C# can only claim until something runs it: that the ground is solid under the
-    /// commander, that a driven suit does not fight the rover's capsule, that the wheel is dead
-    /// behind an open dialogue, and that stepping out lands on the ground rather than in the air
-    /// (or inside the rover). Exit code 0 means every check passed.
+    /// It plays the T5 checklist for real — enters the rover, drives it, steps out, saves and
+    /// restores it — and checks the things the C# can only claim until something runs it: that
+    /// the ground is solid under the commander, that a driven suit does not fight the rover's
+    /// capsule, that the wheel is dead behind an open dialogue, and that stepping out lands on
+    /// the ground rather than in the air (or inside the rover). Exit code 0 means every check
+    /// passed.
     /// </summary>
     public static class RoverPlayTest
     {
@@ -45,9 +47,12 @@ namespace LunaQuest.Unity
                 Physics.Simulate(0.02f);
 
                 CheckGround(game);
+                CheckBoard(game);
                 CheckDriving(game);
+                CheckBoardAfterDrive(game);
                 CheckPauseGate(game);
                 CheckExit(game);
+                CheckSaveRestore(game);
                 CheckRestart(game);
             }
             catch (Exception error)
@@ -90,6 +95,80 @@ namespace LunaQuest.Unity
                 "the ground is solid from underneath: its triangles face down");
         }
 
+        /// <summary>
+        /// The shift task board at mission start: fourteen rows mirroring learning.json, the
+        /// header and the leading row matching the clock, the mission line last, the rover
+        /// rows still pending, and a board that speaks both languages.
+        /// </summary>
+        private static void CheckBoard(LunaQuestGame game)
+        {
+            var hud = game.Hud;
+            hud.UpdateBoard();
+
+            Expect(ColonyHud.BoardRows.Length == 14,
+                $"expected 14 row specs, found {ColonyHud.BoardRows.Length}");
+            Expect(hud.BoardTexts.Length == ColonyHud.BoardRows.Length,
+                $"{hud.BoardTexts.Length} texts for {ColonyHud.BoardRows.Length} specs");
+            Expect(hud.BoardOrder.Length == ColonyHud.BoardRows.Length,
+                "the draw order does not have one slot per row");
+
+            // Kind counts: the journal rows mirror learning.json, two belong to the rover,
+            // one is the mission line. learning.json itself stays at 11 objectives (H9).
+            int journal = 0, rovers = 0, missions = 0;
+            foreach (var row in ColonyHud.BoardRows)
+            {
+                if (row.Kind == "journal") journal++;
+                else if (row.Kind == "mission") missions++;
+                else rovers++;
+            }
+            Expect(journal == game.Sim.Content.Learning.Count,
+                $"board: {journal} journal rows for {game.Sim.Content.Learning.Count} objectives");
+            Expect(rovers == 2, $"board: expected 2 rover rows, found {rovers}");
+            Expect(missions == 1, $"board: expected 1 mission row, found {missions}");
+            foreach (var objective in game.Sim.Content.Learning)
+                Expect(Array.Exists(ColonyHud.BoardRows, r => r.Id == objective.Id),
+                    $"board: {objective.Id} has no row on the board");
+
+            // No blank rows, and the mission line counts the days.
+            for (int i = 0; i < hud.BoardTexts.Length; i++)
+                Expect(!string.IsNullOrEmpty(hud.BoardTexts[i]), $"board: row {i} is blank");
+            Expect(hud.BoardTexts[13].Contains("30"),
+                $"board: the mission line reads '{hud.BoardTexts[13]}'");
+
+            // Both sides of every shift boundary.
+            Expect(ColonyHud.CurrentShift(0.0).Id == "night", "board: 00:00 is not the night shift");
+            Expect(ColonyHud.CurrentShift(5.99).Id == "night", "board: 05:59 is not the night shift");
+            Expect(ColonyHud.CurrentShift(6.0).Id == "morning", "board: 06:00 is not the morning shift");
+            Expect(ColonyHud.CurrentShift(11.99).Id == "morning", "board: 11:59 is not the morning shift");
+            Expect(ColonyHud.CurrentShift(12.0).Id == "afternoon", "board: 12:00 is not the afternoon shift");
+            Expect(ColonyHud.CurrentShift(17.99).Id == "afternoon", "board: 17:59 is not the afternoon shift");
+            Expect(ColonyHud.CurrentShift(18.0).Id == "evening", "board: 18:00 is not the evening shift");
+            Expect(ColonyHud.CurrentShift(23.99).Id == "evening", "board: 23:59 is not the evening shift");
+
+            // The header names the shift the clock says it is, and the row leading the board
+            // belongs to that shift; the mission line always sits last.
+            var shift = ColonyHud.CurrentShift(game.Sim.Clock.HourOfDay);
+            Expect(hud.BoardHeader == L.T(shift.En, shift.Ar),
+                $"board: the header reads '{hud.BoardHeader}', expected '{L.T(shift.En, shift.Ar)}'");
+            int lead = hud.BoardOrder[0];
+            Expect(ColonyHud.BoardRows[lead].Shift == shift.Id,
+                $"board: the {ColonyHud.BoardRows[lead].Shift} row leads but the clock says {shift.Id}");
+            Expect(hud.BoardOrder[13] == 13, "board: the mission line does not sit last");
+
+            // The rover milestones are not finished at mission start.
+            Expect(!hud.BoardDone[4] && !hud.BoardDone[5],
+                "board: the rover rows are already marked at mission start");
+
+            // Bilingual: the board swaps to Arabic and back.
+            bool wasArabic = L.Arabic;
+            L.Arabic = true;
+            hud.UpdateBoard();
+            Expect(hud.BoardTexts[0].Contains("لوحة"),
+                $"board: the Arabic board reads '{hud.BoardTexts[0]}'");
+            L.Arabic = wasArabic;
+            hud.UpdateBoard();
+        }
+
         /// <summary>Enter, drive, steer, drain; the wheels and the odometer move with it.</summary>
         private static void CheckDriving(LunaQuestGame game)
         {
@@ -129,6 +208,36 @@ namespace LunaQuest.Unity
                 $"the driver is not leaning back against the seat (X {lean:F1}°, expected +18)");
             Expect(player.Visual.localPosition.y > rover.SeatGlobal.y - 0.6f,
                 "the suit is not sitting at the hand controller");
+        }
+
+        /// <summary>
+        /// The board follows the rover: taking the seat marks the garage row, and driving out
+        /// to the ice site latches the second milestone and marks that row too — both drawn
+        /// in the calm teal DONE colour (the colour is applied from BoardDone when drawing).
+        /// </summary>
+        private static void CheckBoardAfterDrive(LunaQuestGame game)
+        {
+            var hud = game.Hud;
+            var rover = game.Rover;
+            if (rover == null) return;
+
+            hud.UpdateBoard();
+            Expect(hud.BoardDone[4], "board: taking the rover did not mark the garage row");
+            Expect(!hud.BoardDone[5], "board: the ice row is marked without reaching the ice");
+
+            // Out to the ice site: teleport the way RestartMission does, take one step, and
+            // the milestone latches from the rover's own distance check.
+            Vector3 home = rover.transform.position;
+            rover.transform.position = new Vector3(52f, home.y, -34f);
+            rover.SimulateForTest(1f / 60f, 0f, 0f, false, false, game.Player);
+            Expect(rover.ReachedIce, "the ice-site milestone did not latch");
+
+            hud.UpdateBoard();
+            Expect(hud.BoardDone[5], "board: reaching the ice did not mark the ice row");
+            Expect(hud.BoardTexts[4].StartsWith("✓") && hud.BoardTexts[5].StartsWith("✓"),
+                "board: the finished rover rows are not marked with the check");
+
+            rover.transform.position = home;
         }
 
         /// <summary>BUG-1: an open dialogue must not let the wheel keep driving.</summary>
@@ -185,6 +294,53 @@ namespace LunaQuest.Unity
                 "the suit stepped out inside the rover");
             Expect(Mathf.Abs(Mathf.DeltaAngle(player.Visual.localEulerAngles.x, 0f)) < 1f,
                 "the suit stayed reclined after stepping out");
+        }
+
+        /// <summary>
+        /// The rover survives a save: its parked pose, battery, odometer, milestones and the seat
+        /// all come back through the flat extras keys LunaQuestGame.SaveGame writes. An old save
+        /// from before the rover existed (schema 2, no rover keys at all) must load without
+        /// complaint and leave a full battery, clear milestones and an empty seat — the same
+        /// contract as the Godot .NET edition's RoverAudit.
+        /// </summary>
+        private static void CheckSaveRestore(LunaQuestGame game)
+        {
+            var player = game.Player;
+            var rover = game.Rover;
+            if (rover == null) return;
+
+            // Exactly the keys SaveGame writes for the rover, at a pose away from the apron so a
+            // restored position cannot be mistaken for a default one.
+            var extras = new Dictionary<string, object>
+            {
+                ["roverX"] = 3.5, ["roverY"] = 0.05, ["roverZ"] = -7.25, ["roverYaw"] = 1.1,
+                ["roverBattery"] = 6.25, ["roverOdometer"] = 42.5,
+                ["roverDriven"] = true, ["roverIce"] = true, ["roverOccupied"] = true
+            };
+            rover.Exit(player);
+            rover.Restore(extras, player);
+
+            Expect(rover.Occupied && player.Rover == rover, "restore() did not give the seat back");
+            Expect(Mathf.Abs(rover.BatteryKwh - 6.25f) < 0.001f,
+                $"restore() lost the battery ({rover.BatteryKwh:F2} kWh)");
+            Expect(Mathf.Abs(rover.Odometer - 42.5f) < 0.001f,
+                $"restore() lost the odometer ({rover.Odometer:F2} m)");
+            Expect(rover.HasDriven && rover.ReachedIce, "restore() lost the milestones");
+            Expect(Vector3.Distance(rover.transform.position, new Vector3(3.5f, 0.05f, -7.25f)) < 0.001f,
+                $"restore() lost the parked position ({rover.transform.position})");
+
+            // The old-save case: no rover keys at all. The numeric defaults still apply (a full
+            // battery, zero odometer), the flags stay clear and nobody is seated. Like the .NET
+            // edition, a missing pose key leaves the rover exactly where it already was.
+            rover.Exit(player);
+            rover.Restore(new Dictionary<string, object>(), player);
+            Expect(Mathf.Abs(rover.BatteryKwh - CrewRover.BatteryKwhMax) < 0.001f,
+                $"an old save did not leave a full battery on the rover ({rover.BatteryKwh:F2} kWh)");
+            Expect(rover.Odometer < 0.001f, $"an old save kept the odometer ({rover.Odometer:F2} m)");
+            Expect(!rover.HasDriven && !rover.ReachedIce, "an old save kept the rover milestones");
+            Expect(!rover.Occupied && player.Rover == null, "an old save seated the commander in the rover");
+            Expect(Vector3.Distance(rover.transform.position, new Vector3(3.5f, 0.05f, -7.25f)) < 0.001f,
+                "an old save moved the rover although it carried no pose");
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>

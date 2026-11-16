@@ -115,8 +115,9 @@ The game is fully playable with the sound off: every line also appears as a shor
     <https://polyhaven.com/a/moon_02>.
   - `moon_dusted_03` regolith (fallback set): <https://polyhaven.com/a/moon_dusted_03>.
   - `moon_rock_01`–`moon_rock_07` photoscanned rocks (glTF, 1K): <https://polyhaven.com/models>.
-  - Files: `engines/godot/LunaQuest.Godot/assets/real/`, mirrored into the GDScript and browser
-    builds by `tools/sync-gdscript-assets.sh` and `web/scripts/sync-assets.mjs`.
+  - Files: `engines/godot/LunaQuest.Godot/assets/real/`, mirrored into the GDScript build
+    by `tools/sync-gdscript-assets.sh`; the retired browser edition's own sync script is
+    kept at `archive/web/scripts/sync-assets.mjs`.
 
 - **NASA Blue Marble Next Generation** — the Earth disc in the lunar sky.
   - Source: NASA Earth Observatory, <https://eoimages.gsfc.nasa.gov/>.

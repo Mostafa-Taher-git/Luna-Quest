@@ -2,11 +2,11 @@
 
 > **30 Earth days. Six crew, one commander and NEXO the robot. One shared simulation. Every kilogram and every second counted.**
 
-![Luna-Quest v3.3 - nine in-game views](docs/screenshots/preview-candidates.jpg)
+![Luna-Quest — the colony at Shackleton rim](docs/screenshots/colony.png)
 
 ## Download and play
 
-**This is the latest release of the game.** Both downloads are single files with the whole
+**This is the latest release of the game.** The one-click downloads are single files with the whole
 game already baked in: no Godot, no .NET, no runtime, no installer wizard and nothing to
 unzip. Grab one file and you are playing.
 
@@ -14,11 +14,14 @@ unzip. Grab one file and you are playing.
 
 | Platform | Download | How to play |
 |---|---|---|
-| Windows 10/11 | `LunaQuest-Windows.exe` (~183 MiB / 191 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
-| Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
-| Want to build it yourself? | Build from source (Godot / Unity) | Open `engines/godot/LunaQuest.Godot` (Godot 4.7.2 .NET), `engines/godot-gdscript/LunaQuest.GDScript` (stock Godot 4.7.2) or `engines/unity/LunaQuest.Unity` (Unity 6.3 LTS). The browser edition is retired. |
+| Windows 10/11 | `LunaQuest-Windows.exe` (~196 MiB / 205 MB) | Download -> double-click -> straight into the game. No install wizard, no archive to extract, no dependencies, no admin rights. |
+| Linux (Debian / Ubuntu / Linux Mint / Pop!_OS, x86-64) | `LunaQuest-Linux-amd64.deb` (~111 MiB / 117 MB) | `sudo apt install ./LunaQuest-Linux-amd64.deb`, then click **Luna-Quest** in the app menu or run `luna-quest` in a terminal. `sudo dpkg -i ./LunaQuest-Linux-amd64.deb` works too. |
+| Want to build it yourself? | Build from source (Godot / Unity) | Open `engines/godot/LunaQuest.Godot` (Godot 4.7.2 .NET), `engines/godot-gdscript/LunaQuest.GDScript` (stock Godot 4.7.2) or `engines/unity/LunaQuest.Unity` (Unity 6000.3.0f1). The browser edition is retired. |
 
-Both files come from the **pure GDScript edition**, so no .NET runtime is needed. The asset
+The one-click `.exe`, the `.deb` and the raw `LunaQuest-Linux-x86_64` binary (~161 MiB / 169 MB)
+are the **pure GDScript build**, built from `engines/godot-gdscript/LunaQuest.GDScript` with
+`tools/package-desktop.sh` — no .NET runtime needed. The `.NET` builds are the ZIPs
+(`LunaQuest-Windows.zip`, `LunaQuest-Linux.zip`), built from the shared C# core. The asset
 names are fixed for every release, which is why the `releases/latest/download/` links above
 always point at the newest build.
 
@@ -39,8 +42,8 @@ always point at the newest build.
 ---
 
 Luna-Quest is a walkable, data-driven lunar colony game. You are the new commander on the
-**Shackleton rim at 89.9 deg S**. Walk the base, read every console, and keep nine people alive
-with measured numbers instead of guesses. There is no combat and no permanent failure: the
+**Shackleton rim at 89.9 deg S**. Walk the base, read every console, and keep seven people alive
+(the commander and six crew — NEXO is a robot and does not breathe) with measured numbers instead of guesses. There is no combat and no permanent failure: the
 pressure comes from air, water, power, food, dust, radiation, sleep and time.
 
 The same C# rules run in **Godot 4.7.2 .NET** and **Unity 6.3 LTS**. The engines only draw,
@@ -53,13 +56,13 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Part | State |
 |---|---|
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
-| Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
+| Content (buildings, crew, incidents, crops, learning) | Complete, eight JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
-| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Web, Windows and Linux** |
-| Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 659 rule checks and 238 scene checks passing, exported for Windows and Linux** |
+| Unity 6000.3.0f1 (6.3 LTS) project | Source only — no binary ships. Harness extended (14-row board, rover save/restore); compile-clean by review only, compile/runtime PENDING. Build locally in Unity 6000.3.0f1 |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
-| Browser edition (Three.js) | **Retired (2026-11).** Kept in-tree only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
-| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
+| Browser edition (Three.js) | **Retired (2026-11).** Kept under `archive/` only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
+| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Windows/Linux exports), `release.yml` (Godot .NET and GDScript Windows/Linux zips, the GDScript `.deb` and raw Linux binary, `SHA256SUMS` over every attached file, intro film) on every tag - no browser artifact of any kind (H1/A1) |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -75,10 +78,11 @@ listen and move the player; the simulation is one deterministic core with a shar
 ### Browser edition - retired
 
 The Three.js browser edition is no longer developed, built or deployed. Luna-Quest targets
-exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The `web/` folder
-stays in the tree only because `web/static/intro-poster.jpg` is a locked asset
-(`docs/design/asset-lock.json`) and the folder holds the historical test suite. Play the
-GDScript, Godot .NET or Unity builds instead.
+exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The retired
+edition now lives under `archive/web/`, which carries the locked intro poster
+(`archive/web/static/intro-poster.jpg`, `docs/design/asset-lock.json`) and the
+historical test suite. Play the GDScript or Godot .NET builds instead; Unity ships as source
+only — build it locally in Unity 6000.3.0f1 (its harness is extended; compile/runtime pending).
 
 Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
 steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
@@ -102,8 +106,8 @@ Requirements: **Godot 4.7.2 .NET** and a .NET SDK that supports `netstandard2.1`
 ### GDScript (stock Godot - no .NET anywhere)
 
 A third project, `engines/godot-gdscript/LunaQuest.GDScript`, is the same game written in plain
-GDScript. It needs nothing but a standard Godot 4.7.2 editor, and - unlike the .NET project - it
-exports to the web, which is what CI ships as `LunaQuest-GDScript-Web.zip`.
+GDScript. It needs nothing but a standard Godot 4.7.2 editor; CI exports it for Windows and
+Linux, and the release attaches those archives with the `.deb` package and `SHA256SUMS`.
 
 ```bash
 # one-time: copy the shared astronaut, kit models, intro film and voice pack in
@@ -113,8 +117,8 @@ bash tools/sync-gdscript-assets.sh
 godot --path engines/godot-gdscript/LunaQuest.GDScript
 
 # no GPU required to check it:
-godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 544 checks
-godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 190 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 659 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 238 checks
 ```
 
 Full notes, controls and the file map:
@@ -256,7 +260,7 @@ but the loop is not free: filter health, water quality and power all matter.
 | Value | Number |
 |---|---|
 | Crew intake | `2,800 kcal` per person per day |
-| Stored food | `620,000 kcal` (about 30 crew-days for nine people) |
+| Stored food | `482,000 kcal` (about 24.6 crew-days for seven people; capacity `607,000 kcal`) |
 | Grow pod | `24 m^2` in four 6 m^2 racks, sealed indoors |
 | Crop cycle | `24` days (lettuce reference) |
 | Harvest | `450 kcal/m^2` per cycle |
@@ -364,13 +368,14 @@ Luna-Quest-Game/
 +-- docs/                    design docs, research, screenshots, licenses
 +-- engines/
 |   +-- godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
-|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
+|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, no .NET)
 |   +-- unity/LunaQuest.Unity/
 +-- shared/
 |   +-- LunaQuest.Core/      simulation, content loader, save contract
 |   +-- LunaQuest.Tests/     console test harness
-+-- web/                     RETIRED browser edition (kept for the locked intro poster
-|                            and historical tests; no new development)
++-- archive/                 retired material: the browser edition (with its locked
+|                            intro poster and historical tests), web-era screenshots,
+|                            superseded one-shot tools
 +-- tools/                   content sync, astronaut bake, voice-pack generator,
 |                            sync-gdscript-assets.sh
 +-- README.md
@@ -382,7 +387,7 @@ Luna-Quest-Game/
 
 ## Content and modding
 
-The seven JSON files in `content/` are the source of truth for both engines:
+The eight JSON files in `content/` are the source of truth for both engines:
 
 | File | Contents |
 |---|---|
@@ -432,6 +437,16 @@ Godot --path engines/godot/LunaQuest.Godot --autostart \
 # Front portrait for model checks
 Godot --path engines/godot/LunaQuest.Godot --autostart --portrait \
   --screenshot=/tmp/portrait.png --shot-delay=5
+
+# Take the crew rover's wheel for a drive-by frame (capture-only throttle)
+Godot --path engines/godot/LunaQuest.Godot --autostart --no-intro \
+  --spawn=-11,-25 --drive --look=3.54,-0.3 \
+  --screenshot=/tmp/rover.png --shot-delay=4.5
+
+# Portrait with the shift task board off the picture — the board sits centre screen,
+# exactly where the visor lands
+Godot --path engines/godot/LunaQuest.Godot --autostart --portrait --no-board \
+  --screenshot=/tmp/portrait.png --shot-delay=4.5
 
 # Start in the helmet view, at a fixed position and look direction
 Godot --path engines/godot/LunaQuest.Godot --autostart --first-person \

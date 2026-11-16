@@ -33,9 +33,14 @@ the research is not a flight-certified design.
 
 | File | View |
 |---|---|
-| `screenshots/colony.png` | Default spawn, third-person, Shackleton rim |
+| `screenshots/colony.png` | Default spawn, third-person, Shackleton rim — the shift task board over the colony |
+| `screenshots/rover-driving.png` | The crew rover mid-drive from the garage; the board shows its garage milestone ticked |
 | `screenshots/portrait.png` | Close-up of the astronaut and visor |
 | `screenshots/astronaut-detail.png` | Crop of the backpack and suit details |
+
+The frames are real Godot .NET renders of the shipped game — no browser is involved
+anywhere in the project — taken by `tools/capture-screenshots.sh`, which
+`.github/workflows/screenshots.yml` also runs on demand.
 
 ## Licenses
 

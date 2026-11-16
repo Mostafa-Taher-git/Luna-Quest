@@ -33,6 +33,8 @@ namespace LunaQuest.Godot
             Expect(rover != null && player != null, "the rover or the commander is missing");
             if (rover == null || player == null) return Report();
 
+            CheckBoard(main);
+
             Expect(Mathf.Abs(rover.GlobalPosition.Y - 0.05f) < 0.3f,
                 $"the rover is parked at y {rover.GlobalPosition.Y:F2}, not on the apron");
             // The Moon is solid under it (this is the check that failed for the GDScript ground).
@@ -81,6 +83,17 @@ namespace LunaQuest.Godot
             rover.GlobalPosition = new Vector3(52f, 0.05f, -34f);
             rover.Step(1f / 60f, 0f, 0f, false, false, player);
             Expect(rover.ReachedIce, "the ice-site milestone did not latch");
+
+            // The board follows the rover: both milestones now read as finished, in the calm
+            // teal of a settled task rather than a highlight.
+            main.Hud.UpdateState();
+            Expect(main.Hud.BoardRowLabels[4].Text.StartsWith("✓"),
+                $"board: the garage row is not marked ('{main.Hud.BoardRowLabels[4].Text}')");
+            Expect(main.Hud.BoardRowLabels[5].Text.StartsWith("✓"),
+                $"board: the ice row is not marked ('{main.Hud.BoardRowLabels[5].Text}')");
+            Expect(main.Hud.BoardRowLabels[4].GetThemeColor("font_color") == Hud.DoneColor,
+                "board: a finished row is not recoloured");
+
             rover.GlobalPosition = start;
 
             // Exit: a solid, upright suit on the ground beside the rover, clear of its own box.
@@ -127,6 +140,101 @@ namespace LunaQuest.Godot
                 "a new mission kept the old rover milestones");
 
             return Report();
+        }
+
+        /// <summary>
+        /// The shift task board, checked against the same spec as the other two engines:
+        /// fourteen rows — the eleven objectives from content/learning.json (done = a journal
+        /// entry), the crew rover's two milestones and the mission line — the row for the
+        /// current shift leading the box, the header naming that shift, and a board that
+        /// speaks both languages. learning.json itself stays at 11 objectives (H9).
+        /// </summary>
+        private void CheckBoard(Main main)
+        {
+            var hud = main.Hud;
+            var sim = main.Sim;
+            Expect(hud != null, "board: no HUD");
+            if (hud == null) return;
+            hud.UpdateState();
+
+            Expect(Hud.BoardRows.Length == 14,
+                $"board: expected 14 row specs, found {Hud.BoardRows.Length}");
+            Expect(hud.BoardBox.GetChildCount() == 15,
+                $"board: expected a header plus 14 rows, found {hud.BoardBox.GetChildCount()}");
+            Expect(hud.BoardRowLabels.Count == Hud.BoardRows.Length,
+                $"board: {hud.BoardRowLabels.Count} labels for {Hud.BoardRows.Length} specs");
+
+            // Kind counts: the journal rows mirror learning.json, two belong to the rover,
+            // one is the mission line.
+            int journal = 0, rovers = 0, missions = 0;
+            foreach (var row in Hud.BoardRows)
+            {
+                if (row.Kind == "journal") journal++;
+                else if (row.Kind == "mission") missions++;
+                else rovers++;
+            }
+            Expect(journal == sim.Content.Learning.Count,
+                $"board: {journal} journal rows for {sim.Content.Learning.Count} objectives");
+            Expect(rovers == 2, $"board: expected 2 rover rows, found {rovers}");
+            Expect(missions == 1, $"board: expected 1 mission row, found {missions}");
+            foreach (var objective in sim.Content.Learning)
+                Expect(System.Array.Exists(Hud.BoardRows, r => r.Id == objective.Id),
+                    $"board: {objective.Id} has no row on the board");
+
+            // No blank rows, and the mission line counts the days.
+            for (int i = 0; i < hud.BoardRowLabels.Count; i++)
+                Expect(hud.BoardRowLabels[i].Text.Length > 0, $"board: row {i} is blank");
+            Expect(hud.BoardRowLabels[13].Text.Contains("30"),
+                $"board: the mission line reads '{hud.BoardRowLabels[13].Text}'");
+
+            // Both sides of every shift boundary.
+            Expect(Hud.CurrentShift(0.0).Id == "night", "board: 00:00 is not the night shift");
+            Expect(Hud.CurrentShift(5.99).Id == "night", "board: 05:59 is not the night shift");
+            Expect(Hud.CurrentShift(6.0).Id == "morning", "board: 06:00 is not the morning shift");
+            Expect(Hud.CurrentShift(11.99).Id == "morning", "board: 11:59 is not the morning shift");
+            Expect(Hud.CurrentShift(12.0).Id == "afternoon", "board: 12:00 is not the afternoon shift");
+            Expect(Hud.CurrentShift(17.99).Id == "afternoon", "board: 17:59 is not the afternoon shift");
+            Expect(Hud.CurrentShift(18.0).Id == "evening", "board: 18:00 is not the evening shift");
+            Expect(Hud.CurrentShift(23.99).Id == "evening", "board: 23:59 is not the evening shift");
+
+            // The header names the shift the clock says it is...
+            var shift = Hud.CurrentShift(sim.Clock.HourOfDay);
+            Expect(hud.BoardHeader.Text == L.T(shift.En, shift.Ar),
+                $"board: the header reads '{hud.BoardHeader.Text}', expected '{L.T(shift.En, shift.Ar)}'");
+
+            // ...and the row leading the box belongs to that shift. The rover test never
+            // starts the clock, so the board sits in the night shift.
+            var leader = hud.BoardBox.GetChild(1) as Label;
+            Expect(leader != null, "board: nothing leads the board");
+            int lead = -1;
+            if (leader != null)
+            {
+                for (int i = 0; i < hud.BoardRowLabels.Count; i++)
+                {
+                    if (!ReferenceEquals(hud.BoardRowLabels[i], leader)) continue;
+                    lead = i;
+                    break;
+                }
+            }
+            Expect(lead >= 0, "board: the leading row is not one of the fourteen");
+            if (lead >= 0)
+                Expect(Hud.BoardRows[lead].Shift == shift.Id,
+                    $"board: the {Hud.BoardRows[lead].Shift} row leads but the clock says {shift.Id}");
+
+            // The rover milestones are not finished at mission start.
+            Expect(!hud.BoardRowLabels[4].Text.StartsWith("✓"),
+                $"board: the garage row is already marked ('{hud.BoardRowLabels[4].Text}')");
+            Expect(!hud.BoardRowLabels[5].Text.StartsWith("✓"),
+                $"board: the ice row is already marked ('{hud.BoardRowLabels[5].Text}')");
+
+            // Bilingual: the board swaps to Arabic and back.
+            bool wasArabic = L.Arabic;
+            L.Arabic = true;
+            hud.UpdateState();
+            Expect(hud.BoardRowLabels[0].Text.Contains("لوحة"),
+                $"board: the Arabic board reads '{hud.BoardRowLabels[0].Text}'");
+            L.Arabic = wasArabic;
+            hud.UpdateState();
         }
 
         private bool Report()

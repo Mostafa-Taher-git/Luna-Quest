@@ -53,7 +53,7 @@ for a surface habitat.
 
 | Cue | Where it appears in Luna-Quest |
 |---|---|
-| Sealed horizontal pressure modules | `web/src/world/buildings.js` barrel vaults, arch ribs and hatch bulkheads; `parts.js` `pressureHull()` |
+| Sealed horizontal pressure modules | `archive/web/src/world/buildings.js` barrel vaults, arch ribs and hatch bulkheads; `parts.js` `pressureHull()` |
 | Airlocks and EVA access | `airlock` building, `portico()` canopies, hazard sills on `hatch()` |
 | MLI thermal blankets | `mats.mli` gold blanket panels on habitable modules |
 | Engineered window bands | `parts.js` `windowBand()`, `materials.js` glass |
@@ -77,7 +77,7 @@ for a surface habitat.
 3. **Regolith shielding on the lee side.** The habitat, life support, medical and storm shelter
    modules get a sintered berm on the side away from the plaza, kept clear of the hatch and the
    approach route.
-4. **The scanned height map is finally used.** `web/src/world/environment.js` loaded five PBR
+4. **The scanned height map is finally used.** `archive/web/src/world/environment.js` loaded five PBR
    regolith maps and used four; the height map now drives a low-amplitude bump on the near field
    with its own lower repeat on the far ring, so the ground catches the grazing polar light.
 

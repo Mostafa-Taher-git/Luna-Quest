@@ -6,8 +6,8 @@ name: GDScript build
 # hundred frames, and fail the job if the engine printed a parse error or a script error. That is
 # the same check a developer runs locally, so a broken script cannot reach a tag.
 #
-# On main, tags and manual runs it also exports the three builds — including the web build, which
-# the .NET project cannot produce — and, when asked, publishes the web build to GitHub Pages.
+# On main, tags and manual runs it also exports the two desktop builds (Windows and Linux) and
+# checks that the exporter actually produced them.
 
 on:
   push:
@@ -17,13 +17,9 @@ on:
   workflow_dispatch:
     inputs:
       export:
-        description: 'Export the desktop and web builds'
+        description: 'Export the desktop builds'
         type: boolean
         default: true
-      deploy_web:
-        description: 'Publish the GDScript web build to GitHub Pages'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -133,7 +129,7 @@ jobs:
           if-no-files-found: warn
 
   export:
-    name: Export web, Windows and Linux
+    name: Export Windows and Linux
     needs: validate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -162,20 +158,18 @@ jobs:
           mkdir -p out
           P="engines/godot-gdscript/LunaQuest.GDScript"
           # Godot writes into an existing folder; it will not create one for you.
-          mkdir -p "$P/build/web" "$P/build/linux" "$P/build/windows"
-          ./godot --headless --path "$P" --export-release "Web" build/web/index.html > export.log 2>&1; web=$?
-          ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 >> export.log 2>&1; linux=$?
+          mkdir -p "$P/build/linux" "$P/build/windows"
+          ./godot --headless --path "$P" --export-release "Linux" build/linux/luna-quest-gdscript.x86_64 > export.log 2>&1; linux=$?
           ./godot --headless --path "$P" --export-release "Windows" build/windows/luna-quest-gdscript.exe >> export.log 2>&1; windows=$?
-          echo "export exit codes — web=$web linux=$linux windows=$windows"
-          echo "::notice::export exit codes web=$web linux=$linux windows=$windows"
+          echo "export exit codes — linux=$linux windows=$windows"
+          echo "::notice::export exit codes linux=$linux windows=$windows"
           tail -c 6000 export.log
           while IFS= read -r line; do
             echo "::error::export: $line"
           done < <(grep -Ei "error|failed|cannot|missing|not found|preset|template" export.log | head -12)
           ls -R "$P/build" 2>&1 | head -40 || true
           status=0
-          for f in "$P/build/web/index.html" "$P/build/web/index.wasm" "$P/build/web/index.pck" \
-                   "$P/build/linux/luna-quest-gdscript.x86_64" "$P/build/windows/luna-quest-gdscript.exe"; do
+          for f in "$P/build/linux/luna-quest-gdscript.x86_64" "$P/build/windows/luna-quest-gdscript.exe"; do
             if [ ! -s "$f" ]; then
               echo "::error::missing or empty export output: $f"
               status=1
@@ -188,44 +182,12 @@ jobs:
             exit 1
           fi
           chmod +x "$P/build/linux/luna-quest-gdscript.x86_64"
-          cp "$P/build/web/"* out/ 2>/dev/null || true
           ( cd "$P/build/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
           ( cd "$P/build/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
-          ( cd "$P/build/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
           ls -lh out
-      - name: Upload the three builds
+      - name: Upload the two builds
         uses: actions/upload-artifact@v4
         with:
           name: gdscript-builds
           path: out/LunaQuest-GDScript-*.zip
           if-no-files-found: error
-      - name: Keep the web build for Pages
-        uses: actions/upload-artifact@v4
-        with:
-          name: gdscript-web
-          path: ${{ env.PROJECT_DIR }}/build/web
-          if-no-files-found: error
-
-  pages:
-    name: Publish the GDScript web build
-    needs: export
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_web == true
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: gdscript-web
-          path: site
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - id: deployment
-        uses: actions/deploy-pages@v4

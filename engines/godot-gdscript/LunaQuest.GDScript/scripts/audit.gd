@@ -32,16 +32,17 @@ func ray(from: Vector3, to: Vector3, exclude: Array = []) -> Dictionary:
 func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew,
 		hud: LunaHud, sim: LQSim) -> bool:
 	space = world.get_world_3d().direct_space_state
+	var root: Node = player.get_parent()
+	var rover := root.get_node_or_null("CrewRover") as ColonyRover
 	print("Luna-Quest (GDScript) scene audit")
 	_check_spawn(player)
 	_check_view(player, world)
-	_check_interface(hud, sim)
+	_check_interface(hud, sim, rover)
 	_check_doors(world)
 	_check_consoles(world)
 	_check_crew(world, crew)
 	_check_perimeter()
 	_check_ground_faces()
-	var root: Node = player.get_parent()
 	_check_rover(root, world, player, crew, sim)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
@@ -92,23 +93,44 @@ func _check_view(player: ColonyPlayer, world: ColonyWorld) -> void:
 
 
 ## The interface has to exist and survive the two screens a whole session passes through.
-func _check_interface(hud: LunaHud, sim: LQSim) -> void:
+func _check_interface(hud: LunaHud, sim: LQSim, rover) -> void:
 	expect(hud != null, "hud: no interface")
 	if hud == null:
 		return
 	expect(hud.top_values.size() == 9, "hud: expected 9 gauges, found %d" % hud.top_values.size())
 	expect(hud.crosshair != null, "hud: no crosshair")
 	expect(hud.prompt_label != null and hud.subtitle_label != null, "hud: no prompt or subtitle line")
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 	expect(hud.top_values["day"].text.begins_with("Day"),
 		"hud: the mission stamp reads '%s'" % hud.top_values["day"].text)
 	expect(hud.top_values["power"].text.ends_with("%"), "hud: the battery gauge has no value")
 
 	hud.set_language(true)
 	expect(hud.arabic, "hud: the language toggle did not stick")
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 	expect(hud.top_values["day"].text.begins_with("اليوم"), "hud: the stamp did not change language")
+	_check_board(hud, sim, true)
 	hud.set_language(false)
+	hud.refresh(sim, rover)
+	_check_board(hud, sim, false)
+
+	# Done styling: finishing an objective marks its own row and recolours it, so "done" is
+	# legible at a glance rather than only countable in the journal.
+	var unlocked := false
+	for building in Content.buildings:
+		if unlocked:
+			break
+		for point in building.get("interactions", []):
+			if str(point.get("learning", "")) == "obj_power_budget":
+				sim.interact(str(building.get("id", "")), str(point.get("id", "")))
+				unlocked = true
+				break
+	hud.refresh(sim, rover)
+	if unlocked:
+		expect(str(hud.board_row_labels[0].text).begins_with("✓"),
+			"board: a finished row is not marked: '%s'" % hud.board_row_labels[0].text)
+		expect(hud.board_row_labels[0].get_theme_color("font_color") == LunaHud.DONE,
+			"board: a finished row is not recoloured")
 
 	hud.open_journal(sim)
 	expect(hud.journal_panel.visible and hud.journal_body.get_child_count() > 0,
@@ -128,6 +150,48 @@ func _check_interface(hud: LunaHud, sim: LQSim) -> void:
 	expect(hud.end_body.get_child_count() >= 8,
 		"hud: the mission report has only %d lines" % hud.end_body.get_child_count())
 	hud.end_screen.visible = false
+
+
+## The board has to be complete, readable in the language the rest of the HUD is in, and led by
+## the row for the shift the clock actually says it is.
+func _check_board(hud: LunaHud, sim: LQSim, arabic: bool) -> void:
+	expect(hud.board_box != null, "board: there is no task board")
+	if hud.board_box == null:
+		return
+	expect(hud.board_row_labels.size() == 14,
+		"board: expected 14 rows, found %d" % hud.board_row_labels.size())
+	expect(hud.board_box.get_child_count() == 15,
+		"board: the board holds %d children, expected a header plus 14 rows" %
+		hud.board_box.get_child_count())
+
+	var shift: Dictionary = LunaHud.current_shift(sim.clock.hour_of_day())
+	var expected_header := str(shift["ar"]) if arabic else str(shift["en"])
+	expect(str(hud.board_header.text) == expected_header,
+		"board: the header reads '%s', expected the %s shift" %
+		[str(hud.board_header.text), str(shift["id"])])
+
+	var blanks := 0
+	for line in hud.board_row_labels:
+		if str(line.text).strip_edges() == "":
+			blanks += 1
+	expect(blanks == 0, "board: %d rows are blank" % blanks)
+
+	expect(str(hud.board_row_labels[13].text).contains("30"),
+		"board: the mission line does not name the 30 days: '%s'" % hud.board_row_labels[13].text)
+	if arabic:
+		expect(str(hud.board_row_labels[0].text).contains("لوحة"),
+			"board: the rows did not change to Arabic: '%s'" % hud.board_row_labels[0].text)
+
+	# The row that visually leads is the first child after the header; it must belong to the
+	# shift the clock says it is, which is what "current shift leads" means.
+	var leader := hud.board_box.get_child(1) as Label
+	var leading := ""
+	if leader != null:
+		for i in hud.board_row_labels.size():
+			if hud.board_row_labels[i] == leader:
+				leading = str(LunaHud.BOARD_ROWS[i]["shift"])
+	expect(leading == str(shift["id"]),
+		"board: the %s row leads but the clock says %s" % [leading, str(shift["id"])])
 
 
 func _check_doors(world: ColonyWorld) -> void:

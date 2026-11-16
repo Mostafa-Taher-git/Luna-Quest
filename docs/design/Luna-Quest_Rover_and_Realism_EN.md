@@ -49,7 +49,7 @@ sample at the drill shack. The first drive and the ice-site arrival are logged i
 
 ## Engine parity and safety
 
-- Browser: `web/src/world/rover.js` + wiring in `player.js`, `main.js`, `props.js`, `hud.js`.
+- Browser (retired, archived): `archive/web/src/world/rover.js` + wiring in `player.js`, `main.js`, `props.js`, `hud.js`.
 - GDScript: `scripts/rover.gd` (`ColonyRover`, a `CharacterBody3D`) + `player.gd`, `main.gd`,
   `world.gd`.
 - Every new asset load is guarded: a missing kit module or texture falls back to the previous

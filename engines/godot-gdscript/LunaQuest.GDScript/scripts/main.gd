@@ -33,12 +33,6 @@ var _subtitle_until := 0
 func _ready() -> void:
 	randomize()
 
-	# The browser build gets the same scene at 4× MSAA? No: software GPUs and integrated laptop
-	# chips both feel that, so the web export renders without it and lets the picture carry itself.
-	if OS.has_feature("web"):
-		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
-		Engine.max_fps = 60
-
 	# `godot --headless --path . -- --selftest` flies the whole mission and exits non-zero on any
 	# broken rule. CI runs it before every build, and so can anyone with Godot.
 	if OS.get_cmdline_user_args().has("--selftest"):
@@ -102,7 +96,7 @@ func _ready() -> void:
 
 	hud.show_hud(false)
 	hud.set_language(arabic)
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 
 	if DisplayServer.get_name() != "headless":
 		if not hud.play_intro(INTRO_STREAM):
@@ -171,7 +165,7 @@ func _begin_session() -> void:
 	hud.hide_start_screen()
 	hud.show_hud(true)
 	hud.set_paused(false)
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 	hud.set_subtitle("")
 	Voice.set_enabled(true)
 	Voice.play_key("crew.safaa.greet")
@@ -260,7 +254,7 @@ func _process(delta: float) -> void:
 		_hud_clock += delta
 		if _hud_clock >= 0.2:
 			_hud_clock = 0.0
-			hud.refresh(sim)
+			hud.refresh(sim, rover)
 
 		if not mission_complete and sim.clock.is_mission_complete():
 			_on_mission_complete()
@@ -370,7 +364,7 @@ func _toggle_language() -> void:
 	arabic = not arabic
 	sim.arabic = arabic
 	hud.set_language(arabic)
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 	hud.set_subtitle("اللغة العربية" if arabic else "English")
 
 
@@ -398,7 +392,7 @@ func _interact() -> void:
 		hud.set_subtitle(text)
 		_subtitle_until = Time.get_ticks_msec() + 9000
 		Voice.play_key("ui.console")
-		hud.refresh(sim)
+		hud.refresh(sim, rover)
 		if result.get("ok", false):
 			Voice.play_key("ui.confirm")
 	else:
@@ -419,7 +413,7 @@ func _on_topic_requested(npc_id: String, topic_id: String) -> void:
 	hud.set_dialogue_line(text)
 	hud.set_subtitle(text)
 	_subtitle_until = Time.get_ticks_msec() + 12000
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 
 
 func _on_dialogue_closed() -> void:
@@ -471,7 +465,7 @@ func _load_game() -> bool:
 	arabic = bool(extras.get("arabic", false))
 	sim.arabic = arabic
 	hud.set_language(arabic)
-	hud.refresh(sim)
+	hud.refresh(sim, rover)
 	if rover != null:
 		rover.restore(extras.get("rover", {}), player)
 	return true

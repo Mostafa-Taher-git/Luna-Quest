@@ -1,9 +1,10 @@
 name: README screenshots
 
-# The frames in the README are photographs of the real game, so they are taken by a browser that
-# can actually render it. This sandbox cannot (no GPU, no Chrome, no display), so the capture job
-# lives here: manual trigger only, costs nothing on a push, and leaves the frames as an artifact
-# that can be committed to docs/screenshots/.
+# The frames in docs/screenshots are photographs of the real game, and from v3.4 the game is
+# the Godot .NET edition only — there is no browser anywhere in the project (H1/A1), so the
+# old Chromium/Playwright capture is gone. The job now runs the game itself: build the C#,
+# give it a virtual display, and let Main.cs's capture flags do the rest through
+# tools/capture-screenshots.sh. Manual trigger only, so a push never pays for it.
 #
 #   gh workflow run screenshots.yml --ref <branch>
 #   gh run download <id> -n readme-shots -D shots
@@ -16,58 +17,62 @@ on:
         required: false
         default: ''
 
+# The frames are uploaded as an artifact for a human to review and commit: this job never
+# writes back to a branch. Frames previously landed with [skip ci], which bypasses CI entirely.
 permissions:
-  contents: write
+  contents: read
+
+env:
+  GODOT_VERSION: '4.7.2'
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_DIR: engines/godot/LunaQuest.Godot
 
 jobs:
   capture:
     name: Capture frames
+    # Never run the capture on main: frames are a reviewed artifact, not an automatic commit.
+    if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build the browser edition
-        working-directory: web
+      - name: Fetch Godot .NET ${GODOT_VERSION}
+        # Same recipe as godot-dotnet.yml, including DOTNET_ROOT: the mono editor finds its
+        # own .NET through it, and without the C# glue no script (not even the capture flags)
+        # would instantiate.
         run: |
-          npm ci
-          npm run build
-          test -f dist/media/intro.mp4
-          test -f dist/models/astronaut/cute_astronaut.glb
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64" godot-dir
+          chmod +x godot-dir/Godot_v*
+          echo "DOTNET_ROOT=${DOTNET_ROOT:-$(dirname "$(command -v dotnet)")}" >> "$GITHUB_ENV"
+          echo "GODOT=${PWD}/godot-dir/Godot_v${GODOT_VERSION}-stable_mono.x86_64" >> "$GITHUB_ENV"
 
-      - name: Install Chromium
+      - name: Install the virtual display and Pillow
         run: |
-          npm install --no-save --no-package-lock playwright
-          npx playwright install --with-deps chromium
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth python3-pil
 
       - name: Capture the frames
         run: |
-          node tools/capture-readme.mjs --out shots ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+          set -euo pipefail
+          tools/capture-screenshots.sh ${{ inputs.only }}
 
       - name: Upload the frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: readme-shots
-          path: shots
+          path: docs/screenshots
           retention-days: 14
-
-      - name: Commit the frames back to the branch
-        if: always()
-        run: |
-          test -d shots || exit 0
-          git config user.name "Luna-Quest capture"
-          git config user.email "capture@luna-quest.invalid"
-          git add -f shots
-          git diff --cached --quiet && exit 0
-          git commit -m "Capture README frames from ${GITHUB_SHA::7} [skip ci]"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Summarise
         if: always()
@@ -75,19 +80,14 @@ jobs:
           {
             echo '### README frames'
             echo ''
-            if [ -f shots/report.json ]; then
-              node -e "
-                const r = require('./shots/report.json');
-                for (const s of r.report) {
-                  console.log(s.error ? '| ' + s.name + ' | failed: ' + s.error + ' |'
-                                      : '| ' + s.name + ' | ' + s.kb + ' kB | ' + s.note + ' |');
-                }
-                console.log('');
-                console.log('page errors: ' + r.errors.length);
-              "
-            else
-              echo 'No report — the capture step did not start.'
-            fi
+            echo '| Frame | Size |'
+            echo '|---|---|'
+            for f in docs/screenshots/*.png; do
+              [ -f "$f" ] || continue
+              bytes=$(stat -c %s "$f")
+              dim=$(python3 -c "from PIL import Image;print('x'.join(map(str,Image.open('$f').size)))" 2>/dev/null || echo '?')
+              echo "| ${f#docs/screenshots/} | ${dim} · $((bytes / 1024)) kB |"
+            done
             echo ''
             echo 'Artifact: `readme-shots`'
           } >> "$GITHUB_STEP_SUMMARY"
