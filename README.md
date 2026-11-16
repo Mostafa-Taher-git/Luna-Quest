@@ -2,7 +2,7 @@
 
 > **30 Earth days. Six crew, one commander and NEXO the robot. One shared simulation. Every kilogram and every second counted.**
 
-![Luna-Quest v3.3 - nine in-game views](docs/screenshots/preview-candidates.jpg)
+![Luna-Quest — the colony at Shackleton rim](docs/screenshots/colony.png)
 
 ## Download and play
 
@@ -432,6 +432,16 @@ Godot --path engines/godot/LunaQuest.Godot --autostart \
 # Front portrait for model checks
 Godot --path engines/godot/LunaQuest.Godot --autostart --portrait \
   --screenshot=/tmp/portrait.png --shot-delay=5
+
+# Take the crew rover's wheel for a drive-by frame (capture-only throttle)
+Godot --path engines/godot/LunaQuest.Godot --autostart --no-intro \
+  --spawn=-11,-25 --drive --look=3.54,-0.3 \
+  --screenshot=/tmp/rover.png --shot-delay=4.5
+
+# Portrait with the shift task board off the picture — the board sits centre screen,
+# exactly where the visor lands
+Godot --path engines/godot/LunaQuest.Godot --autostart --portrait --no-board \
+  --screenshot=/tmp/portrait.png --shot-delay=4.5
 
 # Start in the helmet view, at a fixed position and look direction
 Godot --path engines/godot/LunaQuest.Godot --autostart --first-person \

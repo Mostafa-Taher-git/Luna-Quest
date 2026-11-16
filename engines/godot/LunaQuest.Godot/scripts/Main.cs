@@ -104,6 +104,8 @@ namespace LunaQuest.Godot
             bool cinematic = false;
             bool noIntro = false;
             bool roverTest = false;
+            bool drive = false;
+            bool noBoard = false;
             string? testDialogueNpc = null;
             Vector3? spawn = null;
             float? lookYaw = null, lookPitch = null;
@@ -119,6 +121,8 @@ namespace LunaQuest.Godot
                 else if (arg == "--cinematic") cinematic = true;
                 else if (arg == "--no-intro") noIntro = true;
                 else if (arg == "--rover-test") roverTest = true;
+                else if (arg == "--drive") drive = true;
+                else if (arg == "--no-board") noBoard = true;
                 else if (arg.StartsWith("--spawn=", StringComparison.Ordinal))
                 {
                     var parts = arg.Substring("--spawn=".Length).Split(',');
@@ -151,16 +155,26 @@ namespace LunaQuest.Godot
                 }
             }
             if (spawn.HasValue) Player.GlobalPosition = spawn.Value;
-            if (lookYaw.HasValue || lookPitch.HasValue)
+            // `--look` normally applies at once, but `--portrait` sets the portrait camera up
+            // later (deferred), and its own rotation would swallow the requested direction.
+            // With both flags the look is therefore applied after the portrait — that
+            // combination is how tools/capture-screenshots.sh gets the close back view it
+            // crops for astronaut-detail.png.
+            bool lookAfterPortrait = portrait && (lookYaw.HasValue || lookPitch.HasValue);
+            if (!lookAfterPortrait && (lookYaw.HasValue || lookPitch.HasValue))
                 Player.ResetLook(lookYaw ?? 0f, lookPitch ?? -0.12f);
             if (autoStart) CallDeferred(nameof(AutoStart));
+            if (drive) CallDeferred(nameof(DriveForCapture));
             if (firstPerson) CallDeferred(nameof(FirstPersonView));
             if (portrait) CallDeferred(nameof(Portrait));
+            if (lookAfterPortrait)
+                CallDeferred(nameof(ApplyLookDeferred), lookYaw ?? 0f, lookPitch ?? -0.12f);
+            if (noBoard) CallDeferred(nameof(HideBoardForCapture));
             if (voiceCheck) CallDeferred(nameof(VoicePackCheck));
             if (voiceDemo) CallDeferred(nameof(VoiceDemo));
             if (cinematic) CallDeferred(nameof(StartCinematic));
             bool scripted = autoStart || cinematic || voiceCheck || voiceDemo || portrait || firstPerson ||
-                            roverTest ||
+                            roverTest || drive || noBoard ||
                             _screenshotTimer > 0 || !string.IsNullOrEmpty(testDialogueNpc);
             if (cinematic) { _menuCam?.QueueFree(); _menuCam = null; _music?.Stop(); }
             // The film plays on the first launch; afterwards the menu offers it on demand.
@@ -309,6 +323,39 @@ namespace LunaQuest.Godot
         private void FirstPersonView() => Player.SetThirdPerson(false, false);
 
         private void Portrait() => Player.PortraitCamera();
+
+        /// <summary>
+        /// `--drive`: take the crew rover's wheel for a screenshot run (tools/capture-screenshots.sh).
+        /// A capture has no hands on the keyboard, so once the seat is taken the flag supplies
+        /// the pedal through <see cref="RoverController.CaptureThrottle"/> until the frame is
+        /// saved. Outside a capture the throttle stays zero and the keys win as before.
+        /// </summary>
+        private void DriveForCapture()
+        {
+            TryRoverInteraction();
+            RoverController.CaptureThrottle = Rover != null && Rover.Occupied ? 1f : 0f;
+        }
+
+        /// <summary>
+        /// The look half of a `--portrait --look=...` capture (see HandleCommandLine): applied
+        /// after the portrait camera so the arm orbits to the requested direction instead of
+        /// the portrait's own rotation winning. Inert without both flags.
+        /// </summary>
+        private void ApplyLookDeferred(float yaw, float pitch) => Player.ResetLook(yaw, pitch);
+
+        /// <summary>
+        /// `--no-board`: keep the shift task board off the screen for one capture. The board
+        /// sits in the centre of the frame — exactly where a portrait's visor lands — so
+        /// tools/capture-screenshots.sh takes it out of the way for the portrait and detail
+        /// shots. Every other HUD element stays; nothing changes in normal play, where the
+        /// flag is never passed.
+        /// </summary>
+        private void HideBoardForCapture()
+        {
+            // BoardPanel is the styled container around BoardBox — hiding the panel takes the
+            // background and the rows with it.
+            if (Hud?.BoardPanel != null) Hud.BoardPanel.Visible = false;
+        }
 
         public override void _Process(double delta)
         {
