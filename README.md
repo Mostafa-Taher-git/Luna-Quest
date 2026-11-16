@@ -39,8 +39,8 @@ always point at the newest build.
 ---
 
 Luna-Quest is a walkable, data-driven lunar colony game. You are the new commander on the
-**Shackleton rim at 89.9 deg S**. Walk the base, read every console, and keep nine people alive
-with measured numbers instead of guesses. There is no combat and no permanent failure: the
+**Shackleton rim at 89.9 deg S**. Walk the base, read every console, and keep seven people alive
+(the commander and six crew — NEXO is a robot and does not breathe) with measured numbers instead of guesses. There is no combat and no permanent failure: the
 pressure comes from air, water, power, food, dust, radiation, sleep and time.
 
 The same C# rules run in **Godot 4.7.2 .NET** and **Unity 6.3 LTS**. The engines only draw,
@@ -53,10 +53,10 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Part | State |
 |---|---|
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
-| Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
+| Content (buildings, crew, incidents, crops, learning) | Complete, eight JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
-| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Windows and Linux** |
-| Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 659 rule checks and 238 scene checks passing, exported for Windows and Linux** |
+| Unity 6000.3.0f1 (6.3 LTS) project | Source only — no binary ships. Harness extended (14-row board, rover save/restore); compile-clean by review only, compile/runtime PENDING. Build locally in Unity 6000.3.0f1 |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
 | Browser edition (Three.js) | **Retired (2026-11).** Kept under `archive/` only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
 | CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Windows/Linux exports), `release.yml` (Godot .NET and GDScript Windows/Linux zips, the GDScript `.deb` and raw Linux binary, `SHA256SUMS` over every attached file, intro film) on every tag - no browser artifact of any kind (H1/A1) |
@@ -78,7 +78,8 @@ The Three.js browser edition is no longer developed, built or deployed. Luna-Que
 exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The retired
 edition now lives under `archive/web/`, which carries the locked intro poster
 (`archive/web/static/intro-poster.jpg`, `docs/design/asset-lock.json`) and the
-historical test suite. Play the GDScript, Godot .NET or Unity builds instead.
+historical test suite. Play the GDScript or Godot .NET builds instead; Unity ships as source
+only — build it locally in Unity 6000.3.0f1 (its harness is extended; compile/runtime pending).
 
 Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
 steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
@@ -113,8 +114,8 @@ bash tools/sync-gdscript-assets.sh
 godot --path engines/godot-gdscript/LunaQuest.GDScript
 
 # no GPU required to check it:
-godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 544 checks
-godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 190 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --selftest   # 659 checks
+godot --headless --path engines/godot-gdscript/LunaQuest.GDScript -- --audit      # 238 checks
 ```
 
 Full notes, controls and the file map:
@@ -256,7 +257,7 @@ but the loop is not free: filter health, water quality and power all matter.
 | Value | Number |
 |---|---|
 | Crew intake | `2,800 kcal` per person per day |
-| Stored food | `620,000 kcal` (about 30 crew-days for nine people) |
+| Stored food | `482,000 kcal` (about 24.6 crew-days for seven people; capacity `607,000 kcal`) |
 | Grow pod | `24 m^2` in four 6 m^2 racks, sealed indoors |
 | Crop cycle | `24` days (lettuce reference) |
 | Harvest | `450 kcal/m^2` per cycle |
@@ -383,7 +384,7 @@ Luna-Quest-Game/
 
 ## Content and modding
 
-The seven JSON files in `content/` are the source of truth for both engines:
+The eight JSON files in `content/` are the source of truth for both engines:
 
 | File | Contents |
 |---|---|
