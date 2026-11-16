@@ -57,6 +57,7 @@ func run() -> bool:
 	var flown := _test_thirty_days()
 	_test_actions()
 	_test_objectives()
+	_test_board()
 	_test_dialogue()
 	_test_voice_pack()
 	_test_save()
@@ -272,6 +273,76 @@ func _test_objectives() -> void:
 		expect(str(entry.get("bodyEn", "")) != "", "journal: an entry has no body")
 		expect(str(entry.get("skill", "")) != "", "journal: an entry has no skill")
 	expect(not sim.skills.is_empty(), "journal: no skills were credited")
+
+
+## The shift task board, as data: fourteen rows, every learning objective on it, both languages
+## distinct, the rover tasks following the rover, and the shift boundaries where they belong.
+func _test_board() -> void:
+	var sim := LQSim.new()
+	var rows: Array = LunaHud.board_rows(sim, null, false)
+	expect(rows.size() == 14, "board: expected 14 rows, found %d" % rows.size())
+
+	var ids := {}
+	var journals := 0
+	var rovers := 0
+	var missions := 0
+	for row in rows:
+		var id := str(row["id"])
+		expect(not ids.has(id), "board: duplicate row id %s" % id)
+		ids[id] = true
+		expect(str(row["label"]) != "", "board: %s has no label" % id)
+		expect(str(row["hint"]) != "", "board: %s has no hint" % id)
+		match str(row["kind"]):
+			"journal":
+				journals += 1
+				expect(str(row["shift"]) in ["morning", "afternoon", "evening", "night"],
+					"board: %s carries shift '%s'" % [id, str(row["shift"])])
+			"rover_driven", "rover_ice":
+				rovers += 1
+			"mission":
+				missions += 1
+	expect(journals == EXPECTED_OBJECTIVES,
+		"board: %d journal rows, expected %d" % [journals, EXPECTED_OBJECTIVES])
+	expect(rovers == 2, "board: %d rover rows, expected 2" % rovers)
+	expect(missions == 1, "board: %d mission rows, expected 1" % missions)
+
+	# Every objective in content/learning.json is on the board, and the board invents nothing
+	# that is not an objective, a rover milestone or the mission line itself.
+	for objective in Content.objectives:
+		expect(ids.has(str(objective.get("id", ""))),
+			"board: objective %s is missing from the board" % str(objective.get("id", "")))
+
+	# Both languages: the Arabic pass carries its own text for every single row.
+	var ar_rows: Array = LunaHud.board_rows(sim, null, true)
+	expect(ar_rows.size() == rows.size(), "board: the Arabic pass changed the row count")
+	for i in rows.size():
+		expect(str(ar_rows[i]["label"]) != "" and str(ar_rows[i]["label"]) != str(rows[i]["label"]),
+			"board: row %d has no distinct Arabic label" % i)
+
+	# The rover tasks read the rover's own milestones: pending without one, then flipped by
+	# driving it and again by reaching the ice site.
+	expect(not bool(rows[4]["done"]) and not bool(rows[5]["done"]),
+		"board: a rover task is already done before the rover has moved")
+	var rover_ref := ColonyRover.new()
+	rover_ref.has_driven = true
+	var driven: Array = LunaHud.board_rows(sim, rover_ref, false)
+	expect(bool(driven[4]["done"]), "board: taking the rover did not mark its task")
+	expect(not bool(driven[5]["done"]), "board: the ice task completed without reaching the site")
+	rover_ref.reached_ice = true
+	var arrived: Array = LunaHud.board_rows(sim, rover_ref, false)
+	expect(bool(arrived[5]["done"]), "board: reaching the ice site did not mark its task")
+	rover_ref.free()
+
+	# Shift boundaries: 06:00 opens the morning shift, 12:00 the afternoon, 18:00 the evening,
+	# and everything before six is night.
+	expect(str(LunaHud.current_shift(0.0)["id"]) == "night", "board: 00:00 is not the night shift")
+	expect(str(LunaHud.current_shift(5.99)["id"]) == "night", "board: 05:59 is not the night shift")
+	expect(str(LunaHud.current_shift(6.0)["id"]) == "morning", "board: 06:00 is not morning")
+	expect(str(LunaHud.current_shift(11.99)["id"]) == "morning", "board: 11:59 is not morning")
+	expect(str(LunaHud.current_shift(12.0)["id"]) == "afternoon", "board: 12:00 is not afternoon")
+	expect(str(LunaHud.current_shift(17.99)["id"]) == "afternoon", "board: 17:59 is not afternoon")
+	expect(str(LunaHud.current_shift(18.0)["id"]) == "evening", "board: 18:00 is not evening")
+	expect(str(LunaHud.current_shift(23.99)["id"]) == "evening", "board: 23:59 is not evening")
 
 
 # ---- conversation and the voice pack ---------------------------------------
