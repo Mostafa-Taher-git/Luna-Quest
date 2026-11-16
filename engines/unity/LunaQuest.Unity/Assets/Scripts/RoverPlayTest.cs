@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -12,11 +13,12 @@ namespace LunaQuest.Unity
     ///   Unity -batchmode -projectPath engines/unity/LunaQuest.Unity \
     ///         -executeMethod LunaQuest.Unity.RoverPlayTest.Run -quit -logFile rover.log
     ///
-    /// It plays the T5 checklist for real — enters the rover, drives it, steps out — and checks the
-    /// things the C# can only claim until something runs it: that the ground is solid under the
-    /// commander, that a driven suit does not fight the rover's capsule, that the wheel is dead
-    /// behind an open dialogue, and that stepping out lands on the ground rather than in the air
-    /// (or inside the rover). Exit code 0 means every check passed.
+    /// It plays the T5 checklist for real — enters the rover, drives it, steps out, saves and
+    /// restores it — and checks the things the C# can only claim until something runs it: that
+    /// the ground is solid under the commander, that a driven suit does not fight the rover's
+    /// capsule, that the wheel is dead behind an open dialogue, and that stepping out lands on
+    /// the ground rather than in the air (or inside the rover). Exit code 0 means every check
+    /// passed.
     /// </summary>
     public static class RoverPlayTest
     {
@@ -50,6 +52,7 @@ namespace LunaQuest.Unity
                 CheckBoardAfterDrive(game);
                 CheckPauseGate(game);
                 CheckExit(game);
+                CheckSaveRestore(game);
                 CheckRestart(game);
             }
             catch (Exception error)
@@ -291,6 +294,53 @@ namespace LunaQuest.Unity
                 "the suit stepped out inside the rover");
             Expect(Mathf.Abs(Mathf.DeltaAngle(player.Visual.localEulerAngles.x, 0f)) < 1f,
                 "the suit stayed reclined after stepping out");
+        }
+
+        /// <summary>
+        /// The rover survives a save: its parked pose, battery, odometer, milestones and the seat
+        /// all come back through the flat extras keys LunaQuestGame.SaveGame writes. An old save
+        /// from before the rover existed (schema 2, no rover keys at all) must load without
+        /// complaint and leave a full battery, clear milestones and an empty seat — the same
+        /// contract as the Godot .NET edition's RoverAudit.
+        /// </summary>
+        private static void CheckSaveRestore(LunaQuestGame game)
+        {
+            var player = game.Player;
+            var rover = game.Rover;
+            if (rover == null) return;
+
+            // Exactly the keys SaveGame writes for the rover, at a pose away from the apron so a
+            // restored position cannot be mistaken for a default one.
+            var extras = new Dictionary<string, object>
+            {
+                ["roverX"] = 3.5, ["roverY"] = 0.05, ["roverZ"] = -7.25, ["roverYaw"] = 1.1,
+                ["roverBattery"] = 6.25, ["roverOdometer"] = 42.5,
+                ["roverDriven"] = true, ["roverIce"] = true, ["roverOccupied"] = true
+            };
+            rover.Exit(player);
+            rover.Restore(extras, player);
+
+            Expect(rover.Occupied && player.Rover == rover, "restore() did not give the seat back");
+            Expect(Mathf.Abs(rover.BatteryKwh - 6.25f) < 0.001f,
+                $"restore() lost the battery ({rover.BatteryKwh:F2} kWh)");
+            Expect(Mathf.Abs(rover.Odometer - 42.5f) < 0.001f,
+                $"restore() lost the odometer ({rover.Odometer:F2} m)");
+            Expect(rover.HasDriven && rover.ReachedIce, "restore() lost the milestones");
+            Expect(Vector3.Distance(rover.transform.position, new Vector3(3.5f, 0.05f, -7.25f)) < 0.001f,
+                $"restore() lost the parked position ({rover.transform.position})");
+
+            // The old-save case: no rover keys at all. The numeric defaults still apply (a full
+            // battery, zero odometer), the flags stay clear and nobody is seated. Like the .NET
+            // edition, a missing pose key leaves the rover exactly where it already was.
+            rover.Exit(player);
+            rover.Restore(new Dictionary<string, object>(), player);
+            Expect(Mathf.Abs(rover.BatteryKwh - CrewRover.BatteryKwhMax) < 0.001f,
+                $"an old save did not leave a full battery on the rover ({rover.BatteryKwh:F2} kWh)");
+            Expect(rover.Odometer < 0.001f, $"an old save kept the odometer ({rover.Odometer:F2} m)");
+            Expect(!rover.HasDriven && !rover.ReachedIce, "an old save kept the rover milestones");
+            Expect(!rover.Occupied && player.Rover == null, "an old save seated the commander in the rover");
+            Expect(Vector3.Distance(rover.transform.position, new Vector3(3.5f, 0.05f, -7.25f)) < 0.001f,
+                "an old save moved the rover although it carried no pose");
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>
