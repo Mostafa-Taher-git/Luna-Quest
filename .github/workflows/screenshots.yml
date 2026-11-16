@@ -17,8 +17,10 @@ on:
         required: false
         default: ''
 
+# The frames are uploaded as an artifact for a human to review and commit: this job never
+# writes back to a branch. Frames previously landed with [skip ci], which bypasses CI entirely.
 permissions:
-  contents: write
+  contents: read
 
 env:
   GODOT_VERSION: '4.7.2'
@@ -28,6 +30,8 @@ env:
 jobs:
   capture:
     name: Capture frames
+    # Never run the capture on main: frames are a reviewed artifact, not an automatic commit.
+    if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -69,17 +73,6 @@ jobs:
           name: readme-shots
           path: docs/screenshots
           retention-days: 14
-
-      - name: Commit the frames back to the branch
-        if: always()
-        run: |
-          set -euo pipefail
-          git config user.name "Luna-Quest capture"
-          git config user.email "capture@luna-quest.invalid"
-          git add docs/screenshots
-          git diff --cached --quiet && exit 0
-          git commit -m "Capture README frames from ${GITHUB_SHA::7} [skip ci]"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Summarise
         if: always()
