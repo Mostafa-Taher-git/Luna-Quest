@@ -46,6 +46,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_rover(root, world, player, crew, sim)
 	_check_f0_controls(root, world, player)
 	_check_buildings(root, world)
+	_check_language(world, crew)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -467,6 +468,36 @@ func _check_buildings(root: Node, world: ColonyWorld) -> void:
 			if child is MeshInstance3D and not child.visible:
 				hidden += 1
 		expect(hidden >= 2, "buildings: %s wall meshes were not hidden (%d)" % [id, hidden])
+
+
+## F4 — only the selected language is ever visible. The world toggles signs, console labels and
+## crew name labels through `refresh_language`; this walks them in both directions and proves that
+## Arabic text is absent when English is active and vice versa.
+func _check_language(world: ColonyWorld, crew: ColonyCrew) -> void:
+	world.refresh_language(true)
+	crew.refresh_language(true)
+	for pair in world._bilingual:
+		expect(_has_arabic(str(pair["label"].text)),
+			"language: world label %s shows no Arabic while Arabic is active" % pair["label"].text)
+	for member in crew.members:
+		expect(_has_arabic(str(member["label"].text)),
+			"language: %s label shows no Arabic while Arabic is active" % member["label"].text)
+	world.refresh_language(false)
+	crew.refresh_language(false)
+	for pair in world._bilingual:
+		expect(not _has_arabic(str(pair["label"].text)),
+			"language: world label %s contains Arabic while English is active" % pair["label"].text)
+	for member in crew.members:
+		expect(not _has_arabic(str(member["label"].text)),
+			"language: %s label contains Arabic while English is active" % member["label"].text)
+
+
+func _has_arabic(text: String) -> bool:
+	for c in text:
+		var o: int = c.unicode_at(0)
+		if o >= 0x0600 and o <= 0x06FF:
+			return true
+	return false
 
 
 ## rover back with the mission restart (including the reset that BUG-4 was about).

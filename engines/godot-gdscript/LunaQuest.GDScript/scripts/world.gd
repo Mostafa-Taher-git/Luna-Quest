@@ -19,6 +19,21 @@ var sun: DirectionalLight3D
 var earth_mat: ShaderMaterial = null
 var star_mat: StandardMaterial3D = null
 var _attached_prop_count: Dictionary = {}
+var _bilingual: Array = []   # {label, en, ar} every world Label3D produced by _label_both
+var arabic_on := false
+
+func _label_both(group: Node3D, en: String, ar: String, position: Vector3, rotation_y: float,
+		size := 64, pixel := 0.006, color := Color(1, 1, 1)) -> Label3D:
+	var label := _label(group, ar if arabic_on else en, position, rotation_y, size, pixel, color)
+	_bilingual.append({"label": label, "en": en, "ar": ar})
+	return label
+
+## Both languages exist in the content; only the player's selected one is ever shown.
+func refresh_language(arabic_on: bool) -> void:
+	for pair in _bilingual:
+		var label: Label3D = pair["label"]
+		if label != null and is_instance_valid(label):
+			label.text = str(pair["ar"]) if arabic_on else str(pair["en"])
 var terrain := LQTerrain.new(1337)
 
 
@@ -872,7 +887,7 @@ func _make_sign(group: Node3D, building: Dictionary, w: float, d: float, h: floa
 		_:
 			offset = Vector3(-w * 0.5 - 0.16, h - 0.75, 0)
 			yaw = -PI * 0.5
-	var label := _label(group, "%s\n%s" % [text_en, text_ar], offset, yaw, 48, 0.0075)
+	var label := _label_both(group, text_en, text_ar, offset, yaw, 48, 0.0075)
 	label.name = "Sign_%s" % building.get("id", "")
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -910,7 +925,9 @@ func _make_interactions(group: Node3D, building: Dictionary, w: float, d: float,
 
 		_box(desk, Vector3(1.15, 1.0, 0.62), Vector3(0, 0.6, 0), _mat("panel", Color(0.70, 0.74, 0.78), 0.7, 0.06))
 		_box(desk, Vector3(0.9, 0.5, 0.06), Vector3(0, 1.16, -0.26), _glow("screen", Color(0.06, 0.12, 0.16), Color(0.32, 0.78, 0.95), 1.2))
-		var label := _label(desk, str(point.get("nameEn", "")), Vector3(0, 1.62, 0), 0.0, 36, 0.004)
+		var en_text := str(point.get("nameEn", ""))
+		var ar_text := str(point.get("nameAr", ""))
+		var label := _label_both(desk, en_text, ar_text, Vector3(0, 1.62, 0), 0.0, 36, 0.004)
 		label.name = "ConsoleLabel"
 
 		var body := StaticBody3D.new()

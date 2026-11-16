@@ -139,7 +139,7 @@ func _spawn(profile: Dictionary) -> void:
 	root.add_child(area)
 
 	var label := Label3D.new()
-	label.text = "%s\n%s" % [profile.get("nameEn", ""), profile.get("nameAr", "")]
+	label.text = str(profile.get("nameAr", "")) if sim.arabic else str(profile.get("nameEn", ""))
 	label.font_size = 44
 	label.pixel_size = 0.0038
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -364,3 +364,10 @@ func member_by_id(id: String) -> Dictionary:
 		if member["id"] == id:
 			return member
 	return {}
+
+## Every world-visible crew label shows exactly one language, the selected one.
+func refresh_language(arabic_on: bool) -> void:
+	for member in members:
+		var profile: Dictionary = member["profile"]
+		var label: Label3D = member["label"]
+		label.text = str(profile.get("nameAr", "")) if arabic_on else str(profile.get("nameEn", ""))

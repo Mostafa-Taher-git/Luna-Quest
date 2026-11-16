@@ -52,8 +52,13 @@ func _ready() -> void:
 	hud.dialogue_closed.connect(_on_dialogue_closed)
 	hud.language_toggled.connect(_toggle_language)
 
+	sim = LQSim.new()
+	sim.clock.total_minutes = OPENING_MINUTE
+	sim.arabic = arabic
+
 	world = ColonyWorld.new()
 	world.name = "Colony"
+	world.arabic_on = arabic
 	add_child(world)
 	world.build()
 
@@ -65,10 +70,6 @@ func _ready() -> void:
 	rover.position = Vector3(-11.0, 0.05, -28.0)
 	rover.rotation.y = 0.4
 	rover.settle()
-
-	sim = LQSim.new()
-	sim.clock.total_minutes = OPENING_MINUTE
-	sim.arabic = arabic
 
 	player = ColonyPlayer.new()
 	player.name = "Commander"
@@ -352,6 +353,8 @@ func _toggle_language() -> void:
 	arabic = not arabic
 	sim.arabic = arabic
 	hud.set_language(arabic)
+	world.refresh_language(arabic)
+	crew.refresh_language(arabic)
 	hud.refresh(sim, rover)
 	hud.set_subtitle("اللغة العربية" if arabic else "English")
 
