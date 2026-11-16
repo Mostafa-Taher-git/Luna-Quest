@@ -56,6 +56,8 @@ namespace LunaQuest.Unity
                 CheckSaveRestore(game);
                 CheckBuildings(game);
                 CheckSuitScale(game);
+                CheckSettings(game);
+                CheckEvaJobs(game);
                 CheckRestart(game);
             }
             catch (Exception error)
@@ -490,6 +492,70 @@ namespace LunaQuest.Unity
                     $"F3: {agent.NpcId}'s suit scale is {suit.localScale.x:F3}, expected {expectedScale:F3} (1.75 m)");
             }
             Expect(humans == 6, $"F3: expected 6 human crew visuals, found {humans}");
+        }
+
+        /// <summary>
+        /// F5 — the settings file round-trips exactly and the user's original file is restored
+        /// afterwards. Application.persistentDataPath/settings.json never touches the shared save.
+        /// </summary>
+        private static void CheckSettings(LunaQuestGame game)
+        {
+            var original = SettingsStore.Load();
+            var written = new SettingsStore.SettingsData
+            {
+                ThirdPerson = false,
+                Language = "ar",
+                MouseSensitivity = 1.5f,
+                Fov = 82f,
+                MasterVolume = 0.55f,
+                Voice = false,
+                Subtitles = false,
+                Quality = "high",
+                Fullscreen = true,
+            };
+            Expect(SettingsStore.Save(written), "F5: settings.json could not be written");
+            var reloaded = SettingsStore.Load();
+            Expect(reloaded.ThirdPerson == written.ThirdPerson, "F5: third person did not survive");
+            Expect(reloaded.Language == written.Language, "F5: the language choice was lost");
+            Expect(Mathf.Abs(reloaded.MouseSensitivity - written.MouseSensitivity) < 0.001f, "F5: the sensitivity was lost");
+            Expect(Mathf.Abs(reloaded.Fov - written.Fov) < 0.001f, "F5: the field of view was lost");
+            Expect(Mathf.Abs(reloaded.MasterVolume - written.MasterVolume) < 0.001f, "F5: the volume was lost");
+            Expect(reloaded.Voice == false, "F5: the voice flag was lost");
+            Expect(reloaded.Subtitles == false, "F5: the subtitles flag was lost");
+            Expect(reloaded.Quality == "high", "F5: the quality preset was lost");
+            Expect(reloaded.Fullscreen, "F5: the fullscreen flag was lost");
+            Expect(SettingsStore.Save(original), "F5: the user's original preferences could not be restored");
+        }
+
+        /// <summary>
+        /// F6 — the EVA reserve and the two custody/cargo chains, exercised on the live sim.
+        /// An empty suit cannot drill; the chain seals at the ice cache; the board window pays
+        /// timeliness. Same contract as the shared sim harness.
+        /// </summary>
+        private static void CheckEvaJobs(LunaQuestGame game)
+        {
+            var sim = game.Sim;
+            double full = sim.State.SuitEnergy;
+            Expect(full > 0.0, $"F6: the suit does not start charged ({full:F2})");
+            for (int i = 0; i < 400; i++) sim.TickEvaEnergy(false, 1.0);
+            Expect(sim.State.SuitEnergy == 0.0, $"F6: the suit never emptied ({sim.State.SuitEnergy:F2})");
+            Expect(!sim.DrillSample(out _, out _), "F6: an empty suit was allowed to drill");
+            Expect(sim.Learning.Journal.Exists(e => e.ObjectiveId == "eva_drain"),
+                "F6: the dry-suit journal entry was never written");
+            for (int i = 0; i < 80; i++) sim.TickEvaEnergy(true, 1.0);
+            Expect(sim.DrillSample(out _, out _), "F6: a recharged suit could not drill");
+            Expect(sim.LogSampleAtCache(out _, out _), "F6: logging the custody chain failed");
+            Expect(sim.State.SamplesCollected == 1,
+                $"F6: the sample was not counted ({sim.State.SamplesCollected})");
+            Expect(sim.Learning.HasEntry("obj_sample"),
+                "F6: the custody chain did not unlock the sample objective");
+            sim.StartCargoRun(0.0, out _, out _);
+            sim.TickCargo(200.0); // window is 150 s
+            Expect(sim.CompleteCargoRun(out _, out _), "F6: the late delivery failed");
+            Expect(sim.Learning.Journal.Exists(e => e.ObjectiveId == "cargo_run_late"),
+                "F6: the late-delivery journal entry was never written");
+            // Recharge the suit so the rest of the run sees a fit commander.
+            sim.TickEvaEnergy(true, 100.0);
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>

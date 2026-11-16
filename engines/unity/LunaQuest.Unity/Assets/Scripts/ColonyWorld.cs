@@ -476,6 +476,21 @@ namespace LunaQuest.Unity
             }
             var antenna = Cylinder(lander.transform, "Antenna", new Vector3(1.0f, 6.0f, 0f), 0.05f, 2.4f, ascent);
             antenna.transform.localRotation = Quaternion.Euler(0f, 0f, -18f);
+
+            // F6: the supply crate — a hold-E cargo delivery for the workshop spares desk.
+            var crate = Box(root.transform, "SupplyCrate", new Vector3(6.8f, 0.62f, 3.0f),
+                new Vector3(1.5f, 1.25f, 1.15f), Mat(new Color(0.42f, 0.35f, 0.27f), 0.75f, 0.05f));
+            Box(crate.transform, "CrateStripe", new Vector3(0f, -0.18f, 0f),
+                new Vector3(1.52f, 0.18f, 1.17f), Mat(new Color(0.84f, 0.68f, 0.14f), 0.45f, 0.35f,
+                    new Color(0.9f, 0.78f, 0.3f), 0.4f));
+            var crateStation = crate.AddComponent<Station>();
+            crateStation.BuildingId = "";
+            crateStation.InteractionId = "cargo_crate";
+            crateStation.PromptEn = "Supply Crate";
+            crateStation.PromptAr = "صندوق الإمداد";
+            crateStation.Kind = "job";
+            MakeText(crate.transform, "CrateStencil", new Vector3(0f, 0.75f, 0f),
+                0.16f, new Color(0.92f, 0.66f, 0.22f), "SUPPLY", "SUPPLY", true);
         }
 
         // ---- buildings -------------------------------------------------------

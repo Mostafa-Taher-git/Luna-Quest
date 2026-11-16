@@ -23,6 +23,8 @@ namespace LunaQuest.Godot
         public RoverController Rover = null!;
         public Hud Hud = null!;
         public VoicePlayer Voice = null!;
+        /// <summary>The live settings view the game reads from (loaded at boot, saved on change).</summary>
+        public GameSettings.SettingsData LiveSettings = GameSettings.Defaults();
         public bool Started { get; private set; }
 
         private const string SavePath = "user://lunaquest-save.json";
@@ -81,6 +83,9 @@ namespace LunaQuest.Godot
             AddChild(Hud);
             Hud.Bind(this);
             Voice.Bind(Hud);
+
+            LiveSettings = GameSettings.Load();
+            ApplySettings(LiveSettings);
 
             Hud.UpdateState();
             GD.Print($"Luna-Quest ready: {content.Buildings.Count} buildings, {content.Npcs.Count} crew, {content.Incidents.Count} incident rules.");
@@ -374,6 +379,8 @@ namespace LunaQuest.Godot
                 }
                 _saveTimer += delta;
                 if (_saveTimer > 30.0) { _saveTimer = 0; }
+                TickHold(delta);
+                TickEva(delta);
             }
 
             Hud.UpdateState();
@@ -498,6 +505,23 @@ namespace LunaQuest.Godot
                 $"{Sim.PlayerName}، أنت على الكونسول. تجوّل في المستعمرة واقرأ الأرقام."), 7.0);
         }
 
+        // F6: hold-E physical jobs. Durations in real seconds; an entry of zero means the
+        // console is instant (reading, relays, dialogue).
+        private readonly Dictionary<string, float> _holdTimes = new()
+        {
+            ["clean_arrays"] = 2.5f,
+            ["dust_removal"] = 2.5f,
+            ["eva_prep"] = 2.5f,
+            ["clean_filter"] = 3.0f,
+            ["replace_scrubber"] = 3.0f,
+            ["collect_sample"] = 3.5f,
+            ["cache_log"] = 1.5f,
+            ["cargo_crate"] = 1.0f,
+        };
+        private Interactable? _holdStation;
+        private float _holdTime;
+        private float _holdNeed = 1f;
+
         public void DoInteract(Interactable it)
         {
             if (!Started || it == null) return;
@@ -509,10 +533,26 @@ namespace LunaQuest.Godot
                 return;
             }
 
+            if (_holdTimes.TryGetValue(it.InteractionId, out float need))
+            {
+                _holdStation = it;
+                _holdTime = 0f;
+                _holdNeed = need;
+                Hud.SetPrompt("Hold E… 0%");
+                return;
+            }
+
+            ExecuteInteract(it);
+        }
+
+        /// <summary>The console actually runs here: hold complete or instant station.</summary>
+        public void ExecuteInteract(Interactable it)
+        {
             bool ok = Sim.Interact(it.BuildingId, it.InteractionId, out string en, out string ar);
             string message = L.Arabic ? ar : en;
             Hud.ShowToast(message, ok ? 4.0 : 3.0);
             Hud.ShowSubtitle(message, 4.5);
+            Hud.SetPrompt("");
 
             // The crew member who owns this building reacts to work done in it.
             var owner = FindOwnerAt(it.BuildingId);
@@ -521,12 +561,64 @@ namespace LunaQuest.Godot
                 Sim.Npcs.AddTrust(owner.Id, 0.02);
                 Sim.Npcs.Remember(owner.Id, "worked_with_player");
             }
-            else if (!ok && owner != null)
+            else if (!ok && owner != null && it.InteractionId != "cargo_crate")
             {
                 // Observation stations are still useful. The core has already logged the
                 // reading in the journal; the owner acknowledges it.
                 Voice.Speak(owner, false);
             }
+        }
+
+        /// <summary>Tick the hold-E in progress; cancels on release, completes at 100%.</summary>
+        private void TickHold(double delta)
+        {
+            if (_holdStation == null) return;
+            if (Input.IsActionPressed("interact"))
+            {
+                _holdTime += (float)delta;
+                int pct = Mathf.Clamp((int)(100f * _holdTime / _holdNeed), 0, 100);
+                Hud.SetPrompt($"Hold E… {pct}%");
+                if (_holdTime >= _holdNeed)
+                {
+                    var it = _holdStation;
+                    _holdStation = null;
+                    ExecuteInteract(it);
+                }
+                return;
+            }
+            _holdStation = null;
+            Hud.SetPrompt("");
+            Hud.ShowSubtitle(L.T("Hold released. The job waits.",
+                "تركت العمل. ينتظرك عند المحطة."), 3.0);
+        }
+
+        private bool InsideBuilding(Vector3 pos)
+        {
+            foreach (var b in Sim.Content.Buildings)
+            {
+                if (Mathf.Abs(pos.X - b.PositionX) < b.FootprintW * 0.5f + 0.5f
+                    && Mathf.Abs(pos.Z - b.PositionZ) < b.FootprintD * 0.5f + 0.5f)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>F6 per frame: EVA reserve drains outside, recharges indoors; the cargo clock runs down.</summary>
+        private void TickEva(double delta)
+        {
+            if (!Started || GetTree().Paused || Player == null) return;
+            int code = Sim.TickEvaEnergy(InsideBuilding(Player.GlobalPosition), delta);
+            if (code != 0)
+            {
+                Hud.ShowSubtitle(code switch
+                {
+                    1 => L.T("EVA reserve below 25%. Plan the route home.", "احتياط EVA دون 25%. خطط للمسار."),
+                    2 => L.T("Below 10% — turn back now.", "دون 10% — عد الآن."),
+                    _ => L.T("EVA reserve empty. Charge the suit at the airlock.",
+                        "نفد احتياط EVA. اشحن البدلة عند الأيرلوك."),
+                }, 6.0);
+            }
+            Sim.TickCargo(delta);
         }
 
         /// <summary>
@@ -593,6 +685,17 @@ namespace LunaQuest.Godot
 
         public void ToggleLanguage() => SetLanguage(!L.Arabic);
 
+        /// <summary>Apply the settings panel's choices right now: save them and push them into
+        /// the engine (camera, audio, window, voice) and the HUD (language, subtitles).</summary>
+        public void ApplySettings(GameSettings.SettingsData data)
+        {
+            LiveSettings = data;
+            GameSettings.Save(data);
+            GameSettings.ApplyTo(data, Player, Voice);
+            bool wantArabic = data.Language == "ar";
+            if (L.Arabic != wantArabic) SetLanguage(wantArabic);
+        }
+
         public void SetLanguage(bool arabic)
         {
             if (L.Arabic == arabic) return;
@@ -600,6 +703,8 @@ namespace LunaQuest.Godot
             Sim.Language = arabic ? "ar" : "en";
             Hud.RefreshLanguage();
             World.RefreshLanguage();
+            LiveSettings.Language = arabic ? "ar" : "en";
+            GameSettings.Save(LiveSettings);
             Hud.ShowToast(L.T("Language: English", "اللغة: العربية"), 2.5);
         }
 
@@ -723,7 +828,7 @@ namespace LunaQuest.Godot
                 if (_announced.Add(key))
                 {
                     Voice.SpeakEvent(e, L.Arabic);
-                    if (e.Kind == SimEventKind.Critical)
+                    if (e.Kind == SimEventKind.Critical && LiveSettings.Subtitles)
                         Hud.ShowSubtitle(L.Arabic ? e.BodyAr : e.BodyEn, 6.0);
                 }
             }

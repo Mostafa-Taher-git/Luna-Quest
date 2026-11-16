@@ -13,6 +13,16 @@ const SPAWN_X := 0.0
 const SPAWN_Z := -14.0
 
 var sim: LQSim
+
+# F6: hold-E physical jobs and the landing-pad cargo run.
+const HOLD_ACTIONS := {
+	"clean_arrays": 2.5, "dust_removal": 2.5, "eva_prep": 2.5,
+	"clean_filter": 3.0, "replace_scrubber": 3.0,
+	"collect_sample": 3.5, "cache_log": 1.5, "cargo_crate": 1.0,
+}
+var _hold_target: Dictionary = {}
+var _hold_time := 0.0
+var _hold_need := 1.0
 var world: ColonyWorld
 var player: ColonyPlayer
 var crew: ColonyCrew
@@ -51,6 +61,15 @@ func _ready() -> void:
 	hud.topic_requested.connect(_on_topic_requested)
 	hud.dialogue_closed.connect(_on_dialogue_closed)
 	hud.language_toggled.connect(_toggle_language)
+	hud.settings_changed.connect(_on_settings_changed)
+
+	# Persisted settings load before anything is built: the language picks the label language
+	# at build time, and the camera/view/volume choices are applied once the player exists.
+	var boot_settings := GameSettings.load()
+	arabic = str(boot_settings.get("language", "en")) == "ar"
+	hud.settings_data = boot_settings
+	hud.set_language(arabic)
+	hud.set_subtitles_enabled(bool(boot_settings.get("subtitles", true)))
 
 	sim = LQSim.new()
 	sim.clock.total_minutes = OPENING_MINUTE
@@ -80,6 +99,9 @@ func _ready() -> void:
 	var suit := crew_astronaut()
 	if suit != null:
 		player.attach_astronaut(suit)
+
+	# Now the suit exists: the saved view/sensitivity/FOV/volume/voice settings apply.
+	GameSettings.apply_to(GameSettings.load(), player, Voice)
 
 	crew = ColonyCrew.new()
 	crew.name = "Crew"
@@ -149,14 +171,13 @@ func _begin_session() -> void:
 	player.can_move = true
 	player.global_position = Vector3(SPAWN_X, world.height_at(SPAWN_X, SPAWN_Z), SPAWN_Z)
 	player.rotation.y = PI
-	player.set_third_person(false)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hud.hide_start_screen()
 	hud.show_hud(true)
 	hud.set_paused(false)
 	hud.refresh(sim, rover)
 	hud.set_subtitle("")
-	Voice.set_enabled(true)
+	Voice.set_enabled(bool(hud.settings_data.get("voice", true)))
 	Voice.play_key("crew.safaa.greet")
 
 
@@ -226,6 +247,38 @@ func _process(delta: float) -> void:
 	# not touch the simulation or the world.
 	if sim == null or world == null:
 		return
+
+	# F6: EVA reserve drains outside, recharges indoors; the board-window timer runs down.
+	if playing and not paused:
+		var inside := _inside_any_building(player.global_position) if player != null else true
+		var code := sim.tick_eva(inside, delta)
+		if code != 0:
+			var msg := ""
+			match code:
+				1:
+					msg = "احتياط EVA دون 25%. خطط للمسار." if arabic else "EVA reserve below 25%. Plan the route home."
+				2:
+					msg = "دون 10% — عد الآن." if arabic else "Below 10% — turn back now."
+				3:
+					msg = "نفد احتياط EVA. اشحن البدلة عند الأيرلوك." if arabic else "EVA reserve empty. Charge the suit at the airlock."
+			hud.set_subtitle(msg)
+			_subtitle_until = Time.get_ticks_msec() + 6000
+		sim.tick_cargo(delta)
+
+	# F6: a held E keeps the physical job running; releasing early cancels it.
+	if not _hold_target.is_empty():
+		if Input.is_key_pressed(KEY_E):
+			_hold_time += delta
+			var pct := int(100.0 * _hold_time / _hold_need)
+			hud.set_prompt("[HOLD E]  %d%%" % pct)
+			if _hold_time >= _hold_need:
+				var target := _hold_target
+				_hold_target = {}
+				_run_console_action(target)
+		else:
+			_hold_target = {}
+			hud.set_subtitle("تركت العمل. ينتظرك عند المحطة." if arabic else "Hold released. The job waits at the station.")
+			_subtitle_until = Time.get_ticks_msec() + 3000
 	if playing and not paused:
 		var fast := Input.is_key_pressed(KEY_TAB) or Input.is_key_pressed(KEY_T)
 		var speed := 6.0 if fast else 1.0
@@ -349,17 +402,50 @@ func _set_paused(on: bool) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if on else Input.MOUSE_MODE_CAPTURED
 
 
-func _toggle_language() -> void:
-	arabic = not arabic
+func _apply_language(on: bool) -> void:
+	arabic = on
 	sim.arabic = arabic
 	hud.set_language(arabic)
 	world.refresh_language(arabic)
 	crew.refresh_language(arabic)
 	hud.refresh(sim, rover)
+
+
+func _toggle_language() -> void:
+	_apply_language(not arabic)
 	hud.set_subtitle("اللغة العربية" if arabic else "English")
 
 
+func _on_settings_changed(data: Dictionary) -> void:
+	hud.settings_data = data
+	hud.set_subtitles_enabled(bool(data.get("subtitles", true)))
+	GameSettings.save(data)
+	GameSettings.apply_to(data, player, Voice)
+	_apply_language(str(data.get("language", "en")) == "ar")
+
+
 # ---- interaction -----------------------------------------------------------
+
+## Standing inside any building footprint counts as "indoors" for the EVA reserve recharge.
+func _inside_any_building(pos: Vector3) -> bool:
+	for building in Content.buildings:
+		var fp: Array = building.get("footprint", [10, 8])
+		var bp: Array = building.get("position", [0, 0])
+		if absf(pos.x - float(bp[0])) < float(fp[0]) * 0.5 + 0.5 			and absf(pos.z - float(bp[1])) < float(fp[1]) * 0.5 + 0.5:
+			return true
+	return false
+
+
+func _run_console_action(target: Dictionary) -> void:
+	var result: Dictionary = sim.interact(str(target["building_id"]), str(target["interaction_id"]))
+	var text := str(result.get("ar", "")) if arabic else str(result.get("en", ""))
+	hud.set_subtitle(text)
+	_subtitle_until = Time.get_ticks_msec() + 9000
+	Voice.play_key("ui.console")
+	hud.refresh(sim, rover)
+	if result.get("ok", false):
+		Voice.play_key("ui.confirm")
+
 
 func _interact() -> void:
 	if rover != null and rover.occupied:
@@ -378,14 +464,13 @@ func _interact() -> void:
 		_subtitle_until = Time.get_ticks_msec() + 7000
 		return
 	if target["type"] == "console":
-		var result: Dictionary = sim.interact(str(target["building_id"]), str(target["interaction_id"]))
-		var text := str(result.get("ar", "")) if arabic else str(result.get("en", ""))
-		hud.set_subtitle(text)
-		_subtitle_until = Time.get_ticks_msec() + 9000
-		Voice.play_key("ui.console")
-		hud.refresh(sim, rover)
-		if result.get("ok", false):
-			Voice.play_key("ui.confirm")
+		var iid := str(target["interaction_id"])
+		if HOLD_ACTIONS.has(iid):
+			_hold_target = target
+			_hold_time = 0.0
+			_hold_need = float(HOLD_ACTIONS[iid])
+			return
+		_run_console_action(target)
 	else:
 		var npc_id := str(target["npc_id"])
 		var profile := Content.npc(npc_id)

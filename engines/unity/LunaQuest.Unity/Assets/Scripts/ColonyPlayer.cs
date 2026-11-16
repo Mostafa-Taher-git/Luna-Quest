@@ -19,6 +19,14 @@ namespace LunaQuest.Unity
         public Camera Camera;
         public bool ThirdPerson = true;
 
+        /// <summary>F6: shown instead of the focus prompt while a job is being held.</summary>
+        public string HoldPrompt = "";
+
+        /// <summary>Settings-controlled turn rate multiplier (default 1.0).</summary>
+        public float MouseSensitivity = 1.0f;
+        /// <summary>Settings-controlled field of view (default 70).</summary>
+        public float BaseFov = 70f;
+
         public Station FocusStation { get; private set; }
         public CrewAgent FocusCrew { get; private set; }
 
@@ -157,8 +165,8 @@ namespace LunaQuest.Unity
 
             if (Game.InputActive && Cursor.lockState == CursorLockMode.Locked)
             {
-                _yaw += Input.GetAxis("Mouse X") * 2.1f;
-                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * 2.1f, -72f, 72f);
+                _yaw += Input.GetAxis("Mouse X") * 2.1f * MouseSensitivity;
+                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * 2.1f * MouseSensitivity, -72f, 72f);
             }
 
             if (Input.GetKeyDown(KeyCode.V) && Game.InputActive)
@@ -227,7 +235,7 @@ namespace LunaQuest.Unity
                     Quaternion.Euler(0f, targetYaw, 0f), dt * 12f);
             }
 
-            float targetFov = ThirdPerson ? 70f : 78f;
+            float targetFov = BaseFov + (ThirdPerson ? 0f : 8f);
             if (sprinting) targetFov += 4f;
             Camera.fieldOfView = Mathf.Lerp(Camera.fieldOfView, targetFov, 1f - Mathf.Exp(-8f * dt));
 
@@ -317,7 +325,7 @@ namespace LunaQuest.Unity
             Visual.gameObject.SetActive(ThirdPerson);
             _suitLight.enabled = !ThirdPerson;
             _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.45f : 1.58f, 0f);
-            Camera.fieldOfView = ThirdPerson ? 70f : 78f;
+            Camera.fieldOfView = BaseFov + (ThirdPerson ? 0f : 8f);
             Camera.transform.localPosition = new Vector3(0f, 0f, -0.05f);
             _bob = 0f;
             if (Rover != null) ConfigureDriveCamera();

@@ -43,6 +43,177 @@ namespace LunaQuest.Core.Sim
         public IncidentDirector Incidents { get; }
         public LearningDirector Learning { get; }
 
+        // ---- EVA suit reserve (F6) ------------------------------------------------
+        // Real-time drain: the outside world empties the suit in about five minutes, indoors
+        // refills it in about a minute. Nothing here is saved to the schema-2 file; it is live
+        // state a walking mission must manage, exactly like battery charge on the rover.
+        private const double EvaDrainPerSecond = 0.0035;
+        private const double EvaRechargePerSecond = 0.02;
+        private bool _evaWarned25;
+        private bool _evaWarned10;
+        private bool _evaNotePosted;
+        /// <summary>A drill sample is riding in the carrier; chain of custody runs through
+        /// <see cref="LogSampleAtCache"/>.</summary>
+        public bool SampleInHand { get; private set; }
+        /// <summary>The pad crate is in the carrier; deliver it to the workshop spares desk.</summary>
+        public bool CargoCarried { get; private set; }
+        /// <summary>Seconds remaining in the board window for the cargo run (wall clock).</summary>
+        public double CargoDeadlineReal { get; private set; } = -1.0;
+        public const double CargoWindowSeconds = 150.0;
+
+        /// <summary>Advance the EVA reserve by a real frame delta. Returns a warning code:
+        /// 0 = nothing, 1 = fell below 25%, 2 = fell below 10%, 3 = the reserve ran dry.</summary>
+        public int TickEvaEnergy(bool inside, double realSeconds)
+        {
+            if (inside)
+            {
+                State.SuitEnergy = Math.Min(1.0, State.SuitEnergy + EvaRechargePerSecond * realSeconds);
+                if (State.SuitEnergy > 0.3) { _evaWarned25 = false; _evaWarned10 = false; }
+                if (State.SuitEnergy > 0.15) _evaNotePosted = false;
+                return 0;
+            }
+            State.SuitEnergy = Math.Max(0.0, State.SuitEnergy - EvaDrainPerSecond * realSeconds);
+            double e = State.SuitEnergy;
+            if (e <= 0.0 && !_evaNotePosted)
+            {
+                _evaNotePosted = true;
+                _appendJournalEntry("eva_drain",
+                    "Suits are lived systems",
+                    "البدلات أنظمة حية",
+                    "The EVA reserve ran dry during outside work. Recharge at the airlock; plan the route before opening the door.",
+                    "نفد احتياط البدلة أثناء العمل الخارجي. أعد الشحن عند الأيرلوك؛ خطط للمسار قبل فتح الباب.",
+                    "health");
+                return 3;
+            }
+            if (e <= 0.10 && !_evaWarned10) { _evaWarned10 = true; return 2; }
+            if (e <= 0.25 && !_evaWarned25) { _evaWarned25 = true; return 1; }
+            return 0;
+        }
+
+        /// <summary>True when the suit still carries charge for outside work.</summary>
+        public bool RequireEvaEnergy(out string messageEn, out string messageAr)
+        {
+            if (State.SuitEnergy > 0.0) { messageEn = ""; messageAr = ""; return true; }
+            messageEn = "EVA reserve empty. The suit limits further outside work until it recharges at the airlock.";
+            messageAr = "احتياط البدلة فارغ. تمنع البدلة أي عمل خارجي حتى تعيد الشحن عند الأيرلوك.";
+            return false;
+        }
+
+        /// <summary>Drill the ice site. The sample rides in the carrier; custody is sealed at the cache.</summary>
+        public bool DrillSample(out string messageEn, out string messageAr)
+        {
+            if (SampleInHand)
+            {
+                messageEn = "Sample already in the carrier. Log it at the ice cache before drilling another.";
+                messageAr = "العينة في الحامل بالفعل. سجّلها في مستودع موقع الجليد قبل حفر عينة أخرى.";
+                return false;
+            }
+            if (!RequireEvaEnergy(out messageEn, out messageAr)) return false;
+            SampleInHand = true;
+            messageEn = "Drill into the ice-laced regolith — the sample is in the carrier. Log the chain of custody at the ice site cache.";
+            messageAr = "احفر في الريغوليث الحامل للجليد — العينة في الحامل. سجّل سلسلة التوريد في مستودع موقع الجليد.";
+            return true;
+        }
+
+        /// <summary>Seal the sample's chain of custody at the ice site cache.</summary>
+        public bool LogSampleAtCache(out string messageEn, out string messageAr)
+        {
+            if (!SampleInHand)
+            {
+                messageEn = "No sample in the carrier. Drill one at the ice site first.";
+                messageAr = "لا توجد عينة في الحامل. احفر عينة من موقع الجليد أولًا.";
+                return false;
+            }
+            SampleInHand = false;
+            State.SamplesCollected++;
+            State.DataPoints += 10;
+            Complete("obj_sample", "collect_sample", "geology");
+            messageEn = $"Chain of custody sealed: ice-laced regolith drilled and logged at the cache with grid coordinates. +10 data ({State.SamplesCollected} logged).";
+            messageAr = $"أُغلقت سلسلة التوريد: ريغوليث حامل للجليد حُفر وسُجل في المستودع مع إحداثيات الشبكة. +10 بيانات ({State.SamplesCollected} مسجلة).";
+            return true;
+        }
+
+        /// <summary>Pick up the supply crate at the landing pad. Starts the board-window timer.</summary>
+        public bool StartCargoRun(double nowRealSeconds, out string messageEn, out string messageAr)
+        {
+            if (CargoCarried)
+            {
+                messageEn = "Cargo already secured. Deliver it to the workshop spares desk.";
+                messageAr = "البضاعة مؤمنة بالفعل. سلّمها إلى مكتب قطع غيار الورشة.";
+                return false;
+            }
+            CargoCarried = true;
+            CargoDeadlineReal = CargoWindowSeconds;
+            messageEn = "Cargo secured on the pad: 12 kg of filters and coolant, manifest in the carrier. Deliver to the workshop spares desk before the board window closes.";
+            messageAr = "تم تأمين الشحنة في المنصة: 12 كجم فلاتر ومبرد، القائمة في الحامل. سلّمها إلى مكتب قطع غيار الورشة قبل إغلاق نافذة اللوحة.";
+            return true;
+        }
+
+        /// <summary>Advance the board-window timer (real seconds).</summary>
+        public void TickCargo(double realSeconds)
+        {
+            if (CargoCarried && CargoDeadlineReal >= 0.0)
+                CargoDeadlineReal = Math.Max(0.0, CargoDeadlineReal - realSeconds);
+        }
+
+        /// <summary>Deliver the crate at the workshop.</summary>
+        public bool CompleteCargoRun(out string messageEn, out string messageAr)
+        {
+            if (!CargoCarried)
+            {
+                messageEn = "No cargo in the carrier. Collect the supply crate at the landing pad.";
+                messageAr = "لا توجد شحنة في الحامل. اجمع صندوق الإمداد من منصة الهبوط.";
+                return false;
+            }
+            bool onTime = CargoDeadlineReal > 0.0;
+            CargoCarried = false;
+            CargoDeadlineReal = -1.0;
+            double reward = onTime ? 15.0 : 8.0;
+            State.DataPoints += reward;
+            if (onTime)
+            {
+                _appendJournalEntry("cargo_run",
+                    "Every kilogram has an owner",
+                    "كل كيلوغرام له مسؤول",
+                    $"Supply crate delivered before the board window closed: the 12 kg manifest matched the pad load list. +15 data — the run counted because the paperwork did.",
+                    "تم تسليم صندوق الإمداد قبل إغلاق نافذة اللوحة: طابقت قائمة الـ12 كجم حمولة المنصة. +15 بيانات — نجحت الرحلة لأن الورق كان مرتبًا.",
+                    "engineering");
+                messageEn = "Workshop resupplied. Manifest signed, +15 data.";
+                messageAr = "أعادت الورشة الإمداد. وُقعت القائمة، +15 بيانات.";
+            }
+            else
+            {
+                _appendJournalEntry("cargo_run_late",
+                    "Late is a delivery too",
+                    "التسليم المتأخر تسليم أيضًا",
+                    "The supply crate arrived after the board window. Checklists save time, not just pride. +8 data.",
+                    "وصل صندوق الإمداد بعد نافذة اللوحة. القوائم توفر الوقت، لا الفخر فقط. +8 بيانات.",
+                    "engineering");
+                messageEn = "Delivered late. +8 data. The board logs it honestly.";
+                messageAr = "سلّمت متأخرًا. +8 بيانات. تسجل اللوحة ذلك بأمانة.";
+            }
+            return true;
+        }
+
+        /// <summary>Append a journal entry that does not belong to one of the eleven objectives.</summary>
+        private void _appendJournalEntry(string objectiveId, string titleEn, string titleAr,
+            string bodyEn, string bodyAr, string skill)
+        {
+            if (Learning.HasEntry(objectiveId)) return;
+            Learning.Journal.Add(new JournalEntry
+            {
+                ObjectiveId = objectiveId,
+                TitleEn = titleEn,
+                TitleAr = titleAr,
+                BodyEn = bodyEn,
+                BodyAr = bodyAr,
+                Skill = skill,
+                EvidenceClass = "real-world",
+                Source = "Luna-Quest",
+                UnlockedAtMinute = Clock.TotalMinutes,
+            });
+        }
+
         public string PlayerName = "Amara Okafor";
         public string Language = "en";
         public bool Arabic => Language == "ar";
@@ -571,7 +742,20 @@ namespace LunaQuest.Core.Sim
                 case "repair_array": return TryAction(PlayerAction.RepairArray, out messageEn, out messageAr);
                 case "antenna": return TryAction(PlayerAction.CleanSensors, out messageEn, out messageAr);
                 case "collect_sample":
+                case "drill_sample":
+                    // The physical drill. Chain of custody seals at the ice cache, not here.
+                    return DrillSample(out messageEn, out messageAr);
                 case "sample_intake": return TryAction(PlayerAction.CollectSample, out messageEn, out messageAr);
+                case "cache_log":
+                    // With a sample in the carrier this seals the chain; without one it reads
+                    // the station like any other observation console (chain discipline starts there).
+                    if (SampleInHand) return LogSampleAtCache(out messageEn, out messageAr);
+                    return ReadStation(buildingId, interactionId, out messageEn, out messageAr);
+                case "parts":
+                    if (CargoCarried) return CompleteCargoRun(out messageEn, out messageAr);
+                    return ReadStation(buildingId, interactionId, out messageEn, out messageAr);
+                case "cargo_crate":
+                    return StartCargoRun(0.0, out messageEn, out messageAr);
                 case "shelter": return TryAction(PlayerAction.ShelterCrew, out messageEn, out messageAr);
                 case "rest": return TryAction(PlayerAction.RestCrew, out messageEn, out messageAr);
                 case "checkup": return TryAction(PlayerAction.MedicalCheckup, out messageEn, out messageAr);

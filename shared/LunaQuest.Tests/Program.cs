@@ -30,7 +30,8 @@ namespace LunaQuest.Tests
             SimulationTests();
             ResourcePerSecondTests();
             ActionTests();
-            IncidentTests();
+                        EvaTests();
+IncidentTests();
             SaveTests();
             DeterminismTests();
             MissionRunTests();
@@ -185,6 +186,46 @@ namespace LunaQuest.Tests
             Check("one real second changes food", sim.State.FoodKcal != food, $"{food} -> {sim.State.FoodKcal}");
             Check("one real second changes oxygen", sim.State.O2Kg != o2, $"{o2} -> {sim.State.O2Kg}");
             Check("one real second advances 12 sim minutes", Math.Abs(sim.Clock.TotalMinutes - 12.0) < 1e-9, $"{sim.Clock.TotalMinutes}");
+        }
+
+        private static void EvaTests()
+        {
+            var db = ContentDatabase.LoadFromDirectory(_contentDir);
+            var sim = new ColonySimulation(db);
+            Check("suit starts full", sim.State.SuitEnergy == 1.0);
+
+            int warning = -1;
+            for (int i = 0; i < 400 && warning < 3; i++)
+                warning = sim.TickEvaEnergy(false, 1.0);
+            Check("emptying suit raises the empty warning", warning == 3);
+            Check("emptying suit drains to zero", sim.State.SuitEnergy == 0.0, $"{sim.State.SuitEnergy}");
+            Check("empty suit refuses the drill", !sim.DrillSample(out _, out _));
+            Check("dry-suit journal entry written", sim.Learning.Journal.Exists(e => e.ObjectiveId == "eva_drain"));
+
+            for (int i = 0; i < 80; i++) sim.TickEvaEnergy(true, 1.0);
+            Check("indoors recharges the suit", sim.State.SuitEnergy > 0.0, $"{sim.State.SuitEnergy}");
+
+            Check("charged suit drills", sim.DrillSample(out _, out _));
+            Check("drill refuses a second sample", !sim.DrillSample(out _, out _));
+            Check("logging custody seals the chain", sim.LogSampleAtCache(out _, out _));
+            Check("samples counted", sim.State.SamplesCollected == 1);
+            Check("custody pays data", sim.State.DataPoints >= 10.0, $"{sim.State.DataPoints}");
+            Check("custody unlocks the sample objective", sim.Learning.HasEntry("obj_sample"));
+
+            var cargo = new ColonySimulation(db);
+            Check("the pad crate can be carried", cargo.StartCargoRun(0.0, out _, out _));
+            Check("already carrying refuses a second grab", !cargo.StartCargoRun(0.0, out _, out _));
+            Check("delivery succeeds", cargo.CompleteCargoRun(out _, out _));
+            Check("on-time delivery pays 15", cargo.State.DataPoints >= 15.0, $"{cargo.State.DataPoints}");
+            Check("on-time delivery writes its journal entry",
+                cargo.Learning.Journal.Exists(e => e.ObjectiveId == "cargo_run"));
+
+            var late = new ColonySimulation(db);
+            late.StartCargoRun(0.0, out _, out _);
+            late.TickCargo(200.0); // window is 150 s of board time
+            Check("late delivery still completes", late.CompleteCargoRun(out _, out _));
+            Check("late delivery pays 8 and journals honestly",
+                late.State.DataPoints >= 8.0 && late.Learning.Journal.Exists(e => e.ObjectiveId == "cargo_run_late"));
         }
 
         private static void ActionTests()

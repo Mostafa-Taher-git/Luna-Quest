@@ -61,6 +61,9 @@ func run() -> bool:
 	_test_dialogue()
 	_test_voice_pack()
 	_test_save()
+	_test_settings()
+	_test_eva()
+	_test_cargo_run()
 	return _report(flown)
 
 
@@ -394,6 +397,96 @@ func _test_voice_pack() -> bool:
 		missing.size(), str(missing.slice(0, 4))])
 	expect(narration <= 15, "voice: %d incident lines are narration-only, expected at most 15" % narration)
 	return true
+
+
+# ---- F6: EVA, sample custody, cargo run -----------------------------------
+
+## The drill cannot run on an empty suit; the custody chain is one-way; the board-window
+## math pays out more on time than late. These three behaviours are the whole point of the
+## F6 pass and they are checked without input, at the simulation layer.
+func _test_eva() -> void:
+	var sim := LQSim.new()
+	# Suit starts full. After a long outside walk the reserve falls; inside, it recharges.
+	expect(float(sim.state["suitEnergy"]) == 1.0, "eva: the suit does not start full")
+	var code := sim.tick_eva(false, 60.0)          # a minute outside
+	expect(float(sim.state["suitEnergy"]) < 1.0, "eva: an outside minute did not drain the suit")
+	expect(code <= 1, "eva: a full-to-95%% walk should not trip a warning")
+	var hit_empty := false
+	for i in range(400):
+		var c: int = sim.tick_eva(false, 1.0)
+		if c == 3:
+			hit_empty = true
+			code = 3
+	expect(float(sim.state["suitEnergy"]) == 0.0, "eva: the suit never emptied")
+	expect(hit_empty, "eva: an emptying suit never raised the empty warning")
+	var drilled := sim.drill_sample()
+	expect(not drilled.get("ok", false), "eva: an empty suit was allowed to drill")
+	expect(sim.journal.any(func(e): return str(e.get("objectiveId", "")) == "eva_drain"),
+		"eva: the dry-suit journal entry was never written")
+	# Recharge inside, then the drill is legal again.
+	for i in range(80):
+		sim.tick_eva(true, 1.0)
+	sim.drill_sample()
+	expect(sim.sample_in_hand, "eva: a charged suit could not drill")
+	var logged := sim.log_sample_cache()
+	expect(logged.get("ok", false), "eva: logging the custody chain failed")
+	expect(int(sim.state["samplesCollected"]) == 1, "eva: the sample was not counted")
+	expect(float(sim.state["dataPoints"]) >= 10.0, "eva: the custody log paid no data")
+	expect(sim.journal.any(func(e): return str(e.get("objectiveId", "")) == "obj_sample"),
+		"eva: chaining the custody did not unlock the sample objective")
+
+func _test_cargo_run() -> void:
+	var sim := LQSim.new()
+	var started := sim.start_cargo()
+	expect(started.get("ok", false), "cargo: the pad crate refused to be carried")
+	expect(sim.cargo_carried, "cargo: the crate did not enter the carrier")
+	var delivered := sim.complete_cargo()
+	expect(delivered.get("ok", false), "cargo: the delivery failed")
+	expect(float(sim.state["dataPoints"]) >= 15.0, "cargo: an on-time delivery did not pay out the full reward")
+	expect(sim.journal.any(func(e): return str(e.get("objectiveId", "")) == "cargo_run"),
+		"cargo: the on-time journal entry was never written")
+	expect(not sim.cargo_carried, "cargo: the carrier kept the crate after delivery")
+	# A flat window pays less, honestly.
+	var sim2 := LQSim.new()
+	sim2.start_cargo()
+	sim2.tick_cargo(200.0)                        # blow the 150 s board window
+	sim2.complete_cargo()
+	expect(float(sim2.state["dataPoints"]) >= 8.0, "cargo: a late delivery did not pay the base reward")
+	expect(sim2.journal.any(func(e): return str(e.get("objectiveId", "")) == "cargo_run_late"),
+		"cargo: the late-delivery journal entry was never written")
+
+
+# ---- settings contract ----------------------------------------------------
+
+## The persisted settings file survives a round trip exactly (schema for the *settings*, not
+## the save: user://settings.json is engine-local state, never the shared save file).
+func _test_settings() -> void:
+	var original := GameSettings.load()
+	var written := GameSettings.save({
+		"third_person": true,
+		"fov": 82.0,
+		"master_volume": 0.55,
+		"quality": "high",
+		"fullscreen": true,
+		"language": "ar",
+		"subtitles": false,
+		"voice": false,
+	})
+	expect(written == OK, "settings: the write failed (%s)" % written)
+	var reloaded := GameSettings.load()
+	expect(bool(reloaded["third_person"]) == true, "settings: third person did not survive the round trip")
+	expect(absf(float(reloaded["fov"]) - 82.0) < 0.001, "settings: the field of view was lost")
+	expect(absf(float(reloaded["master_volume"]) - 0.55) < 0.001, "settings: the master volume was lost")
+	expect(str(reloaded["quality"]) == "high", "settings: the quality preset was lost")
+	expect(bool(reloaded["fullscreen"]) == true, "settings: fullscreen did not survive")
+	expect(str(reloaded["language"]) == "ar", "settings: the language choice was lost")
+	expect(bool(reloaded["subtitles"]) == false, "settings: the subtitles choice was lost")
+	expect(bool(reloaded["voice"]) == false, "settings: the voice choice was lost")
+	expect(str(reloaded["mouse_sensitivity"]) != "", "settings: a default key (mouse_sensitivity) was dropped")
+	expect(absf(GameSettings.linear_to_db(1.0)) < 0.001, "settings: unity volume should be 0 dB")
+	expect(GameSettings.linear_to_db(0.1) < -15.0, "settings: 0.1 linear should be well under -15 dB")
+	# Restore the user's original file so the selftest never rewrites the player's preferences.
+	GameSettings.save(original)
 
 
 # ---- save contract ---------------------------------------------------------

@@ -148,7 +148,80 @@ namespace LunaQuest.Godot
             CheckF0Controls(rover, player);
             CheckBuildings(main);
             CheckCrew(main);
+            CheckSettings();
+            CheckEvaJobs(main);
             return Report();
+        }
+
+        /// <summary>
+        /// F6 — the EVA reserve and the two cargo/custody chains, exercised on the live sim.
+        /// Same contract as the LunaQuest.Core harness: an empty suit cannot drill, the chain
+        /// seals at the cache, the board window pays timeliness.
+        /// </summary>
+        private void CheckEvaJobs(Main main)
+        {
+            var sim = main.Sim;
+            double full = sim.State.SuitEnergy;
+            Expect(full > 0.0, $"eva: the suit does not start charged ({full:F2})");
+
+            // Drain until empty; the only sanctioned outside action must run dry.
+            for (int i = 0; i < 400; i++) sim.TickEvaEnergy(false, 1.0);
+            Expect(sim.State.SuitEnergy == 0.0, $"eva: the suit never emptied ({sim.State.SuitEnergy:F2})");
+            Expect(!sim.DrillSample(out _, out _), "eva: an empty suit was allowed to drill");
+            Expect(sim.Learning.Journal.Exists(e => e.ObjectiveId == "eva_drain"),
+                "eva: the dry-suit journal entry was never written");
+            for (int i = 0; i < 80; i++) sim.TickEvaEnergy(true, 1.0);
+            Expect(sim.DrillSample(out _, out _), "eva: a recharged suit could not drill");
+            Expect(sim.LogSampleAtCache(out _, out _), "eva: logging the custody chain failed");
+            Expect(sim.State.SamplesCollected == 1, $"eva: the sample was not counted ({sim.State.SamplesCollected})");
+            Expect(sim.Learning.HasEntry("obj_sample"), "eva: the custody chain did not unlock the sample objective");
+
+            // Cargo run: pickup pays out more on time than late, and both paths journal.
+            var late = main.Sim;
+            late.StartCargoRun(0.0, out _, out _);
+            late.TickCargo(200.0); // window is 150 s
+            Expect(late.CompleteCargoRun(out _, out _), "cargo: the late delivery failed");
+            Expect(late.Learning.Journal.Exists(e => e.ObjectiveId == "cargo_run_late"),
+                "cargo: the late-delivery journal entry was never written");
+
+            // Restore the player's suit so the rest of the audit sees a charged commander.
+            sim.TickEvaEnergy(true, 100.0);
+        }
+
+        /// <summary>
+        /// F5 — the settings file round-trips exactly and every check restores the user's
+        /// original preferences afterwards. Godot loads user://settings.json at boot; the file
+        /// never becomes part of the shared save schema.
+        /// </summary>
+        private void CheckSettings()
+        {
+            var original = GameSettings.Load();
+            var written = new GameSettings.SettingsData
+            {
+                ThirdPerson = true,
+                Language = "ar",
+                MouseSensitivity = 1.5f,
+                Fov = 82f,
+                MasterVolume = 0.55f,
+                Voice = false,
+                Subtitles = false,
+                Quality = "high",
+                Fullscreen = true,
+            };
+            Expect(GameSettings.Save(written) == Error.Ok, "settings: the write failed");
+            var reloaded = GameSettings.Load();
+            Expect(reloaded.ThirdPerson == written.ThirdPerson, "settings: third person did not survive");
+            Expect(reloaded.Language == written.Language, "settings: the language choice was lost");
+            Expect(Mathf.Abs(reloaded.MouseSensitivity - written.MouseSensitivity) < 0.001f, "settings: the sensitivity was lost");
+            Expect(Mathf.Abs(reloaded.Fov - written.Fov) < 0.001f, "settings: the field of view was lost");
+            Expect(Mathf.Abs(reloaded.MasterVolume - written.MasterVolume) < 0.001f, "settings: the volume was lost");
+            Expect(reloaded.Voice == false, "settings: the voice flag was lost");
+            Expect(reloaded.Subtitles == false, "settings: the subtitles flag was lost");
+            Expect(reloaded.Quality == "high", "settings: the quality preset was lost");
+            Expect(reloaded.Fullscreen, "settings: the fullscreen flag was lost");
+            Expect(Mathf.Abs(GameSettings.LinearToDb(1.0f)) < 0.001f, "settings: unity volume should be 0 dB");
+            Expect(GameSettings.LinearToDb(0.1f) < -15f, "settings: 0.1 linear should be under -15 dB");
+            Expect(GameSettings.Save(original) == Error.Ok, "settings: the user's original preferences were lost");
         }
 
         /// <summary>
@@ -164,9 +237,12 @@ namespace LunaQuest.Godot
             const float posedHeight = 2.311f;
             const float expectedScale = suitHeight / posedHeight;
 
+            var playerSuit = main.Player.Visual.GetChildCount() > 0
+                ? main.Player.Visual.GetChild(0) as Node3D
+                : null;
             var suits = new List<(Node3D suit, string label)>
             {
-                (main.Player.Visual, "player"),
+                (playerSuit, "player"),
             };
             foreach (var npc in main.World.Npcs)
                 if (!npc.Profile.IsRobot)

@@ -1167,6 +1167,33 @@ func _make_landing_pad() -> void:
 			_box(group, Vector3(0.3, 0.3, 0.3), Vector3(sx * 10.2, 1.5, sz * 10.2),
 				_glow("lamp", Color(1, 0.96, 0.88), Color(1.0, 0.93, 0.78), 2.4))
 
+	# F6: the supply crate. A physical, hold-E-interactable delivery trunk.
+	var crate := StaticBody3D.new()
+	crate.name = "SupplyCrate"
+	crate.set_meta("interaction_id", "cargo_crate")
+	crate.set_meta("building_id", "")
+	crate.set_meta("label_en", "Supply Crate")
+	crate.set_meta("label_ar", "صندوق الإمداد")
+	crate.position = Vector3(6.8, 0, 3.0)
+	crate.collision_layer = 1
+	group.add_child(crate)
+	var crate_mesh := MeshInstance3D.new()
+	var crate_box := BoxMesh.new()
+	crate_box.size = Vector3(1.5, 1.25, 1.15)
+	crate_mesh.mesh = crate_box
+	crate_mesh.material_override = _mat("crate", Color(0.42, 0.35, 0.27), 0.75, 0.05)
+	crate_mesh.position = Vector3(0, 0.62, 0)
+	crate.add_child(crate_mesh)
+	var stripe := _box(crate, Vector3(1.52, 0.18, 1.17), Vector3(0, 0.42, 0),
+		_glow("hazard_strip", Color(0.84, 0.68, 0.14), Color(0.9, 0.74, 0.2), 0.35))
+	var crate_shape := CollisionShape3D.new()
+	var crate_body := BoxShape3D.new()
+	crate_body.size = Vector3(1.5, 1.25, 1.15)
+	crate_shape.shape = crate_body
+	crate_shape.position = Vector3(0, 0.62, 0)
+	crate.add_child(crate_shape)
+	_label(crate, "SUPPLY", Vector3(0, 1.42, 0), 0, 30, 0.005, Color(0.92, 0.66, 0.22))
+
 
 func _make_power_farm() -> void:
 	var farm: Dictionary = Content.building("power_farm")

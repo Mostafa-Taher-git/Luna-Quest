@@ -29,6 +29,33 @@ namespace LunaQuest.Unity
         public string ContentError = "";
 
         private double _saveTimer;
+        // F6: hold-E physical jobs (durations in real seconds; 0 = instant station).
+        private static float HoldDurationFor(string id) => id switch
+        {
+            "clean_arrays" => 2.5f,
+            "dust_removal" => 2.5f,
+            "eva_prep" => 2.5f,
+            "clean_filter" => 3.0f,
+            "replace_scrubber" => 3.0f,
+            "collect_sample" => 3.5f,
+            "cache_log" => 1.5f,
+            "cargo_crate" => 1.0f,
+            _ => 0f,
+        };
+        private Station _holdStation;
+        private float _holdTime;
+        private float _holdNeed = 1f;
+
+        private bool InsideBuilding(Vector3 pos)
+        {
+            foreach (var b in Sim.Content.Buildings)
+            {
+                if (Mathf.Abs(pos.x - b.PositionX) < b.FootprintW * 0.5f + 0.5f
+                    && Mathf.Abs(pos.z - b.PositionZ) < b.FootprintD * 0.5f + 0.5f)
+                    return true;
+            }
+            return false;
+        }
         private int _lastSavedDay = 1;
         private readonly HashSet<string> _announced = new HashSet<string>();
 
@@ -89,6 +116,9 @@ namespace LunaQuest.Unity
             Voice = voiceGo.AddComponent<VoicePlayer>();
             Voice.Bind(this);
 
+            LiveSettings = SettingsStore.Load();
+            ApplySettings(LiveSettings);
+
             Debug.Log($"Luna-Quest ready: {Sim.Content.Buildings.Count} buildings, " +
                       $"{Sim.Content.Npcs.Count} crew, {Sim.Content.Incidents.Count} incident rules.");
         }
@@ -107,6 +137,17 @@ namespace LunaQuest.Unity
                     _lastSavedDay = Sim.Clock.Day;
                     SaveGame(false);
                 }
+                // F6: the EVA reserve drains outside and recharges indoors.
+                int eva = Sim.TickEvaEnergy(InsideBuilding(Player.transform.position), Time.deltaTime);
+                if (eva == 1)
+                    Hud.ShowSubtitle(L.T("EVA reserve below 25%. Plan the route home.",
+                        "احتياط EVA دون 25%. خطط للمسار."), 6f);
+                else if (eva == 2)
+                    Hud.ShowSubtitle(L.T("Below 10% — turn back now.", "دون 10% — عد الآن."), 6f);
+                else if (eva == 3)
+                    Hud.ShowSubtitle(L.T("EVA reserve empty. Charge the suit at the airlock.",
+                        "نفد احتياط EVA. اشحن البدلة عند الأيرلوك."), 6f);
+                Sim.TickCargo(Time.deltaTime);
 
                 _saveTimer += Time.deltaTime;
                 if (_saveTimer > 30.0) _saveTimer = 0.0;
@@ -122,6 +163,19 @@ namespace LunaQuest.Unity
         {
             if (Hud != null)
                 Hud.Draw();
+        }
+
+        /// <summary>The live settings view the game reads from (loaded at boot, saved on change).</summary>
+        public SettingsStore.SettingsData LiveSettings = SettingsStore.Defaults();
+
+        /// <summary>Save the settings panel's choices and push them into the engine right now.</summary>
+        public void ApplySettings(SettingsStore.SettingsData data)
+        {
+            LiveSettings = data;
+            SettingsStore.Save(data);
+            SettingsStore.ApplyTo(data, this);
+            bool wantArabic = data.Language == "ar";
+            if (L.Arabic != wantArabic) SetLanguage(wantArabic);
         }
 
         public bool Paused { get; private set; }
@@ -171,7 +225,36 @@ namespace LunaQuest.Unity
             if (Input.GetKeyDown(KeyCode.F5)) SaveGame(true);
             if (Input.GetKeyDown(KeyCode.F9)) LoadGame();
 
-            if (Input.GetKeyDown(KeyCode.E) && InputActive)
+            if (_holdStation != null)
+            {
+                // A held job: complete at 100%, otherwise cancel on release.
+                if (!InputActive)
+                {
+                    _holdStation = null;
+                    if (Player != null) Player.HoldPrompt = "";
+                }
+                else if (Input.GetKey(KeyCode.E))
+                {
+                    _holdTime += Time.deltaTime;
+                    float pct = Mathf.Clamp01(_holdTime / _holdNeed);
+                    if (Player != null) Player.HoldPrompt = $"Hold E… {Mathf.RoundToInt(pct * 100f)}%";
+                    if (_holdTime >= _holdNeed)
+                    {
+                        var station = _holdStation;
+                        _holdStation = null;
+                        if (Player != null) Player.HoldPrompt = "";
+                        ExecuteInteract(station);
+                    }
+                }
+                else
+                {
+                    _holdStation = null;
+                    if (Player != null) Player.HoldPrompt = "";
+                    Hud.ShowToast(L.T("Hold released. The job waits.",
+                        "تركت العمل. ينتظرك عند المحطة."), 3f);
+                }
+            }
+            else if (Input.GetKeyDown(KeyCode.E) && InputActive)
                 Interact();
 
             if (Input.GetMouseButtonDown(0) && !Hud.OverlayOpen &&
@@ -262,6 +345,21 @@ namespace LunaQuest.Unity
             var station = Player.FocusStation;
             if (station == null) return;
 
+            float need = HoldDurationFor(station.InteractionId);
+            if (need > 0f)
+            {
+                _holdStation = station;
+                _holdNeed = need;
+                _holdTime = 0f;
+                if (Player != null) Player.HoldPrompt = "Hold E… 0%";
+                return;
+            }
+
+            ExecuteInteract(station);
+        }
+
+        private void ExecuteInteract(Station station)
+        {
             bool ok = Sim.Interact(station.BuildingId, station.InteractionId,
                 out string en, out string ar);
             string message = L.T(en, ar);
@@ -350,7 +448,7 @@ namespace LunaQuest.Unity
 
             Voice.SpeakEvent(e, L.Arabic);
 
-            if (e.Kind == SimEventKind.Critical)
+            if (e.Kind == SimEventKind.Critical && LiveSettings.Subtitles)
                 Hud.ShowSubtitle(L.T(e.BodyEn, e.BodyAr), 6f);
             else if (e.Kind == SimEventKind.Mission)
                 Hud.ShowToast(L.T(e.TitleEn, e.TitleAr), 4f);

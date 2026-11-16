@@ -465,6 +465,28 @@ namespace LunaQuest.Godot
             pad.AddChild(ring);
 
             // A small crew lander, gold foil and white ascent stage.
+            // F6: the supply crate — a hold-E cargo delivery for the workshop spares desk.
+            var crateMat = Mat(new Color(0.42f, 0.35f, 0.27f), 0.75f, 0.05f);
+            var crate = new StaticBody3D { Position = new Vector3(6.8f, 0.62f, 3.0f), CollisionLayer = 1, CollisionMask = 0 };
+            pad.AddChild(crate);
+            var crateMesh = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(1.5f, 1.25f, 1.15f) }, MaterialOverride = crateMat };
+            crate.AddChild(crateMesh);
+            var crateStripe = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(1.52f, 0.18f, 1.17f) }, MaterialOverride = Mat(new Color(0.84f, 0.68f, 0.14f), 0.4f, 0.3f, 0.5f), Position = new Vector3(0, -0.18f, 0) };
+            crate.AddChild(crateStripe);
+            var crateCol = new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3(1.5f, 1.25f, 1.15f) } };
+            crate.AddChild(crateCol);
+            var crateInteract = new Interactable
+            {
+                BuildingId = "",
+                InteractionId = "cargo_crate",
+                PromptEn = "Supply Crate",
+                PromptAr = "صندوق الإمداد",
+                Kind = "job",
+                Radius = 2.4f,
+                Position = new Vector3(6.8f, 0.8f, 3.0f),
+            };
+            pad.AddChild(crateInteract);
+
             var foil = Mat(new Color(0.85f, 0.62f, 0.18f), 0.85f, 0.35f);
             var white = Mat(new Color(0.86f, 0.87f, 0.88f), 0.3f, 0.45f);
             var body = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 2.0f, BottomRadius = 2.6f, Height = 3.4f }, MaterialOverride = foil };
