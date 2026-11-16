@@ -283,6 +283,14 @@ jobs:
 
             Saved games use schema 2 and are interchangeable between the Godot .NET, GDScript
             and Unity builds. The simulation is deterministic at a one-second step.
+
+            Unity ships as SOURCE ONLY in this release: open `engines/unity/LunaQuest.Unity` in
+            Unity 6000.3.0f1 and build locally. Its playtest harness is extended; compile and
+            runtime are pending.
+
+            The one-click `LunaQuest-Windows.exe` is verified to be a single self-contained
+            PE32+ x86-64 binary produced by the GDScript export, but it has NOT been launched on
+            a real Windows machine yet — please report any launch problem.
           files: |
             artifacts/godot-builds/*.zip
             artifacts/gdscript-builds/*.zip

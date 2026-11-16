@@ -62,6 +62,13 @@ archives. `SHA256SUMS` covers every attached file, and the intro film MP4 is att
 GDScript self-test 659 checks, scene audit 238, .NET rover test 81 and LunaQuest.Tests 426 —
 each count comes from a fresh local run. Unity: harness extended (board + save/restore),
 compile-clean by review only; compile/runtime PENDING — build locally in Unity 6000.3.0f1.
+
+### Known limitations
+
+The one-click `LunaQuest-Windows.exe` is verified to be a single self-contained PE32+ x86-64
+binary produced by the GDScript export, but it has NOT been launched on a real Windows machine
+yet — please report any launch problem. Unity ships as SOURCE ONLY; its harness is extended but
+checked by review only, with compile/runtime PENDING. Build it locally in Unity 6000.3.0f1.
 CI runs the parity and immutable-asset guards on every
 push, builds the C# edition on every push and PR, and can recapture the README frames from the
 real game with `tools/capture-screenshots.sh`.
@@ -127,6 +134,13 @@ Cute Astronaut مثبّتان بـ SHA-256 في `docs/design/asset-lock.json`، 
 فحص GDScript الذاتي 659 وفحص المشهد 238 واختبار المركبة في .NET 81 وLunaQuest.Tests 426 —
 كل رقم من تشغيل محلي حديث. أما Unity: فموجّه الاختبار موسّع (اللوحة + الحفظ والاستعادة)،
 وسليم بالتدقيق فقط؛ التجميع والتشغيل قيد الانتظار — ابنِه محلياً في Unity 6000.3.0f1.
+
+### قيود معروفة
+
+ملف `LunaQuest-Windows.exe` بنقرة واحدة مُتحقَّق منه أنه ثنائي PE32+ واحد ذاتي الاحتواء يُنتِجه
+تصدير GDScript، لكنه لم يُشغَّل على جهاز Windows حقيقي بعد — يرجى الإبلاغ عن أي مشكلة تشغيل.
+Unity مصدر فقط؛ موجّهه موسّع وخُضع لمراجعة فقط؛ التجميع والتشغيل قيد الانتظار. ابنِه محليًا في
+Unity 6000.3.0f1.
 يشغّل CI حرّاس التكافؤ والأصول المقفلة عند كل دفع، ويبني
 إصدار C# عند كل دفع وطلب دمج، ويمكنه إعادة التقاط لقطات README من اللعبة الحقيقية عبر
 `tools/capture-screenshots.sh`.

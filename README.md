@@ -479,11 +479,16 @@ one adapter can be loaded by the other after copying the file to the other engin
 
 ## Known limitations and pending items
 
-- **Unity was not opened in this environment.** It has been compiled against Unity reference
-  assemblies with 0 warnings/0 errors, and the scene/project files are hand-authored. The
-  first editor open may regenerate missing `Library/`, `QualitySettings` or `GraphicsSettings`
-  files; that is normal. Use Unity 6.3 LTS and the built-in render pipeline.
-- **Voice is synthetic and English-only.** The 55 lines were generated offline with Piper
+- **Unity ships as source only and was never opened in this environment.** The harness (14-row
+  board, rover save/restore) passed a Roslyn `/nostdlib` syntax check with no new diagnostic kinds
+  against a control — that is a syntax proxy, **not a clean compile**. Nothing has been verified at
+  Unity editor runtime. No Unity binary ships in this release. Build it locally in Unity 6000.3.0f1
+  (6.3 LTS); the first editor open may regenerate missing `Library/`, `QualitySettings` or
+  `GraphicsSettings` files — that is normal.
+- **The one-click Windows `.exe` is untested on real Windows.** It is verified to be a single
+  self-contained PE32+ x86-64 binary produced by the GDScript export, but it has NOT been launched
+  on a real Windows machine yet. If it does not start, please report it.
+- **Voice is synthetic and English-only.** The 94 voice lines were generated offline with Piper
   from open voice models. Arabic is a subtitle translation; there is no Arabic speech in the
   pack. The models and licenses are listed in `docs/licenses/piper-voices.md`.
 - **Dialogue is bark-based.** Each crew member has a greeting and four ambient lines rather
