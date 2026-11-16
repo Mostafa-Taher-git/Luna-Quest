@@ -30,6 +30,9 @@ namespace LunaQuest.Unity
         public float BatteryKwh = BatteryKwhMax;
 
         private CharacterController _controller;
+        private Transform _bodyTilt;
+        private AudioSource _hum;
+        private ParticleSystem _dustL, _dustR;
         /// <summary>
         /// Where the rover's own capsule last actually was. On a groundless stretch (and for one
         /// frame after the player exits, while their controller is still live) CharacterController
@@ -89,6 +92,77 @@ namespace LunaQuest.Unity
                 wheel.GetComponent<Renderer>().sharedMaterial = dark;
                 _corners.Add((wheel.transform, steer, front));
             }
+            BuildF7();
+        }
+
+        /// <summary>F7: a two-stroke hum generated at runtime, pitch follows speed; regolith
+        /// puffs kicked from the rear wheels while moving; nothing is downloaded.</summary>
+        private void BuildF7()
+        {
+            const int sampleRate = 22050;
+            var samples = new float[sampleRate];
+            float fundamental = sampleRate / 55f;
+            for (int i = 0; i < samples.Length; i++)
+            {
+                float phase = (i % fundamental) / fundamental;
+                float saw = phase * 2f - 1f;
+                float sub = Mathf.Sin(i * Mathf.PI * 2f * 27.5f / sampleRate);
+                samples[i] = Mathf.Clamp(saw * 0.55f + sub * 0.35f, -1f, 1f) * 0.28f;
+            }
+            var clip = AudioClip.Create("rover_hum", samples.Length, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            var humGo = new GameObject("EngineHum");
+            humGo.transform.SetParent(transform, false);
+            _hum = humGo.AddComponent<AudioSource>();
+            _hum.clip = clip;
+            _hum.loop = true;
+            _hum.spatialBlend = 1f;
+            _hum.minDistance = 1.5f;
+            _hum.maxDistance = 26f;
+            _hum.volume = 0.0f;
+
+            _dustL = BuildDust("DustLeft", -0.96f);
+            _dustR = BuildDust("DustRight", 0.96f);
+        }
+
+        private ParticleSystem BuildDust(string name, float side)
+        {
+            // Unity's rover forward is +Z; the rear wheels sit at -Z behind the seat.
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(side, 0.2f, -1.15f);
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.startColor = new Color(0.62f, 0.58f, 0.53f, 0.65f);
+            main.startLifetime = 1.5f;
+            main.startSpeed = 2.1f;
+            main.startSize = 0.3f;
+            main.maxParticles = 18;
+            main.gravityModifier = 0.07f;   // 1.62 m/s² moon gravity
+            main.loop = true;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 18f;
+            shape.radius = 0.18f;
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.material = new Material(Shader.Find("Standard")) { color = new Color(0.62f, 0.58f, 0.53f) };
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            return ps;
+        }
+
+        private Transform Tilt
+        {
+            get
+            {
+                if (_bodyTilt == null)
+                {
+                    _bodyTilt = new GameObject("BodyTilt").transform;
+                    _bodyTilt.SetParent(transform, false);
+                }
+                return _bodyTilt;
+            }
         }
 
         private void Body(string name, PrimitiveType type, Vector3 pos, Vector3 scale, Material mat)
@@ -96,7 +170,7 @@ namespace LunaQuest.Unity
             var go = GameObject.CreatePrimitive(type);
             go.name = name;
             Object.Destroy(go.GetComponent<Collider>());
-            go.transform.SetParent(transform, false);
+            go.transform.SetParent(Tilt, false);
             go.transform.localPosition = pos;
             go.transform.localScale = scale;
             go.GetComponent<Renderer>().sharedMaterial = mat;
@@ -190,9 +264,50 @@ namespace LunaQuest.Unity
                 BatteryKwh = Mathf.Max(0f, BatteryKwh - Mathf.Abs(Speed) * 0.9f * dt / 60f);
             if (!ReachedIce && Vector2.Distance(pos2, IceSite) < 12f) ReachedIce = true;
 
+            // F7: hum pitch follows speed; dust kicks off the rear wheels; the body leans.
+            if (_hum != null)
+            {
+                float ratio = Mathf.Clamp(Mathf.Abs(Speed) / MaxForward, 0f, 1f);
+                _hum.pitch = 0.55f + ratio * 1.55f;
+                _hum.volume = ratio > 0.05f ? 0.15f + ratio * 0.6f : 0f;
+                if (ratio > 0.05f && !_hum.isPlaying) _hum.Play();
+                else if (ratio <= 0.02f && _hum.isPlaying) _hum.Pause();
+            }
+            bool grounded = _controller.isGrounded;
+            float kick = Mathf.Abs(Speed) > 1.6f && grounded ? Mathf.Abs(Speed) * 3.5f : 0f;
+            SetDustRate(_dustL, kick);
+            SetDustRate(_dustR, kick);
+
+            if (Game != null && Game.World != null && _bodyTilt != null)
+            {
+                float Ground(float rx, float fz)
+                {
+                    Vector3 probe = transform.TransformPoint(new Vector3(rx, 0f, fz));
+                    return Game.World.HeightAt(probe.x, probe.z);
+                }
+                float front = (Ground(-0.96f, 1.16f) + Ground(0.96f, 1.16f)) * 0.5f;
+                float rear = (Ground(-0.96f, -1.16f) + Ground(0.96f, -1.16f)) * 0.5f;
+                float left = (Ground(-0.96f, 1.16f) + Ground(-0.96f, -1.16f)) * 0.5f;
+                float rightSide = (Ground(0.96f, 1.16f) + Ground(0.96f, -1.16f)) * 0.5f;
+                float pitch = Mathf.Clamp(Mathf.Atan((rear - front) / 2.32f), -0.38f, 0.38f);
+                float roll = Mathf.Clamp(Mathf.Atan((rightSide - left) / 1.92f), -0.38f, 0.38f);
+                _bodyTilt.localRotation = Quaternion.Slerp(_bodyTilt.localRotation,
+                    Quaternion.Euler(pitch * Mathf.Rad2Deg, 0f, roll * Mathf.Rad2Deg),
+                    Mathf.Clamp(dt * 6f, 0f, 1f));
+            }
+
             p.transform.position = SeatGlobal;
             p.Halt();
             p.Visual.localRotation = Quaternion.Euler(18f, 180f, 0f);
+        }
+
+        private static void SetDustRate(ParticleSystem ps, float rate)
+        {
+            if (ps == null) return;
+            var emission = ps.emission;
+            emission.rateOverTime = rate;
+            if (rate > 0f && !ps.isPlaying) ps.Play();
+            else if (rate <= 0f && ps.isPlaying) ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
         public void Restore(Dictionary<string, object> extras, ColonyPlayer p)

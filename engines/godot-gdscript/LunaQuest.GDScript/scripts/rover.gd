@@ -36,6 +36,9 @@ var odometer := 0.0
 var _wheels: Array = []
 var _steers: Array = []
 var _seat := Vector3(0.0, 0.34, 0.18)
+var _hum: AudioStreamPlayer3D = null
+var _dust_left: CPUParticles3D = null
+var _dust_right: CPUParticles3D = null
 ## Last place the rover's own body sat, used by exit(): transform changes only reach the physics
 ## server on the next physics tick, and that tick fires before the frame in which the exit is
 ## handled. See exit().
@@ -55,8 +58,74 @@ func setup(colony_world: ColonyWorld) -> void:
 	model = _load_model()
 	add_child(model)
 	_rig_wheels()
+	_build_hum()
+	_build_dust()
 	floor_max_angle = deg_to_rad(50.0)
 	floor_snap_length = 0.4
+
+
+## F7: a two-stroke hum generated at runtime — nothing is downloaded. The pitch scales with
+## speed, so the drive communicates through the ear before the eye.
+func _build_hum() -> void:
+	_hum = AudioStreamPlayer3D.new()
+	_hum.name = "EngineHum"
+	_hum.max_distance = 26.0
+	_hum.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	_hum.unit_size = 4.0
+	var sample_rate := 22050
+	var frames := sample_rate        # 1 s loop, seamless sawtooth
+	var data := PackedByteArray()
+	var period := sample_rate / 55.0  # 55 Hz fundamental, a deep two-stroke idle
+	for i in range(frames):
+		var t := float(i)
+		var phase := fmod(t, period) / period
+		var saw := phase * 2.0 - 1.0
+		var sub := sin(t * TAU * 27.5 / float(sample_rate))
+		var v := clampf(saw * 0.55 + sub * 0.35, -1.0, 1.0) * 9000.0
+		data.append(int(v) & 0xFF)
+		data.append((int(v) >> 8) & 0xFF)
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = sample_rate
+	wav.stereo = false
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.data = data
+	_hum.stream = wav
+	_hum.volume_db = -9.0
+	add_child(_hum)
+
+
+## F7: regolith puffs kicked from the rear wheels while moving. Real behaviour, approximate look.
+func _build_dust() -> void:
+	for side in [-1.0, 1.0]:
+		var p := CPUParticles3D.new()
+		p.name = "DustLeft" if side < 0.0 else "DustRight"
+		p.position = Vector3(side * 0.96, 0.2, 1.15)
+		p.emitting = false
+		p.amount = 18
+		p.lifetime = 1.5
+		p.preprocess = 0.0
+		p.one_shot = false
+		p.explosiveness = 0.0
+		p.randomness = 0.6
+		p.direction = Vector3(0, 0.55, 1.0)
+		p.spread = 24.0
+		p.gravity = Vector3(0, -1.1, 0)
+		p.initial_velocity_min = 1.2
+		p.initial_velocity_max = 3.2
+		p.scale_amount_min = 0.12
+		p.scale_amount_max = 0.4
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.62, 0.58, 0.53)
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color.a = 0.55
+		p.material_override = mat
+		add_child(p)
+		if side < 0.0:
+			_dust_left = p
+		else:
+			_dust_right = p
 
 
 func _load_model() -> Node3D:
@@ -209,6 +278,40 @@ func _step(delta: float, throttle: float, steer_in: float, boost: bool, handbrak
 	if not reached_ice and pos2.distance_to(ICE_SITE) < 12.0:
 		reached_ice = true
 
+	# F7: the ear leads the eye — pitch the hum with speed; kick dust when carrying speed.
+	if _hum != null:
+		var ratio: float = clampf(absf(speed) / MAX_FORWARD, 0.0, 1.0)
+		_hum.pitch_scale = 0.55 + ratio * 1.55
+		_hum.volume_db = -16.0 + ratio * 8.0
+		var driving := absf(speed) > 0.4
+		# The 3D positional hum is audible inside and outside the suit.
+		if driving == (_hum.playing == false):
+			if driving:
+				_hum.play()
+			else:
+				_hum.stop()
+	for p in [_dust_left, _dust_right]:
+		if p != null:
+			p.emitting = absf(speed) > 1.6 and is_on_floor()
+
+	# F7: suspension tilt from the four contact patches — the body rolls and pitches with the terrain.
+	if world != null and model != null:
+		# right and forward in world space, measured from the chassis yaw
+		var right := Vector3(cos(rotation.y), 0.0, sin(rotation.y))
+		var fwd := Vector3(sin(rotation.y), 0.0, -cos(rotation.y))
+		var h_fl := _wheel_ground(right, fwd, -0.96, 1.16)
+		var h_fr := _wheel_ground(right, fwd, 0.96, 1.16)
+		var h_rl := _wheel_ground(right, fwd, -0.96, -1.16)
+		var h_rr := _wheel_ground(right, fwd, 0.96, -1.16)
+		var front := (h_fl + h_fr) * 0.5
+		var rear := (h_rl + h_rr) * 0.5
+		var left := (h_fl + h_rl) * 0.5
+		var rightside := (h_fr + h_rr) * 0.5
+		var pitch := clampf(atan((rear - front) / 2.32), -0.38, 0.38)
+		var roll := clampf(atan((rightside - left) / 1.92), -0.38, 0.38)
+		model.rotation.x = lerp_angle(model.rotation.x, pitch, clampf(delta * 6.0, 0.0, 1.0))
+		model.rotation.z = lerp_angle(model.rotation.z, roll, clampf(delta * 6.0, 0.0, 1.0))
+
 	if driver == null:
 		return
 	# Carry the commander at the hand controller, facing the way the rover points.
@@ -217,6 +320,11 @@ func _step(delta: float, throttle: float, steer_in: float, boost: bool, handbrak
 	driver.rotation.y = rotation.y
 	if driver.astronaut != null:
 		driver.astronaut.rotation.x = -0.32
+
+
+func _wheel_ground(right: Vector3, fwd: Vector3, right_off: float, fwd_off: float) -> float:
+	var p := global_position + right * right_off + fwd * fwd_off
+	return world.height_at(p.x, p.z)
 
 
 func speed_kmh() -> float:

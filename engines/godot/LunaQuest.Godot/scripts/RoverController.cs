@@ -40,6 +40,8 @@ namespace LunaQuest.Godot
         private float _settledYaw = 0.4f;
 
         private Node3D _model = null!;
+        private AudioStreamPlayer3D? _hum;
+        private readonly GpuParticles3D[] _dust = new GpuParticles3D[2];
         private readonly List<(Node3D node, bool front)> _wheels = new();
         private readonly List<(Node3D node, bool front)> _steers = new();
         private readonly Vector3 _seat = new Vector3(0f, 0.34f, 0.18f);
@@ -59,6 +61,8 @@ namespace LunaQuest.Godot
             _model = LoadModel();
             AddChild(_model);
             RigWheels();
+            BuildHum();
+            BuildDust();
         }
 
         private Node3D LoadModel()
@@ -101,6 +105,81 @@ namespace LunaQuest.Godot
                     if (name == "wheel-" + corner) _wheels.Add((n, front));
                     else if (name == "steer-" + corner) _steers.Add((n, front));
                 }
+            }
+        }
+
+        /// <summary>F7: a two-stroke hum generated at runtime — nothing is downloaded. Pitch follows speed.</summary>
+        private void BuildHum()
+        {
+            _hum = new AudioStreamPlayer3D
+            {
+                Name = "EngineHum",
+                MaxDistance = 26f,
+                UnitSize = 4f,
+                VolumeDb = -9f,
+            };
+            const int sampleRate = 22050;
+            var frames = sampleRate;
+            var data = new byte[frames * 2];
+            float fundamental = sampleRate / 55f;
+            for (int i = 0; i < frames; i++)
+            {
+                float phase = (i % fundamental) / fundamental;
+                float saw = phase * 2f - 1f;
+                float sub = Mathf.Sin(i * Mathf.Tau * 27.5f / sampleRate);
+                float v = Mathf.Clamp(saw * 0.55f + sub * 0.35f, -1f, 1f) * 9000f;
+                short s = (short)v;
+                data[i * 2] = (byte)(s & 0xFF);
+                data[i * 2 + 1] = (byte)((s >> 8) & 0xFF);
+            }
+            var wav = new AudioStreamWav
+            {
+                Format = AudioStreamWav.FormatEnum.Format16Bits,
+                MixRate = sampleRate,
+                Stereo = false,
+                LoopMode = AudioStreamWav.LoopModeEnum.Forward,
+                Data = data,
+            };
+            _hum.Stream = wav;
+            AddChild(_hum);
+        }
+
+        /// <summary>F7: regolith puffs kicked from the rear wheels while moving.</summary>
+        private void BuildDust()
+        {
+            var process = new ParticleProcessMaterial
+            {
+                Direction = new Vector3(0f, 0.55f, 1f),
+                Spread = 24f,
+                Gravity = new Vector3(0f, -1.1f, 0f),
+                InitialVelocityMin = 1.2f,
+                InitialVelocityMax = 3.2f,
+                ScaleMin = 0.12f,
+                ScaleMax = 0.4f,
+            };
+            var mat = new StandardMaterial3D
+            {
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                AlbedoColor = new Color(0.62f, 0.58f, 0.53f, 0.55f),
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            };
+            for (int i = 0; i < 2; i++)
+            {
+                float side = i == 0 ? -1f : 1f;
+                var p = new GpuParticles3D
+                {
+                    Name = i == 0 ? "DustLeft" : "DustRight",
+                    Position = new Vector3(side * 0.96f, 0.2f, 1.15f),
+                    Emitting = false,
+                    Amount = 18,
+                    Lifetime = 1.5f,
+                    ProcessMaterial = process,
+                    DrawPasses = 1,
+                };
+                p.MaterialOverride = mat;
+                p.DrawPass1 = new SphereMesh { Radius = 0.16f, Height = 0.32f, RadialSegments = 8, Rings = 4 };
+                AddChild(p);
+                _dust[i] = p;
             }
         }
 
@@ -186,6 +265,42 @@ namespace LunaQuest.Godot
             _settledPosition = GlobalPosition;
             _settledYaw = Rotation.Y;
             Odometer += Mathf.Abs(Speed) * dt;
+
+            // F7: the ear leads the eye — hum pitch follows speed; dust kicks off the rear wheels.
+            if (_hum != null)
+            {
+                float ratio = Mathf.Clamp(Mathf.Abs(Speed) / MaxForward, 0f, 1f);
+                _hum.PitchScale = 0.55f + ratio * 1.55f;
+                _hum.VolumeDb = -16f + ratio * 8f;
+                bool driving = Mathf.Abs(Speed) > 0.4f;
+                if (driving && !_hum.Playing) _hum.Play();
+                else if (!driving && _hum.Playing) _hum.Stop();
+            }
+            bool floorHere = IsOnFloor();
+            foreach (var dust in _dust) dust.Emitting = Mathf.Abs(Speed) > 1.6f && floorHere;
+
+            // Suspension tilt from the four contact patches.
+            var world = Main.Instance?.World;
+            if (world != null && _model is Node3D model)
+            {
+                var right = new Vector3(Mathf.Cos(Rotation.Y), 0, Mathf.Sin(Rotation.Y));
+                var fwd = new Vector3(Mathf.Sin(Rotation.Y), 0, -Mathf.Cos(Rotation.Y));
+                float H(float r, float f)
+                {
+                    var p2 = GlobalPosition + right * r + fwd * f;
+                    return (float)world.Terrain.Height(p2.X, p2.Z);
+                }
+                float front = (H(-0.96f, 1.16f) + H(0.96f, 1.16f)) * 0.5f;
+                float rear = (H(-0.96f, -1.16f) + H(0.96f, -1.16f)) * 0.5f;
+                float left = (H(-0.96f, 1.16f) + H(-0.96f, -1.16f)) * 0.5f;
+                float rightSide = (H(0.96f, 1.16f) + H(0.96f, -1.16f)) * 0.5f;
+                float pitch = Mathf.Clamp(Mathf.Atan((rear - front) / 2.32f), -0.38f, 0.38f);
+                float roll = Mathf.Clamp(Mathf.Atan((rightSide - left) / 1.92f), -0.38f, 0.38f);
+                model.Rotation = new Vector3(
+                    Mathf.LerpAngle(model.Rotation.X, pitch, Mathf.Clamp(dt * 6f, 0f, 1f)),
+                    model.Rotation.Y,
+                    Mathf.LerpAngle(model.Rotation.Z, roll, Mathf.Clamp(dt * 6f, 0f, 1f)));
+            }
 
             Spin -= (Speed / WheelRadius) * dt;
             foreach (var (node, front) in _wheels)
