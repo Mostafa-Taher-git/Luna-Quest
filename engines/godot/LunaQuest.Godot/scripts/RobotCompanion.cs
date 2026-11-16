@@ -17,7 +17,6 @@ namespace LunaQuest.Godot
         public WorldBuilder World = null!;
         private Node3D _body = null!;
         private ShaderMaterial _face = null!;
-        private OmniLight3D _glow = null!;
         private MeshInstance3D _thruster = null!;
         private Label3D _name = null!;
         private Label3D _activity = null!;
@@ -340,7 +339,7 @@ namespace LunaQuest.Godot
         public override void _Process(double delta)
         {
             var main = Main.Instance;
-            if (main == null) return;
+            if (main == null || _name == null) return;
             // Blink every few seconds.
             _blinkTimer -= delta;
             if (_blinkTimer <= 0) { _blinkT = 0; _blinkTimer = 2.5 + GD.Randf() * 3.5; }
@@ -374,8 +373,6 @@ namespace LunaQuest.Godot
                     _thrusterGlow.LightEnergy = 1.25f + 0.2f * Mathf.Abs(Mathf.Sin((float)_t * 2.4f));
                 }
             }
-            _glow.LightEnergy = 0.7f + (float)Math.Sin(_t * 7.0) * 0.15f;
-
             var st = main.Sim.Npcs.State(Profile.Id);
             _name.Text = L.Arabic ? Profile.DisplayNameAr : Profile.DisplayNameEn;
             _name.Font = L.Arabic ? L.ArabicFont : L.LatinFont;

@@ -93,10 +93,10 @@ func _ready() -> void:
 
 	player = ColonyPlayer.new()
 	player.name = "Commander"
+	add_child(player)
 	player.global_position = Vector3(SPAWN_X, world.height_at(SPAWN_X, SPAWN_Z), SPAWN_Z)
 	player.rotation.y = PI
 	player.can_move = false
-	add_child(player)
 	var suit := crew_astronaut()
 	if suit != null:
 		player.attach_astronaut(suit)
