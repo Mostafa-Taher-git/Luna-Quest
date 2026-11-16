@@ -1,10 +1,10 @@
 # Luna-Quest Architecture Review — v3 (three engines)
 
 **Scope decision (owner, 2026-11):** the game targets exactly three engines —
-**Godot .NET**, **Godot GDScript** and **Unity**. The browser edition is retired from
-active development; `web/` stays in the tree only because `web/static/intro-poster.jpg`
-is a locked asset (`docs/design/asset-lock.json`) and the folder holds historical tests.
-No new feature work lands in `web/`.
+**Godot .NET**, **Godot GDScript** and **Unity**. The browser edition is retired and
+now lives at `archive/web/`, which carries the locked poster
+`archive/web/static/intro-poster.jpg` (`docs/design/asset-lock.json`) and the
+historical tests. No new feature work lands there.
 
 This review records what was found, what was changed, and the rules that keep the three
 engines honest. It supersedes the "dual engine" framing of v2.2.

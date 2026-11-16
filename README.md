@@ -75,10 +75,10 @@ listen and move the player; the simulation is one deterministic core with a shar
 ### Browser edition - retired
 
 The Three.js browser edition is no longer developed, built or deployed. Luna-Quest targets
-exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The `web/` folder
-stays in the tree only because `web/static/intro-poster.jpg` is a locked asset
-(`docs/design/asset-lock.json`) and the folder holds the historical test suite. Play the
-GDScript, Godot .NET or Unity builds instead.
+exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The retired
+edition now lives under `archive/web/`, which carries the locked intro poster
+(`archive/web/static/intro-poster.jpg`, `docs/design/asset-lock.json`) and the
+historical test suite. Play the GDScript, Godot .NET or Unity builds instead.
 
 Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
 steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
@@ -369,8 +369,9 @@ Luna-Quest-Game/
 +-- shared/
 |   +-- LunaQuest.Core/      simulation, content loader, save contract
 |   +-- LunaQuest.Tests/     console test harness
-+-- web/                     RETIRED browser edition (kept for the locked intro poster
-|                            and historical tests; no new development)
++-- archive/                 retired material: the browser edition (with its locked
+|                            intro poster and historical tests), web-era screenshots,
+|                            superseded one-shot tools
 +-- tools/                   content sync, astronaut bake, voice-pack generator,
 |                            sync-gdscript-assets.sh
 +-- README.md

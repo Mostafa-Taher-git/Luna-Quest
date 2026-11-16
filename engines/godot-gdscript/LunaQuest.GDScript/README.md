@@ -15,7 +15,8 @@ engines/godot-gdscript/LunaQuest.GDScript
 ├── scripts/
 │   ├── content.gd           autoload Content — reads data/*.json, the source of truth
 │   ├── clock.gd             the mission clock: 12 simulated minutes per real second
-│   ├── sim.gd               the rule set, ported from shared/LunaQuest.Core and web/src/sim
+│   ├── sim.gd               the rule set, ported from shared/LunaQuest.Core and the
+│   │                         retired browser sim (now archive/web/src/sim)
 │   ├── world.gd             the colony: terrain, sixteen modules, consoles, rovers, perimeter
 │   ├── player.gd            the commander, at 1.62 m/s² and 1.66 m eye height
 │   ├── crew.gd              six crew and NEXO, on their schedule, wearing their own trim colours

@@ -26,8 +26,8 @@ const DONE := Color(0.45, 0.80, 0.72)
 
 ## The shift task board — 14 rows. Eleven are the learning objectives from content/learning.json
 ## (done = a journal entry), two are the crew rover's own milestones, and one is the mission line.
-## `kind` says how `done` is read, `shift` says where the row leads. Ported from the browser
-## edition's web/src/ui/hud.js taskList(); learning.json itself stays at 11 objectives (H9).
+## `kind` says how `done` is read, `shift` says where the row leads. Ported from the retired
+## browser edition (archive/web/src/ui/hud.js) taskList(); learning.json stays at 11 objectives (H9).
 const BOARD_ROWS: Array = [
 	{"id": "obj_power_budget", "kind": "journal", "shift": "morning",
 		"en": "Read the colony board in Mission Control", "ar": "اقرأ لوحة المستعمرة في مركز التحكم",

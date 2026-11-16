@@ -29,7 +29,7 @@ permissions -> Workflows: Read and write; or a classic token with the `workflow`
 ## 2. Remove the retired browser job
 
 Delete the whole `web:` job from `.github/workflows/ci.yml` (the browser edition is retired;
-see `web/DEPRECATED.md`). Keep the `content` and `core` jobs.
+see `archive/web/DEPRECATED.md`). Keep the `content` and `core` jobs.
 
 ## 3. Delete the Pages workflow
 

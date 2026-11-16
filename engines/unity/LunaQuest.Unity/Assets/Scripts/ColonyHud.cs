@@ -214,7 +214,7 @@ namespace LunaQuest.Unity
         /// The shift task board — 14 rows. Eleven are the learning objectives from
         /// content/learning.json (done = a journal entry), two are the crew rover's own
         /// milestones, and one is the mission line. Ported from the browser edition's
-        /// web/src/ui/hud.js taskList(); wording identical to the Godot editions' hud.gd and
+        /// archive/web/src/ui/hud.js taskList(); wording identical to the Godot editions' hud.gd and
         /// Hud.cs. learning.json itself stays at 11 objectives (H9).
         /// </summary>
         public static readonly BoardRowSpec[] BoardRows =

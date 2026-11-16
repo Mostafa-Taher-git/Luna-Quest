@@ -22,7 +22,7 @@ npm run build                   # production bundle
 |---|---|
 | `web` unit tests | **36 passed, 0 failed** (`sim.test.mjs`, `world.test.mjs`) |
 | Content consistency (`tools/check-content.mjs`) | exit 0 — 16 buildings, 7 crew, 15 incident rules, 11 objectives, 17 research notes, 44 dialogue topics, 94 voiced lines |
-| Production build | `web/dist` builds clean: 811 kB JS (219 kB gzip), 12 kB CSS, Noto Sans Latin and Arabic |
+| Production build | retired browser edition (`archive/web`, formerly `web/`) built clean: 811 kB JS (219 kB gzip), 12 kB CSS, Noto Sans Latin and Arabic |
 | Static payload | ~60 MB — the Sketchfab kit models and the intro film dominate; only the kit stems referenced by `props.js` are copied |
 | Headless Chromium run | boots, plays the intro film, reaches the start screen and a playable colony with no page errors |
 | Console on load | `16 buildings, 7 crew, 36 kit props, 26 rocks, 45 consoles`; `dressing 15 materials from 369 meshes (0 kept whole)` |
