@@ -147,7 +147,7 @@ jobs:
           ver="${tag#v}"
           if [ -z "$ver" ]; then
             # A dry-run dispatch carries no tag; still build a valid, clearly-marked package.
-            ver="0.0.0-dev"
+            ver="0.0.0-1"
           fi
           cp "$base/linux/luna-quest-gdscript.x86_64" out/LunaQuest-GDScript-Linux-x86_64
           bash tools/package-desktop.sh "$base/linux/luna-quest-gdscript.x86_64" "$ver" \
