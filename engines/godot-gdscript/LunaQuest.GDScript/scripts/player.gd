@@ -22,6 +22,11 @@ var _head: Node3D
 var _current_target: Dictionary = {}
 var rover: ColonyRover = null # set while driving the crew rover
 
+## The F0 contract: W moves toward the way the camera looks. Kept as a static helper so the
+## input-to-direction mapping can be locked by regression tests without a live keyboard.
+static func move_direction(input_dir: Vector2, yaw: float) -> Vector3:
+	return (Basis(Vector3.UP, yaw) * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()
+
 
 func _ready() -> void:
 	_head = Node3D.new()
@@ -101,7 +106,7 @@ func _physics_process(delta: float) -> void:
 
 	var running := Input.is_key_pressed(KEY_SHIFT)
 	var speed := RUN_SPEED if running else WALK_SPEED
-	var direction := (transform.basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()
+	var direction := ColonyPlayer.move_direction(input_dir, rotation.y)
 	if direction.length() > 0.01:
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed

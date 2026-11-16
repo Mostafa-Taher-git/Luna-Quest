@@ -35,7 +35,7 @@ var battery_kwh := BATTERY_KWH
 var odometer := 0.0
 var _wheels: Array = []
 var _steers: Array = []
-var _seat := Vector3(0.0, 0.34, -0.18)
+var _seat := Vector3(0.0, 0.34, 0.18)
 ## Last place the rover's own body sat, used by exit(): transform changes only reach the physics
 ## server on the next physics tick, and that tick fires before the frame in which the exit is
 ## handled. See exit().
@@ -64,7 +64,11 @@ func _load_model() -> Node3D:
 	if ResourceLoader.exists(path):
 		var scene := load(path) as PackedScene
 		if scene != null:
-			return scene.instantiate() as Node3D
+			var instance := scene.instantiate() as Node3D
+			# The kit GLB's nose is +Z (front wheels at z = +1.16); the rover's forward
+			# is -Z (Godot camera / F0 contract), so the visual nose is swung 180 degrees.
+			instance.rotation.y = PI
+			return instance
 	# Fallback for a fresh clone without the kit: a simple box LTV, never a different character.
 	var holder := Node3D.new()
 	var body := MeshInstance3D.new()
@@ -175,7 +179,7 @@ func _step(delta: float, throttle: float, steer_in: float, boost: bool, handbrak
 	steer = lerpf(steer, steer_target, clampf(delta * 6.0, 0.0, 1.0))
 	rotation.y += (speed / 2.3) * tan(steer) * delta
 
-	var forward := global_transform.basis.z.normalized()
+	var forward := -global_transform.basis.z.normalized()
 	velocity = forward * speed
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -186,7 +190,7 @@ func _step(delta: float, throttle: float, steer_in: float, boost: bool, handbrak
 	_settled_rotation = rotation.y
 	odometer += absf(speed) * delta
 
-	spin += (speed / WHEEL_RADIUS) * delta
+	spin -= (speed / WHEEL_RADIUS) * delta
 	for entry in _wheels:
 		var node: Node3D = entry[0]
 		var front: bool = entry[1]

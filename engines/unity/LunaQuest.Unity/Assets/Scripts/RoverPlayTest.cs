@@ -52,6 +52,7 @@ namespace LunaQuest.Unity
                 CheckBoardAfterDrive(game);
                 CheckPauseGate(game);
                 CheckExit(game);
+                CheckF0Controls(game);
                 CheckSaveRestore(game);
                 CheckRestart(game);
             }
@@ -341,6 +342,99 @@ namespace LunaQuest.Unity
             Expect(!rover.Occupied && player.Rover == null, "an old save seated the commander in the rover");
             Expect(Vector3.Distance(rover.transform.position, new Vector3(3.5f, 0.05f, -7.25f)) < 0.001f,
                 "an old save moved the rover although it carried no pose");
+        }
+
+        /// <summary>
+        /// F0 — the universal control contract, proven by driving, not by reasoning. W drives
+        /// toward the view, S reverses, A and D turn toward screen-left and screen-right (measured
+        /// against the camera basis), and walking keeps the same meaning after any driving episode.
+        /// </summary>
+        private static void CheckF0Controls(LunaQuestGame game)
+        {
+            var player = game.Player;
+            var rover = game.Rover;
+            if (rover == null || player == null) return;
+
+            // Deterministic pose: the apron, the usual yaw, full charge.
+            rover.transform.position = new Vector3(-11f, 0.05f, -28f);
+            rover.transform.rotation = Quaternion.Euler(0f, 0.4f * Mathf.Rad2Deg, 0f);
+            rover.Speed = 0f;
+            rover.Steer = 0f;
+            rover.BatteryKwh = CrewRover.BatteryKwhMax;
+            rover.Settle();
+
+            player.SetDriving(false);
+            player.Teleport(rover.transform.position + rover.transform.right * 2.2f);
+            rover.Enter(player);
+            player.SyncCameraToRover();
+
+            var vehFwd = rover.transform.forward; vehFwd.y = 0f; vehFwd.Normalize();
+            var camFwd = player.Camera.transform.forward; camFwd.y = 0f; camFwd.Normalize();
+            Expect(Vector3.Dot(vehFwd, camFwd) > 0.9f,
+                $"F0: the rover's forward is not aligned with the camera ({Vector3.Dot(vehFwd, camFwd):F2})");
+
+            // W under throttle: displacement goes toward the view, not away from it.
+            var before = rover.transform.position;
+            for (int i = 0; i < 120; i++) rover.SimulateForTest(1f / 60f, 1f, 0f, false, false, player);
+            var moved = rover.transform.position - before;
+            Expect(Vector3.Dot(moved, vehFwd) > 0.5f,
+                $"F0: W does not drive toward the view ({Vector3.Dot(moved, vehFwd):F2} m)");
+
+            // S from rest: displacement away from the view.
+            rover.Speed = 0f;
+            before = rover.transform.position;
+            for (int i = 0; i < 120; i++) rover.SimulateForTest(1f / 60f, -1f, 0f, false, false, player);
+            moved = rover.transform.position - before;
+            Expect(Vector3.Dot(moved, vehFwd) < 0f,
+                $"F0: S does not reverse ({Vector3.Dot(moved, vehFwd):F2} m)");
+
+            // Get rolling, then A turns toward screen-left, D toward screen-right.
+            rover.Speed = 0f;
+            for (int i = 0; i < 90; i++) rover.SimulateForTest(1f / 60f, 1f, 0f, false, false, player);
+            var camRight = player.Camera.transform.right; camRight.y = 0f; camRight.Normalize();
+            var left = -camRight;
+            float yaw0 = rover.transform.eulerAngles.y;
+            for (int i = 0; i < 60; i++)
+            {
+                rover.SimulateForTest(1f / 60f, 1f, 1f, false, false, player);
+                player.SyncCameraToRover();
+            }
+            var h0 = Quaternion.Euler(0f, yaw0, 0f) * Vector3.forward;
+            var h1 = Quaternion.Euler(0f, rover.transform.eulerAngles.y, 0f) * Vector3.forward;
+            Expect(Vector3.Dot(h1, left) > Vector3.Dot(h0, left),
+                "F0: A did not move the heading toward screen-left");
+
+            rover.Speed = 0f;
+            yaw0 = rover.transform.eulerAngles.y;
+            for (int i = 0; i < 60; i++)
+            {
+                rover.SimulateForTest(1f / 60f, 1f, -1f, false, false, player);
+                player.SyncCameraToRover();
+            }
+            h0 = Quaternion.Euler(0f, yaw0, 0f) * Vector3.forward;
+            h1 = Quaternion.Euler(0f, rover.transform.eulerAngles.y, 0f) * Vector3.forward;
+            Expect(Vector3.Dot(h1, camRight) > Vector3.Dot(h0, camRight),
+                "F0: D did not move the heading toward screen-right");
+
+            // Exiting cannot drift walking: W still leads to the camera, A/D still map to
+            // screen-left/right.
+            rover.Exit(player);
+            Expect(!rover.Occupied && player.Rover == null, "F0: exit() kept the seat");
+            Expect(ColonyPlayer.CameraRelativeDirection(new Vector2(0, 1), 0f).z > 0.9f,
+                "F0: W no longer maps to the camera forward after exiting the rover");
+            Expect(ColonyPlayer.CameraRelativeDirection(new Vector2(-1, 0), 0f).x < -0.9f,
+                "F0: A no longer maps to screen-left after exiting the rover");
+            Expect(ColonyPlayer.CameraRelativeDirection(new Vector2(1, 0), 0f).x > 0.9f,
+                "F0: D no longer maps to screen-right after exiting the rover");
+            Expect(ColonyPlayer.CameraRelativeDirection(new Vector2(0, -1), 0f).z < -0.9f,
+                "F0: S no longer maps to reverse after exiting the rover");
+            Expect(ColonyPlayer.CameraRelativeDirection(new Vector2(0, 1), 90f).x > 0.9f,
+                "F0: walking at yaw 90 degrees is not camera-relative");
+
+            // Back to the apron for anything that runs after this check.
+            rover.transform.position = new Vector3(-11f, 0.05f, -28f);
+            rover.transform.rotation = Quaternion.Euler(0f, 0.4f * Mathf.Rad2Deg, 0f);
+            rover.Settle();
         }
 
         /// <summary>A new mission puts the rover back with full power and no milestones.</summary>

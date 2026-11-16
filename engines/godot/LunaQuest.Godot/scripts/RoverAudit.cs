@@ -60,22 +60,27 @@ namespace LunaQuest.Godot
             Expect(rover.Rotation.Y > yaw, "A should steer left: the yaw went the other way");
             Expect(rover.Odometer > 2f, $"the odometer did not count ({rover.Odometer:F2} m)");
             Expect(rover.BatteryKwh < battery, "driving did not drain the battery");
-            Expect(rover.Spin > 1f, "the wheels did not spin");
+            Expect(Mathf.Abs(rover.Spin) > 1f, "the wheels did not spin");
             Expect(rover.GlobalPosition.Y > -2f, $"the rover sank through the ground (y {rover.GlobalPosition.Y:F2})");
             // BUG-5: the driver leans back against the seat (rotation.x = -0.32 rad, yaw PI).
             float lean = player.Visual.Rotation.X;
             Expect(lean < -0.2f && lean > -0.5f,
                 $"the driver is not leaning back (visual X {lean:F2} rad, expected -0.32)");
 
-            // Handbrake and a flat battery.
+            // Handbrake and a flat battery. The drive before this test leaves the rover within
+            // the garage recharge radius in the -Z (camera-aligned) build, so park it somewhere
+            // the garage cannot reach it — the test needs a genuinely flat pack.
             for (int i = 0; i < 120; i++) rover.Step(1f / 60f, 0f, 0f, false, true, player);
             Expect(Mathf.Abs(rover.Speed) < 0.05f, $"the handbrake left it rolling at {rover.Speed:F2} m/s");
+            rover.GlobalPosition = new Vector3(30f, 0.05f, -55f);
+            rover.Speed = 0f;
             rover.BatteryKwh = 0f;
             for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
             Expect(Mathf.Abs(rover.Speed) < 0.01f, $"a flat battery still drove ({rover.Speed:F2} m/s)");
 
             // The garage apron recharges a stopped rover; the ice site sets the milestone.
             rover.GlobalPosition = new Vector3(-16f, 0.05f, -40f);
+            rover.Speed = 0f;
             rover.BatteryKwh = 1f;
             for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 0f, 0f, false, false, player);
             Expect(rover.BatteryKwh > 1f, "the garage apron did not recharge the rover");
@@ -139,7 +144,87 @@ namespace LunaQuest.Godot
             Expect(!rover.ReachedIce && !rover.HasDriven && rover.Odometer < 0.001f,
                 "a new mission kept the old rover milestones");
 
+            CheckF0Controls(rover, player);
             return Report();
+        }
+
+        /// <summary>
+        /// F0 — the universal control contract, proven by driving, not by reasoning. W drives
+        /// toward the view, S reverses, A and D turn toward screen-left and screen-right (measured
+        /// against the camera basis), and walking keeps the same meaning after any driving episode.
+        /// </summary>
+        private void CheckF0Controls(RoverController rover, PlayerController player)
+        {
+            // Deterministic pose: the apron, the usual yaw, full charge.
+            rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+            rover.Rotation = new Vector3(0, 0.4f, 0);
+            rover.Speed = 0f;
+            rover.Steer = 0f;
+            rover.BatteryKwh = RoverController.BatteryKwhMax;
+            rover.Settle();
+            rover.Enter(player);
+            player.SyncCameraToRover();
+
+            var vehFwd = -rover.GlobalTransform.Basis.Z.Normalized();
+            var camFwd = -player.Camera.GlobalTransform.Basis.Z.Normalized();
+            Expect(vehFwd.Dot(camFwd) > 0.9f,
+                $"F0: the rover's forward is not aligned with the camera ({vehFwd.Dot(camFwd):F2})");
+
+            // W under throttle: displacement goes toward the view, not away from it.
+            var before = rover.GlobalPosition;
+            for (int i = 0; i < 120; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
+            var moved = rover.GlobalPosition - before;
+            Expect(moved.Dot(vehFwd) > 0.5f,
+                $"F0: W does not drive toward the view ({moved.Dot(vehFwd):F2} m)");
+
+            // S from rest: displacement away from the view.
+            rover.Speed = 0f;
+            before = rover.GlobalPosition;
+            for (int i = 0; i < 120; i++) rover.Step(1f / 60f, -1f, 0f, false, false, player);
+            moved = rover.GlobalPosition - before;
+            Expect(moved.Dot(vehFwd) < 0f,
+                $"F0: S does not reverse ({moved.Dot(vehFwd):F2} m)");
+
+            // Get rolling, then A turns toward the camera's screen-left, D toward screen-right.
+            rover.Speed = 0f;
+            for (int i = 0; i < 90; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
+            var camRight = player.Camera.GlobalTransform.Basis.X.Normalized();
+            var left = -camRight;
+            float yaw0 = rover.Rotation.Y;
+            for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, 1f, false, false, player);
+            float yaw1 = rover.Rotation.Y;
+            var h0 = new Basis(Vector3.Up, yaw0) * new Vector3(0, 0, -1);
+            var h1 = new Basis(Vector3.Up, yaw1) * new Vector3(0, 0, -1);
+            Expect(h1.Dot(left) > h0.Dot(left),
+                $"F0: A did not move the heading toward screen-left (delta {h1.Dot(left) - h0.Dot(left):F3})");
+            rover.Speed = 0f;
+            yaw0 = rover.Rotation.Y;
+            for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, -1f, false, false, player);
+            yaw1 = rover.Rotation.Y;
+            h0 = new Basis(Vector3.Up, yaw0) * new Vector3(0, 0, -1);
+            h1 = new Basis(Vector3.Up, yaw1) * new Vector3(0, 0, -1);
+            Expect(h1.Dot(camRight) > h0.Dot(camRight),
+                $"F0: D did not move the heading toward screen-right (delta {h1.Dot(camRight) - h0.Dot(camRight):F3})");
+
+            // Exiting cannot drift walking: W still leads to the camera, A/D still map to
+            // screen-left/right.
+            rover.Exit(player);
+            Expect(!rover.Occupied && player.Rover == null, "F0: exit() kept the seat");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, -1), 0f).Dot(new Vector3(0, 0, -1)) > 0.9f,
+                "F0: W no longer maps to the camera forward after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(-1, 0), 0f).Dot(new Vector3(-1, 0, 0)) > 0.9f,
+                "F0: A no longer maps to screen-left after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(1, 0), 0f).Dot(new Vector3(1, 0, 0)) > 0.9f,
+                "F0: D no longer maps to screen-right after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, 1), 0f).Dot(new Vector3(0, 0, 1)) > 0.9f,
+                "F0: S no longer maps to reverse after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, -1), Mathf.Pi / 2f).Dot(new Vector3(-1, 0, 0)) > 0.9f,
+                "F0: walking at yaw 90 degrees is not camera-relative");
+
+            // Back to the apron for anything that runs after this check.
+            rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+            rover.Rotation = new Vector3(0, 0.4f, 0);
+            rover.Settle();
         }
 
         /// <summary>

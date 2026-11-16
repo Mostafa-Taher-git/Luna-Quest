@@ -25,6 +25,13 @@ namespace LunaQuest.Godot
 
         public Node3D Visual = null!;
         public Camera3D Camera = null!;
+
+        /// <summary>F0 contract: W moves toward the way the camera looks. Static for regression tests.</summary>
+        public static Vector3 CameraRelativeDirection(Vector2 input, float yaw)
+        {
+            Vector3 wish = new Vector3(input.X, 0f, input.Y).Rotated(Vector3.Up, yaw);
+            return wish.LengthSquared() > 1f ? wish.Normalized() : wish;
+        }
         public bool ThirdPerson = true;
         public bool InputLocked = true;
 
@@ -123,7 +130,10 @@ namespace LunaQuest.Godot
 
             if (Rover != null)
             {
+                // F0: the chase camera follows the vehicle heading every frame so W drives
+                // toward the view.
                 Rover.Drive(dt, this);
+                SyncCameraToRover();
                 return;
             }
 
@@ -131,8 +141,7 @@ namespace LunaQuest.Godot
             else _jumpBuffer = Mathf.Max(0f, _jumpBuffer - dt);
 
             Vector2 input = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
-            Vector3 wish = new Vector3(input.X, 0, input.Y).Rotated(Vector3.Up, _yaw);
-            if (wish.LengthSquared() > 1f) wish = wish.Normalized();
+            Vector3 wish = CameraRelativeDirection(input, _yaw);
 
             bool sprinting = Input.IsActionPressed("sprint") && wish.LengthSquared() > 0.01f;
             float targetSpeed = sprinting ? RunSpeed : WalkSpeed;
@@ -337,6 +346,14 @@ namespace LunaQuest.Godot
         {
             _yaw = yaw;
             _pitch = Mathf.Clamp(pitch, -1.18f, 1.18f);
+            _arm.Rotation = new Vector3(_pitch, _yaw, 0);
+        }
+
+        /// <summary>F0 contract: the chase camera follows the vehicle heading every frame.</summary>
+        public void SyncCameraToRover()
+        {
+            if (Rover == null) return;
+            _yaw = Rover.Rotation.Y;
             _arm.Rotation = new Vector3(_pitch, _yaw, 0);
         }
     }

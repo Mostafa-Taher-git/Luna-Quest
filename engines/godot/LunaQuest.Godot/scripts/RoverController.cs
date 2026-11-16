@@ -42,7 +42,7 @@ namespace LunaQuest.Godot
         private Node3D _model = null!;
         private readonly List<(Node3D node, bool front)> _wheels = new();
         private readonly List<(Node3D node, bool front)> _steers = new();
-        private readonly Vector3 _seat = new Vector3(0f, 0.34f, -0.18f);
+        private readonly Vector3 _seat = new Vector3(0f, 0.34f, 0.18f);
 
         public override void _Ready()
         {
@@ -67,7 +67,14 @@ namespace LunaQuest.Godot
             if (ResourceLoader.Exists(path))
             {
                 var scene = GD.Load<PackedScene>(path);
-                if (scene != null) return scene.Instantiate<Node3D>();
+                if (scene != null)
+                {
+                    var instance = scene.Instantiate<Node3D>();
+                    // The kit GLB's nose is +Z (front wheels at z = +1.16); the rover's
+                    // forward is -Z (F0 control contract), so the visual nose is swung 180 degrees.
+                    instance.Rotation = new Vector3(0, Mathf.Pi, 0);
+                    return instance;
+                }
             }
             // Fallback for a fresh clone without the kit: a simple box LTV, never a new character.
             var holder = new Node3D();
@@ -171,7 +178,7 @@ namespace LunaQuest.Godot
             float yaw = Rotation.Y + (Speed / 2.3f) * Mathf.Tan(Steer) * dt;
             Rotation = new Vector3(0, yaw, 0);
 
-            Vector3 forward = GlobalTransform.Basis.Z.Normalized();
+            Vector3 forward = -GlobalTransform.Basis.Z.Normalized();
             Vector3 v = forward * Speed;
             v.Y = IsOnFloor() ? 0f : Velocity.Y - Gravity * dt;
             Velocity = v;
@@ -180,7 +187,7 @@ namespace LunaQuest.Godot
             _settledYaw = Rotation.Y;
             Odometer += Mathf.Abs(Speed) * dt;
 
-            Spin += (Speed / WheelRadius) * dt;
+            Spin -= (Speed / WheelRadius) * dt;
             foreach (var (node, front) in _wheels)
                 node.Rotation = new Vector3(Spin, front ? Steer : -Steer * 0.4f, 0);
             foreach (var (node, front) in _steers)

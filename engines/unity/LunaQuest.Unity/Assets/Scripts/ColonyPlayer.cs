@@ -67,6 +67,13 @@ namespace LunaQuest.Unity
         public bool NearIncident =>
             Game != null && Game.Sim.Incidents.Active.Exists(a => !a.Resolved && !a.Ignored);
 
+        /// <summary>F0 contract: W moves toward the way the camera looks. Static for regression tests.</summary>
+        public static Vector3 CameraRelativeDirection(Vector2 input, float yawDegrees)
+        {
+            Vector3 dir = Quaternion.Euler(0f, yawDegrees, 0f) * new Vector3(input.x, 0f, input.y);
+            return dir.sqrMagnitude > 1f ? dir.normalized : dir;
+        }
+
         public static ColonyPlayer Create(LunaQuestGame game)
         {
             var go = new GameObject("Commander");
@@ -163,25 +170,31 @@ namespace LunaQuest.Unity
             {
                 // Dialogue and menus do not stop time, so the wheel itself has to be gated:
                 // without this the rover keeps driving behind an open dialogue box.
-                if (Game.InputActive) Rover.Drive(dt, this);
+                if (Game.InputActive)
+                {
+                    // The chase camera follows the vehicle heading every frame so W drives
+                    // toward the view (F0 contract).
+                    SyncCameraToRover();
+                    Rover.Drive(dt, this);
+                }
                 return;
             }
 
-            Vector3 input = Vector3.zero;
+            Vector2 moveInput = Vector2.zero;
             bool sprinting = false;
             if (Game.InputActive)
             {
-                if (Input.GetKey(KeyCode.W)) input.z += 1f;
-                if (Input.GetKey(KeyCode.S)) input.z -= 1f;
-                if (Input.GetKey(KeyCode.D)) input.x += 1f;
-                if (Input.GetKey(KeyCode.A)) input.x -= 1f;
-                sprinting = Input.GetKey(KeyCode.LeftShift) && input.sqrMagnitude > 0.01f;
+                if (Input.GetKey(KeyCode.W)) moveInput.y += 1f;
+                if (Input.GetKey(KeyCode.S)) moveInput.y -= 1f;
+                if (Input.GetKey(KeyCode.D)) moveInput.x += 1f;
+                if (Input.GetKey(KeyCode.A)) moveInput.x -= 1f;
+                sprinting = Input.GetKey(KeyCode.LeftShift) && moveInput.sqrMagnitude > 0.01f;
                 if (Input.GetKeyDown(KeyCode.Space)) _jumpBuffer = JumpBufferSeconds;
             }
 
             if (_jumpBuffer > 0f) _jumpBuffer = Mathf.Max(0f, _jumpBuffer - dt);
 
-            Vector3 dir = Quaternion.Euler(0f, _yaw, 0f) * input.normalized;
+            Vector3 dir = CameraRelativeDirection(moveInput, _yaw);
             float speed = sprinting ? RunSpeed : WalkSpeed;
             Vector3 target = dir * speed;
 
@@ -283,6 +296,13 @@ namespace LunaQuest.Unity
         {
             _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.5f : 1.2f, 0f);
             Camera.transform.localPosition = new Vector3(0f, 0f, ThirdPerson ? -7.5f : -0.05f);
+        }
+
+        public void SyncCameraToRover()
+        {
+            if (Rover == null) return;
+            _yaw = Rover.transform.eulerAngles.y;
+            _pivot.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
         }
 
         public void RestoreWalkCamera()

@@ -44,6 +44,7 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_perimeter()
 	_check_ground_faces()
 	_check_rover(root, world, player, crew, sim)
+	_check_f0_controls(root, world, player)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -338,6 +339,92 @@ func _is_ground(collider: Object) -> bool:
 
 ## The T5 rover checklist, driven instead of described: enter, drive, steer, boost, brake, the
 ## battery rule, the garage charger, the ice-site milestone, exiting on the ground and putting the
+## F0 — the universal control contract, proven by driving, not by reasoning.
+##
+## W (or Up) drives the rover forward; S (or Down) reverses; A and D turn toward screen-left and
+## screen-right, always measured against the camera basis; and walking keeps the same meaning
+## after any driving episode.
+func _check_f0_controls(root: Node, world: ColonyWorld, player: ColonyPlayer) -> void:
+	var rover := root.get_node_or_null("CrewRover") as ColonyRover
+	expect(rover != null, "f0: the crew rover is not in the scene")
+	if rover == null:
+		return
+	# Deterministic pose: the apron, the usual yaw, full charge.
+	rover.global_position = Vector3(-11.0, 0.05, -28.0)
+	rover.rotation.y = 0.4
+	rover.speed = 0.0
+	rover.steer = 0.0
+	rover.battery_kwh = ColonyRover.BATTERY_KWH
+	rover.settle()
+	rover.enter(player)
+	# The audit entered the vehicle by hand earlier; point the commander at the same heading
+	# before any camera basis is read, so the checks measure the vehicle, not a stale angle.
+	player.rotation.y = rover.rotation.y
+
+	var veh_fwd := -rover.global_transform.basis.z
+	var cam_fwd := -player.camera.global_transform.basis.z
+	expect(veh_fwd.dot(cam_fwd) > 0.9,
+		"f0: the rover's forward is not aligned with the camera (%.2f)" % veh_fwd.dot(cam_fwd))
+
+	# W under throttle: displacement goes toward the view, not away from it.
+	var before := rover.global_position
+	for i in range(120):
+		rover._step(1.0 / 60.0, 1.0, 0.0, false, false)
+	var moved := rover.global_position - before
+	expect(moved.dot(veh_fwd) > 0.5,
+		"f0: W does not drive toward the view (%.2f m)" % moved.dot(veh_fwd))
+
+	# S from rest: displacement away from the view.
+	rover.speed = 0.0
+	before = rover.global_position
+	for i in range(120):
+		rover._step(1.0 / 60.0, -1.0, 0.0, false, false)
+	moved = rover.global_position - before
+	expect(moved.dot(veh_fwd) < 0.0,
+		"f0: S does not reverse (%.2f m)" % moved.dot(veh_fwd))
+
+	# Get rolling, then A turns toward the camera's screen-left, D toward screen-right.
+	rover.speed = 0.0
+	for i in range(90):
+		rover._step(1.0 / 60.0, 1.0, 0.0, false, false)
+	var cam_right := player.camera.global_transform.basis.x
+	var left := -cam_right
+	var yaw0 := rover.rotation.y
+	for i in range(60):
+		rover._step(1.0 / 60.0, 1.0, 1.0, false, false)
+	var h0 := Basis(Vector3.UP, yaw0) * Vector3(0, 0, -1)
+	var h1 := Basis(Vector3.UP, rover.rotation.y) * Vector3(0, 0, -1)
+	expect(h1.dot(left) > h0.dot(left),
+		"f0: A did not move the heading toward screen-left (delta %.2f)" % (h1.dot(left) - h0.dot(left)))
+	rover.speed = 0.0
+	yaw0 = rover.rotation.y
+	for i in range(60):
+		rover._step(1.0 / 60.0, 1.0, -1.0, false, false)
+	h0 = Basis(Vector3.UP, yaw0) * Vector3(0, 0, -1)
+	h1 = Basis(Vector3.UP, rover.rotation.y) * Vector3(0, 0, -1)
+	expect(h1.dot(cam_right) > h0.dot(cam_right),
+		"f0: D did not move the heading toward screen-right (delta %.2f)" % (h1.dot(cam_right) - h0.dot(cam_right)))
+
+	# Exiting cannot drift walking: W still leads to the camera, A/D still map to screen-left/right.
+	rover.exit(player)
+	expect(not player.rover, "f0: exit() left the rover glued to the commander")
+	expect(ColonyPlayer.move_direction(Vector2(0, -1), 0.0).dot(Vector3(0, 0, -1)) > 0.9,
+		"f0: W no longer maps to the camera forward after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(-1, 0), 0.0).dot(Vector3(-1, 0, 0)) > 0.9,
+		"f0: A no longer maps to screen-left after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(1, 0), 0.0).dot(Vector3(1, 0, 0)) > 0.9,
+		"f0: D no longer maps to screen-right after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(0, 1), 0.0).dot(Vector3(0, 0, 1)) > 0.9,
+		"f0: S no longer maps to reverse after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(0, -1), PI / 2.0).dot(Vector3(-1, 0, 0)) > 0.9,
+		"f0: walking at yaw 90 degrees is not camera-relative")
+
+	# Back to the apron for anything that runs after this check.
+	rover.global_position = Vector3(-11.0, 0.05, -28.0)
+	rover.rotation.y = 0.4
+	rover.settle()
+
+
 ## rover back with the mission restart (including the reset that BUG-4 was about).
 func _check_rover(root: Node, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew,
 		sim: LQSim) -> void:
@@ -382,7 +469,7 @@ func _check_rover(root: Node, world: ColonyWorld, player: ColonyPlayer, crew: Co
 	expect(rover.battery_kwh < drained, "rover: driving did not drain the battery")
 	expect(rover.odometer > 3.0, "rover: the odometer did not count (%.2f m)" % rover.odometer)
 	expect(rover.steer > 0.01 and not rover._steers.is_empty(), "rover: the front wheels did not steer")
-	expect(rover.spin > 1.0, "rover: the wheels did not spin")
+	expect(absf(rover.spin) > 1.0, "rover: the wheels did not spin (%.2f)" % rover.spin)
 
 	# Boost raises the cap, the handbrake stops it, reverse is slower than forward.
 	rover.speed = 0.0
