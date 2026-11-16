@@ -23,7 +23,7 @@ namespace LunaQuest.Godot
         private Label _dialogueSkills = null!, _dialogueResp = null!;
         private ProgressBar _missionBar = null!;
         private VBoxContainer _feed = null!, _journalList = null!, _plantsBox = null!, _dialogueTopics = null!;
-        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!, _pausePanel = null!, _dialoguePanel = null!;
+        private PanelContainer _promptPanel = null!, _startOverlay = null!, _journalPanel = null!, _helpPanel = null!, _plantsPanel = null!, _pausePanel = null!, _dialoguePanel = null!, _settingsPanel = null!;
         private VisorOverlay _visor = null!;
         private ColorRect _pauseDim = null!;
         private LineEdit _nameEdit = null!;
@@ -178,6 +178,7 @@ namespace LunaQuest.Godot
             BuildOverlays();
             BuildDialogue();
             BuildPause();
+            BuildSettings();
             BuildStart();
         }
 
@@ -718,6 +719,10 @@ namespace LunaQuest.Godot
             body.Modulate = new Color(0.65f, 0.78f, 0.9f);
             col.AddChild(body);
 
+            var settingsBtn = new Button { Text = "Settings · الإعدادات", CustomMinimumSize = new Vector2(0, 40) };
+            settingsBtn.Pressed += OpenSettings;
+            col.AddChild(settingsBtn);
+
             _resume = new Button { Text = "Resume", CustomMinimumSize = new Vector2(0, 42) };
             _resume.Pressed += () => _main.ResumeGame();
             col.AddChild(_resume);
@@ -726,6 +731,103 @@ namespace LunaQuest.Godot
             hint.AddThemeFontSizeOverride("font_size", 12);
             hint.Modulate = new Color(0.5f, 0.65f, 0.8f);
             col.AddChild(hint);
+        }
+
+        /// <summary>The settings panel: every choice applies live and persists to
+        /// user://settings.json (never the shared save). Rows are plain buttons so the panel is
+        /// both keyboard- and mouse-navigable, and bilingual by construction.</summary>
+        private VBoxContainer? _settingsBody;
+
+        private void BuildSettings()
+        {
+            _settingsPanel = Panel(new Color(0.01f, 0.02f, 0.035f, 0.97f), new Color(0.35f, 0.75f, 0.95f, 0.65f));
+            _settingsPanel.AnchorLeft = 0.22f;
+            _settingsPanel.AnchorRight = 0.78f;
+            _settingsPanel.AnchorTop = 0.08f;
+            _settingsPanel.AnchorBottom = 0.92f;
+            _settingsPanel.Visible = false;
+            _root.AddChild(_settingsPanel);
+
+            var m = new MarginContainer();
+            foreach (var k in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+                m.AddThemeConstantOverride(k, 18);
+            _settingsPanel.AddChild(m);
+
+            var scroll = new ScrollContainer { FollowFocus = true };
+            m.AddChild(scroll);
+
+            _settingsBody = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            _settingsBody.AddThemeConstantOverride("separation", 8);
+            scroll.AddChild(_settingsBody);
+        }
+
+        public void OpenSettings()
+        {
+            if (_settingsPanel == null || _settingsBody == null || _main == null) return;
+            foreach (Node child in _settingsBody.GetChildren()) child.QueueFree();
+            RebuildSettingsRows();
+            var done = new Button { Text = "Done · تم", CustomMinimumSize = new Vector2(0, 40) };
+            done.Pressed += () => _settingsPanel.Visible = false;
+            _settingsBody.AddChild(done);
+            _settingsPanel.Visible = true;
+        }
+
+        private void RebuildSettingsRows()
+        {
+            var s = _main!.LiveSettings;
+            var col = _settingsBody!;
+            var title = Txt(new Label { HorizontalAlignment = HorizontalAlignment.Center }, "Settings", "الإعدادات");
+            title.AddThemeFontSizeOverride("font_size", 24);
+            title.Modulate = new Color(0.92f, 0.96f, 1f);
+            col.AddChild(title);
+
+            CycleRow(col, "Camera · الكاميرا", new[] { "First person · منظور الخوذة", "Third person · كاميرا البدلة" },
+                () => s.ThirdPerson ? 1 : 0,
+                i => { s.ThirdPerson = i == 1; });
+            CycleRow(col, "Language · اللغة", new[] { "English", "العربية" },
+                () => s.Language == "ar" ? 1 : 0,
+                i => { s.Language = i == 1 ? "ar" : "en"; });
+            CycleRow(col, "Sensitivity · حساسية الماوس", new[] { "×0.5", "×1.0", "×1.5", "×2.0" },
+                () => s.MouseSensitivity <= 0.75f ? 0 : s.MouseSensitivity <= 1.25f ? 1 : s.MouseSensitivity <= 1.75f ? 2 : 3,
+                i => { s.MouseSensitivity = new[] { 0.5f, 1.0f, 1.5f, 2.0f }[i]; });
+            CycleRow(col, "Field of view · مجال الرؤية", new[] { "62°", "70°", "78°" },
+                () => s.Fov <= 66f ? 0 : s.Fov <= 74f ? 1 : 2,
+                i => { s.Fov = new[] { 62f, 70f, 78f }[i]; });
+            CycleRow(col, "Master volume · مستوى الصوت", new[] { "Off", "Low", "Medium", "High" },
+                () => s.MasterVolume <= 0.01f ? 0 : s.MasterVolume <= 0.6f ? 1 : s.MasterVolume <= 0.9f ? 2 : 3,
+                i => { s.MasterVolume = new[] { 0.0f, 0.4f, 0.8f, 1.0f }[i]; });
+            CycleRow(col, "Voice · الصوت المنطوق", new[] { "Off", "On" },
+                () => s.Voice ? 1 : 0,
+                i => { s.Voice = i == 1; });
+            CycleRow(col, "Subtitles · الترجمة", new[] { "Off", "On" },
+                () => s.Subtitles ? 1 : 0,
+                i => { s.Subtitles = i == 1; });
+            CycleRow(col, "Quality · الجودة", new[] { "Low · منخفضة", "Medium · متوسطة", "High · عالية" },
+                () => s.Quality == "low" ? 0 : s.Quality == "medium" ? 1 : 2,
+                i => { s.Quality = new[] { "low", "medium", "high" }[i]; });
+            CycleRow(col, "Fullscreen · ملء الشاشة", new[] { "Off", "On" },
+                () => s.Fullscreen ? 1 : 0,
+                i => { s.Fullscreen = i == 1; });
+        }
+
+        private void CycleRow(VBoxContainer col, string combined, string[] options,
+            System.Func<int> current, System.Action<int> apply)
+        {
+            var row = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+            row.AddThemeConstantOverride("separation", 16);
+            var label = Txt(new Label { CustomMinimumSize = new Vector2(280, 0) }, combined, combined);
+            row.AddChild(label);
+            var btn = new Button { CustomMinimumSize = new Vector2(230, 34) };
+            btn.Text = options[Mathf.Clamp(current(), 0, options.Length - 1)];
+            row.AddChild(btn);
+            btn.Pressed += () =>
+            {
+                int next = (current() + 1) % options.Length;
+                apply(next);
+                _main!.ApplySettings(_main.LiveSettings);
+                btn.Text = options[next];
+            };
+            col.AddChild(row);
         }
 
         private void BuildStart()
@@ -786,6 +888,10 @@ namespace LunaQuest.Godot
             var ar = new Button { Text = "العربية", CustomMinimumSize = new Vector2(120, 36) };
             ar.Pressed += () => SetLanguage(true);
             row.AddChild(ar);
+
+            var settingsBtn = new Button { Text = "Settings · الإعدادات", CustomMinimumSize = new Vector2(240, 36) };
+            settingsBtn.Pressed += OpenSettings;
+            col.AddChild(settingsBtn);
 
             _begin = new Button { Text = "Begin the mission", CustomMinimumSize = new Vector2(240, 42) };
             _begin.Pressed += Begin;

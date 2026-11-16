@@ -10,14 +10,17 @@ const JUMP_VELOCITY := 3.4
 const GRAVITY := 1.62
 const MOUSE_SENSITIVITY := 0.0022
 const EYE_HEIGHT := 1.66
+const THIRD_PERSON_OFFSET := Vector3(0.42, 0.18, 2.9)
 
 var camera: Camera3D
 var ray: RayCast3D
 var astronaut: Node3D
 var third_person := false
 var can_move := true
+var mouse_sensitivity := MOUSE_SENSITIVITY
 var bob_time := 0.0
 var _pitch := 0.0
+var _arm_position := Vector3.ZERO
 var _head: Node3D
 var _current_target: Dictionary = {}
 var rover: ColonyRover = null # set while driving the crew rover
@@ -68,7 +71,35 @@ func set_third_person(on: bool) -> void:
 	third_person = on
 	if astronaut != null:
 		astronaut.visible = on
-	camera.position = Vector3(0, 0, 2.9) if on else Vector3.ZERO
+
+## Settings: the saved mouse sensitivity multiplies the default turn rate and the saved
+## field-of-view overrides the default lens.
+func apply_camera_settings(sensitivity: float, fov: float) -> void:
+	mouse_sensitivity = MOUSE_SENSITIVITY * clampf(sensitivity, 0.1, 4.0)
+	camera.fov = clampf(fov, 30.0, 110.0)
+
+## The over-the-shoulder boom: the camera pulls back to THIRD_PERSON_OFFSET, but a ray from the
+## eyes bounces it forward if a wall or rock is in the way (SpringArm3D-style). The commander
+## is never clipped inside geometry, and the suit never swallows the camera.
+func update_camera_arm(delta: float) -> void:
+	if not third_person:
+		camera.position = Vector3.ZERO
+		return
+	var from := _head.global_position
+	var desired_world := _head.global_transform * THIRD_PERSON_OFFSET
+	var space := get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(from, desired_world)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	query.exclude = [get_rid()]
+	var hit := space.intersect_ray(query)
+	var desired := THIRD_PERSON_OFFSET
+	if not hit.is_empty():
+		var hit_dist := from.distance_to(hit.position)
+		var full := THIRD_PERSON_OFFSET.length()
+		var scale_len := clampf((hit_dist - 0.15) / full, 0.3, 1.0)
+		desired = THIRD_PERSON_OFFSET * scale_len
+	camera.position = camera.position.lerp(desired, minf(delta * 10.0, 1.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -76,12 +107,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	var locked := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 	var dragging: bool = event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0
 	if event is InputEventMouseMotion and (locked or dragging) and can_move:
-		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
-		_pitch = clampf(_pitch - event.relative.y * MOUSE_SENSITIVITY, -1.2, 1.0)
+		rotate_y(-event.relative.x * mouse_sensitivity)
+		_pitch = clampf(_pitch - event.relative.y * mouse_sensitivity, -1.2, 1.0)
 		_head.rotation.x = _pitch
 
 
 func _physics_process(delta: float) -> void:
+	update_camera_arm(delta)
 	if not can_move:
 		return
 

@@ -33,6 +33,11 @@ namespace LunaQuest.Godot
             return wish.LengthSquared() > 1f ? wish.Normalized() : wish;
         }
         public bool ThirdPerson = true;
+
+        /// <summary>Settings-controlled turn rate multiplier (default 1.0).</summary>
+        public float MouseSensitivity = 1.0f;
+        /// <summary>Settings-controlled field of view (default 70).</summary>
+        public float BaseFov = 70f;
         public bool InputLocked = true;
 
         private SpringArm3D _arm = null!;
@@ -103,8 +108,8 @@ namespace LunaQuest.Godot
             if (InputLocked) return;
             if (e is InputEventMouseMotion mm && Input.MouseMode == Input.MouseModeEnum.Captured)
             {
-                _yaw -= mm.Relative.X * 0.0028f;
-                _pitch = Mathf.Clamp(_pitch - mm.Relative.Y * 0.0022f, -1.18f, 1.18f);
+                _yaw -= mm.Relative.X * 0.0028f * MouseSensitivity;
+                _pitch = Mathf.Clamp(_pitch - mm.Relative.Y * 0.0022f * MouseSensitivity, -1.18f, 1.18f);
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             if (e.IsActionPressed("toggle_view")) ToggleView();
@@ -230,7 +235,7 @@ namespace LunaQuest.Godot
 
         private void UpdateFov(float dt, bool sprinting)
         {
-            float target = ThirdPerson ? 70f : 78f;
+            float target = BaseFov + (ThirdPerson ? 0f : 8f);
             if (sprinting) target += 4f;
             Camera.Fov = Mathf.Lerp(Camera.Fov, target, 1f - Mathf.Exp(-8f * dt));
         }
@@ -305,14 +310,14 @@ namespace LunaQuest.Godot
             {
                 _arm.SpringLength = 3.9f;
                 _arm.Position = new Vector3(0, 1.45f, 0);
-                Camera.Fov = 70;
+                Camera.Fov = BaseFov;
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             else
             {
                 _arm.SpringLength = 0.05f;
                 _arm.Position = new Vector3(0, 1.58f, 0);
-                Camera.Fov = 78;
+                Camera.Fov = BaseFov + 8f;
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             if (Rover != null) ConfigureDriveCamera();

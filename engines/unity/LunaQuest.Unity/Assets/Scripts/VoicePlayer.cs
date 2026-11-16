@@ -93,6 +93,7 @@ namespace LunaQuest.Unity
 
         public void SpeakFile(string file, string subtitle, float seconds = 5f)
         {
+            if (!Enabled) return;
             var clip = Clip(file);
             if (clip != null && _source != null)
             {

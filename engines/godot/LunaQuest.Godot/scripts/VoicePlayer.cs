@@ -33,6 +33,9 @@ namespace LunaQuest.Godot
             ["npc_mostafa"] = "mostafa",
         };
 
+        /// <summary>Spoken lines can be silenced from the settings panel; subtitles still run.</summary>
+        public bool Enabled = true;
+
         public void Bind(Hud hud) => _hud = hud;
 
         public bool IsPlaying => _voice != null && _voice.Playing;
@@ -60,6 +63,7 @@ namespace LunaQuest.Godot
 
         public void Speak(NpcProfile profile, bool greeting)
         {
+            if (!Enabled) return;
             // A greeting is a direct answer to the player and always plays. Ambient barks
             // keep their cooldown so the colony does not chatter over itself.
             if (_barkCooldown > 0 && !greeting) return;
@@ -79,6 +83,7 @@ namespace LunaQuest.Godot
 
         public void SpeakEvent(SimEvent e, bool arabic)
         {
+            if (!Enabled) return;
             string key = $"inc.{e.Id}";
             if (!_file.TryGetValue(key, out string? file)) return;
             string text = arabic
@@ -93,6 +98,7 @@ namespace LunaQuest.Godot
         /// </summary>
         public void SpeakTopic(DialogueTopic topic)
         {
+            if (!Enabled) return;
             string text = L.Arabic ? topic.LineAr : topic.LineEn;
             if (_file.TryGetValue(topic.VoiceKey, out string? file))
                 SpeakFile(file, text, 7.0);
@@ -138,6 +144,7 @@ namespace LunaQuest.Godot
 
         public void SpeakFile(string file, string subtitle, double seconds = 5.0)
         {
+            if (!Enabled) return;
             var path = $"res://assets/voice/{file}";
             if (ResourceLoader.Exists(path))
             {
