@@ -55,11 +55,11 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
 | Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
-| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Web, Windows and Linux** |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Windows and Linux** |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
-| Browser edition (Three.js) | **Retired (2026-11).** Kept in-tree only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
-| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
+| Browser edition (Three.js) | **Retired (2026-11).** Kept under `archive/` only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
+| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Windows/Linux exports), `release.yml` (Godot .NET and GDScript Windows/Linux zips, the GDScript `.deb` and raw Linux binary, `SHA256SUMS` over every attached file, intro film) on every tag - no browser artifact of any kind (H1/A1) |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -102,8 +102,8 @@ Requirements: **Godot 4.7.2 .NET** and a .NET SDK that supports `netstandard2.1`
 ### GDScript (stock Godot - no .NET anywhere)
 
 A third project, `engines/godot-gdscript/LunaQuest.GDScript`, is the same game written in plain
-GDScript. It needs nothing but a standard Godot 4.7.2 editor, and - unlike the .NET project - it
-exports to the web, which is what CI ships as `LunaQuest-GDScript-Web.zip`.
+GDScript. It needs nothing but a standard Godot 4.7.2 editor; CI exports it for Windows and
+Linux, and the release attaches those archives with the `.deb` package and `SHA256SUMS`.
 
 ```bash
 # one-time: copy the shared astronaut, kit models, intro film and voice pack in
@@ -364,7 +364,7 @@ Luna-Quest-Game/
 +-- docs/                    design docs, research, screenshots, licenses
 +-- engines/
 |   +-- godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
-|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
+|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, no .NET)
 |   +-- unity/LunaQuest.Unity/
 +-- shared/
 |   +-- LunaQuest.Core/      simulation, content loader, save contract

@@ -691,7 +691,7 @@ func _build_start_screen() -> void:
 	load_button.pressed.connect(func(): resume_requested.emit())
 	column.add_child(load_button)
 
-	var note := _label("Pure GDScript build · Web, Windows and Linux exports · "
+	var note := _label("Pure GDScript build · Windows and Linux exports · "
 		+ "the same content and save file as the Godot .NET and Unity projects", 13, DIM)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

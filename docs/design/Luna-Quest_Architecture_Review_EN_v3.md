@@ -4,7 +4,9 @@
 **Godot .NET**, **Godot GDScript** and **Unity**. The browser edition is retired and
 now lives at `archive/web/`, which carries the locked poster
 `archive/web/static/intro-poster.jpg` (`docs/design/asset-lock.json`) and the
-historical tests. No new feature work lands there.
+historical tests. No new feature work lands there. From v3.4 there is no browser
+build anywhere: the GDScript `Web` export preset is deleted and no workflow exports,
+publishes or attaches a web artifact (H1/A1).
 
 This review records what was found, what was changed, and the rules that keep the three
 engines honest. It supersedes the "dual engine" framing of v2.2.
@@ -33,7 +35,7 @@ heightfield, **one** simulation and **one** content set exist.
 | 3 | **Unity ground was a flat 1600 m plane.** `ColonyWorld.BuildGround` never used the mirrored `Core/LunarTerrain.cs`; Unity had no craters, no relief, and a different horizon from Godot. | High | Fixed: Unity generates its ground mesh + MeshCollider from the shared `LunarTerrain`. |
 | 4 | **Nothing enforced the Unity core mirror.** `tools/sync-content.sh` copies `shared/LunaQuest.Core` into Unity, but CI never checked drift — a hand edit in Unity would silently fork the simulation. | High | Fixed: `tools/check-engine-parity.py` fails CI on any byte difference (core mirror, content JSON in all four homes). |
 | 5 | **The immutable-asset guard was not run in CI.** `tools/check-immutable-assets.sh` exists but no workflow invoked it. | Medium | **Done:** the `parity` job in `ci.yml` runs the parity script and the guard on every push. |
-| 6 | **CI and Pages still built/deployed the retired browser edition.** | Medium | **Done:** `pages.yml` deleted, the CI `web` job deleted, and the release workflow no longer builds or publishes `web/`. |
+| 6 | **CI and Pages still built/deployed the retired browser edition.** | Medium | **Done:** `pages.yml` deleted and the CI `web` job deleted; as of v3.4 the release and GDScript workflows build no web artifact at all — the GDScript `Web` export preset was deleted with them (H1/A1). |
 | 7 | **The crew rover was driveable in GDScript only.** Feature parity across the three engines was broken. | Medium | Fixed: `RoverController.cs` (Godot .NET) and `CrewRover.cs` (Unity) mirror the GDScript vehicle: same kit mesh where the engine can load GLB, same lunar physics constants, same battery/garage/ice-site rules, same save keys. |
 | 8 | Unity cannot import `.glb` without a glTF package (none is in `Packages/manifest.json`), so the 54 kit GLBs sit unused there. | Low | Documented. The Unity rover uses the procedural LTV fallback (the same fallback GDScript uses when the kit is absent). Adding `com.unity.cloud.gltfast` is the optional next step; it is an editor-side decision, not an architecture blocker. |
 
@@ -59,6 +61,9 @@ heightfield, **one** simulation and **one** content set exist.
    (`asset-lock.json`); CI now enforces that on every push.
 5. **Three engines, one feature set.** A gameplay feature is "done" when Godot .NET,
    GDScript and Unity all have it, with the same constants and the same save keys.
+6. **No browser build.** Three engines, desktop artifacts only: the GDScript `Web`
+   export preset stays deleted, no workflow grows a web step, and nothing under
+   `archive/web/` is executed by CI or the release (H1/A1).
 
 ## Save compatibility
 

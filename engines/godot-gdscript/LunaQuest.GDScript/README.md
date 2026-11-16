@@ -4,9 +4,10 @@ The same game as the Godot .NET and Unity projects, written in plain GDScript an
 stock Godot 4.7.2 editor. No .NET SDK, no Mono, no C# toolchain, no compilation step: open the
 folder, press **F5**, and you are standing on the Shackleton rim with a colony to keep alive.
 
-It exists for two reasons. The .NET build cannot be exported to the web — Godot's web export has
-no .NET support — so this edition is what CI ships as `LunaQuest-GDScript-Web.zip`. And opening the
-game to change one number should not require installing a compiler.
+Since v3.4 it is one of the three shipped engines and the only one needing no toolchain
+beyond the Godot editor itself: CI exports it as `LunaQuest-GDScript-*` and the release
+attaches those archives, the `.deb` package and `SHA256SUMS`. There is no browser build
+of any kind (H1/A1).
 
 ```
 engines/godot-gdscript/LunaQuest.GDScript
@@ -97,4 +98,5 @@ from where a player stands, the spawn point clear and floored, no crew member in
 the traverse markers closed on twelve headings.
 
 Both run in `.github/workflows/godot-gdscript.yml` before anything is exported, and the same
-workflow exports Web, Windows and Linux. `release.yml` attaches all three to the GitHub Release.
+workflow exports Windows and Linux. `release.yml` attaches those two archives to the GitHub
+Release together with the `.deb` package, the raw Linux binary and `SHA256SUMS`.

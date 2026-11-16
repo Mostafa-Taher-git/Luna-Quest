@@ -6,9 +6,14 @@ name: Release
 # Outputs, all attached to one GitHub Release:
 #   · LunaQuest-v<tag>-Windows.zip — Godot .NET export for Windows
 #   · LunaQuest-v<tag>-Linux.zip   — Godot .NET export for Linux
-#   · LunaQuest-GDScript-Web.zip   — the pure-GDScript web export (stock Godot, no .NET)
 #   · LunaQuest-GDScript-Windows.zip / -Linux.zip — the GDScript desktop exports
+#   · LunaQuest-GDScript-Linux-amd64.deb — Debian/Ubuntu package of the GDScript build
+#   · LunaQuest-GDScript-Linux-x86_64 — the raw Linux binary the .deb wraps
+#   · SHA256SUMS — the SHA-256 of every file attached to the release
 #   · the intro film as a shareable MP4
+#
+# There is no browser build of any kind (H1/A1): v3.4 ships three engines and desktop
+# artifacts only.
 #
 # The engine jobs are allowed to fail without sinking the release (continue-on-error): if the
 # Godot toolchain moves or the version needs bumping, only that job goes red and the release
@@ -29,7 +34,6 @@ permissions:
 
 env:
   GODOT_VERSION: '4.7.2'
-  NODE_VERSION: '22'
   DOTNET_VERSION: '8.0.x'
 
 jobs:
@@ -92,7 +96,7 @@ jobs:
           if-no-files-found: warn
 
   gdscript:
-    name: GDScript exports (web, Windows, Linux)
+    name: GDScript exports (Windows, Linux)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -114,16 +118,9 @@ jobs:
       - name: Import the project
         run: |
           set -euo pipefail
-          mkdir -p engines/godot-gdscript/LunaQuest.GDScript/build/web \
-                   engines/godot-gdscript/LunaQuest.GDScript/build/linux \
+          mkdir -p engines/godot-gdscript/LunaQuest.GDScript/build/linux \
                    engines/godot-gdscript/LunaQuest.GDScript/build/windows
           ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript --import || true
-      - name: Export the browser build (the one the .NET project cannot make)
-        run: |
-          set -euo pipefail
-          ./godot --headless --path engines/godot-gdscript/LunaQuest.GDScript \
-            --export-release "Web" build/web/index.html
-          test -f engines/godot-gdscript/LunaQuest.GDScript/build/web/index.wasm
       - name: Export both desktop builds
         run: |
           set -euo pipefail
@@ -137,14 +134,22 @@ jobs:
           set -euo pipefail
           mkdir -p out
           base="engines/godot-gdscript/LunaQuest.GDScript/build"
-          ( cd "$base/web" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Web.zip" . )
           ( cd "$base/linux" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Linux.zip" . )
           ( cd "$base/windows" && zip -qr "$GITHUB_WORKSPACE/out/LunaQuest-GDScript-Windows.zip" . )
+          # The raw Linux binary plus the Debian package built from it (A7): a release can
+          # be installed with dpkg or run directly, and both are checksummed below.
+          tag="${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
+          cp "$base/linux/luna-quest-gdscript.x86_64" out/LunaQuest-GDScript-Linux-x86_64
+          bash tools/package-desktop.sh "$base/linux/luna-quest-gdscript.x86_64" "${tag#v}" \
+            out/LunaQuest-GDScript-Linux-amd64.deb
           ls -lh out
       - uses: actions/upload-artifact@v4
         with:
           name: gdscript-builds
-          path: out/*.zip
+          path: |
+            out/*.zip
+            out/LunaQuest-GDScript-Linux-amd64.deb
+            out/LunaQuest-GDScript-Linux-x86_64
           if-no-files-found: warn
 
   publish:
@@ -160,6 +165,26 @@ jobs:
           path: artifacts
       - name: Show what arrived
         run: find artifacts -type f -printf '%p  %s bytes\n' | sort
+      - name: Checksum every artifact
+        # SHA256SUMS covers everything the release will attach, named the way the release
+        # page shows it (flat basenames), so a download can be verified with sha256sum -c.
+        run: |
+          set -euo pipefail
+          cd artifacts
+          : > SHA256SUMS
+          find . -mindepth 2 -maxdepth 2 -type f | sort | while IFS= read -r f; do
+            dir=$(dirname "$f")
+            base=$(basename "$f")
+            ( cd "$dir" && sha256sum "$base" ) >> SHA256SUMS
+          done
+          cat SHA256SUMS
+          # Nothing may be attached without a checksum line.
+          missing=0
+          while IFS= read -r f; do
+            base=$(basename "$f")
+            grep -q "  ${base}\$" SHA256SUMS || { echo "no checksum for $base"; missing=1; }
+          done < <(find . -mindepth 2 -maxdepth 2 -type f)
+          exit $missing
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
@@ -174,8 +199,11 @@ jobs:
             or `./LunaQuest.x86_64` on Linux.
 
             The `LunaQuest-GDScript-*` archives are the same game built from the pure-GDScript
-            project with stock Godot 4.7.2 — no .NET runtime needed anywhere. The GDScript web
-            zip is a self-contained site: unzip it behind any static server and play.
+            project with stock Godot 4.7.2 — no .NET runtime needed anywhere. On Debian or
+            Ubuntu install it with `sudo dpkg -i LunaQuest-GDScript-Linux-amd64.deb`, or run
+            `LunaQuest-GDScript-Linux-x86_64` directly (it needs `chmod +x` first).
+
+            `SHA256SUMS` lists the SHA-256 of every other file attached to this release.
 
             The intro film is the original render of the game world and is included unchanged.
 
@@ -184,4 +212,7 @@ jobs:
           files: |
             artifacts/godot-builds/*.zip
             artifacts/gdscript-builds/*.zip
+            artifacts/gdscript-builds/*.deb
+            artifacts/gdscript-builds/*.x86_64
             artifacts/intro-film/*.mp4
+            artifacts/SHA256SUMS

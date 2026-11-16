@@ -33,12 +33,6 @@ var _subtitle_until := 0
 func _ready() -> void:
 	randomize()
 
-	# The browser build gets the same scene at 4× MSAA? No: software GPUs and integrated laptop
-	# chips both feel that, so the web export renders without it and lets the picture carry itself.
-	if OS.has_feature("web"):
-		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
-		Engine.max_fps = 60
-
 	# `godot --headless --path . -- --selftest` flies the whole mission and exits non-zero on any
 	# broken rule. CI runs it before every build, and so can anyone with Godot.
 	if OS.get_cmdline_user_args().has("--selftest"):
