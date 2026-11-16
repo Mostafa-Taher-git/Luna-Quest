@@ -17,6 +17,7 @@ var interactables: Array = []
 var building_nodes: Dictionary = {}
 var sun: DirectionalLight3D
 var earth_mat: ShaderMaterial = null
+var star_mat: StandardMaterial3D = null
 var terrain := LQTerrain.new(1337)
 
 
@@ -94,7 +95,7 @@ func _make_materials() -> void:
 func _make_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.008, 0.010, 0.016)
+	env.background_color = Color(0.0, 0.0, 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.24, 0.27, 0.34)
 	env.ambient_light_energy = 0.55
@@ -127,6 +128,10 @@ func point_sun(clock: LQClock) -> void:
 	# The Earth is lit from the same sun as the colony: the phase and terminator stay in step.
 	if earth_mat != null:
 		earth_mat.set_shader_parameter("sun_dir", dir)
+	# The horizon sun washes the stars out.
+	if star_mat != null:
+		star_mat.albedo_color = Color(1, 1, 1,
+			clampf(1.15 - (0.5 + sin(deg_to_rad(clock.sun_elevation_deg())) * 0.6) * 0.9, 0.18, 1.0))
 
 
 func height_at(x: float, z: float) -> float:
@@ -243,21 +248,53 @@ func _regolith_material() -> StandardMaterial3D:
 
 
 func _make_sky() -> void:
-	# Stars: one mesh, one material, no nodes per star.
+	# Stars are points of light, not squares the size of the Moon. Magnitude distribution:
+	# many faint points, few bright ones, colour spread, no twinkle. A faint Milky Way band
+	# is drawn from a rotated great circle of haze points.
 	var verts := PackedVector3Array()
 	var colors := PackedColorArray()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4242
-	for i in range(700):
-		var dir := Vector3(rng.randfn(), absf(rng.randfn()) * 0.9 + 0.02, rng.randfn()).normalized()
+	var band_normal := Vector3(0.42, 0.9, 0.25).normalized()
+	var bin1 := band_normal.cross(Vector3.RIGHT)
+	if bin1.length_squared() < 1e-4:
+		bin1 = band_normal.cross(Vector3.FORWARD)
+	bin1 = bin1.normalized()
+	var bin2 := band_normal.cross(bin1)
+	for i in range(2200):
+		var is_band := i >= 1700
+		var dir: Vector3
+		var size: float
+		var color: Color
+		if is_band:
+			var t := rng.randf() * TAU
+			var spread := (rng.randf() + rng.randf() + rng.randf() - 1.5) * 0.34
+			dir = (bin1 * cos(t) + bin2 * sin(t) + band_normal * spread).normalized()
+			if dir.y < 0.03:
+				dir.y = 0.03
+				dir = dir.normalized()
+			size = 0.15 + pow(rng.randf(), 3.0) * 0.15
+			var b := 0.16 + rng.randf() * 0.18
+			color = Color(b * 0.75, b * 0.82, b)
+		else:
+			var az := rng.randf() * TAU
+			var el := asin(0.02 + rng.randf() * 0.95)
+			dir = Vector3(cos(el) * cos(az), sin(el), cos(el) * sin(az))
+			var m := pow(rng.randf(), 2.6)
+			size = 0.14 + m * 0.46
+			var b2 := 0.35 + pow(rng.randf(), 2.2) * 0.75
+			var w := rng.randf()
+			if w < 0.78:
+				color = Color(b2, b2, b2)
+			elif w < 0.89:
+				color = Color(b2, b2 * 0.82, b2 * 0.65)
+			else:
+				color = Color(b2 * 0.78, b2 * 0.88, b2)
 		var distance := 1500.0
 		var center: Vector3 = dir * distance
 		var up := Vector3.UP if absf(dir.y) < 0.9 else Vector3.RIGHT
 		var right: Vector3 = dir.cross(up).normalized()
 		var up2: Vector3 = right.cross(dir).normalized()
-		var size := rng.randf_range(2.0, 6.5)
-		var brightness := rng.randf_range(0.45, 1.0)
-		var color := Color(brightness, brightness, brightness * rng.randf_range(0.95, 1.05))
 		var p0 := center + right * size + up2 * size
 		var p1 := center - right * size + up2 * size
 		var p2 := center - right * size - up2 * size
@@ -272,10 +309,11 @@ func _make_sky() -> void:
 	arrays[Mesh.ARRAY_COLOR] = colors
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var star_mat := StandardMaterial3D.new()
+	star_mat = StandardMaterial3D.new()
 	star_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	star_mat.vertex_color_use_as_albedo = true
 	star_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	star_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	var stars := MeshInstance3D.new()
 	stars.name = "Stars"
 	stars.mesh = mesh

@@ -25,6 +25,7 @@ namespace LunaQuest.Godot
         private DirectionalLight3D _sun = null!;
         private MeshInstance3D _sunDisc = null!;
         private MeshInstance3D _earth = null!;
+        private StandardMaterial3D? _starMat;
         private StandardMaterial3D _panelMat = null!;
         private Label3D _greenhouseLive = null!;
         private Label3D _habitatLive = null!;
@@ -69,7 +70,7 @@ namespace LunaQuest.Godot
             var env = new global::Godot.Environment
             {
                 BackgroundMode = global::Godot.Environment.BGMode.Color,
-                BackgroundColor = new Color(0.006f, 0.008f, 0.016f),
+                BackgroundColor = new Color(0f, 0f, 0f),
                 // There is no atmosphere on the Moon, so there is no sky bounce: the only
                 // ambient light is earthshine, and it is weak. The old flat 0.82 energy filled
                 // every shadow and made the whole colony read as one washed-out white box.
@@ -135,7 +136,7 @@ namespace LunaQuest.Godot
             _sunDisc = new MeshInstance3D
             {
                 Name = "SunDisc",
-                Mesh = new QuadMesh { Size = new Vector2(70f, 70f) },
+                Mesh = new QuadMesh { Size = new Vector2(9f, 9f) },
                 MaterialOverride = sunMat,
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             };
@@ -334,36 +335,68 @@ namespace LunaQuest.Godot
             {
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
                 UseColors = true,
-                Mesh = new QuadMesh { Size = new Vector2(1.1f, 1.1f) },
+                Mesh = new QuadMesh { Size = new Vector2(0.30f, 0.30f) },
             };
             var mat = new StandardMaterial3D
             {
                 ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                EmissionEnabled = true,
-                Emission = Colors.White,
-                EmissionEnergyMultiplier = 2.0f,
+                VertexColorUseAsAlbedo = true,
                 BillboardMode = BaseMaterial3D.BillboardModeEnum.Enabled,
                 Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
                 AlbedoColor = Colors.White,
             };
             mm.Mesh.SurfaceSetMaterial(0, mat);
+            _starMat = mat;
 
+            const int stars = 1700;      // real points: small, magnitude-spread
+            const int band = 500;        // a faint Milky Way band of haze points
             var rng = new Random(42);
-            int count = 900;
-            mm.InstanceCount = count;
-            for (int i = 0; i < count; i++)
+            // The band is a rotated great circle: its poles are the sky's "milky way poles".
+            var bandNormal = new Vector3(0.42f, 0.9f, 0.25f).Normalized();
+            var bin1 = bandNormal.Cross(Vector3.Right);
+            if (bin1.LengthSquared() < 1e-4f) bin1 = bandNormal.Cross(Vector3.Forward);
+            bin1 = bin1.Normalized();
+            var bin2 = bandNormal.Cross(bin1);
+
+            mm.InstanceCount = stars + band;
+            for (int i = 0; i < mm.InstanceCount; i++)
             {
-                double az = rng.NextDouble() * Math.PI * 2.0;
-                double el = Math.Asin(0.06 + rng.NextDouble() * 0.93);
-                var dir = new Vector3(
-                    (float)(Math.Cos(el) * Math.Cos(az)),
-                    (float)Math.Sin(el),
-                    (float)(Math.Cos(el) * Math.Sin(az)));
-                var pos = dir * 430f;
-                var xf = new Transform3D(Basis.Identity, pos);
+                bool isBand = i >= stars;
+                Vector3 dir;
+                Color color;
+                float size;
+                if (isBand)
+                {
+                    double t = rng.NextDouble() * Math.Tau;
+                    double spread = (rng.NextDouble() + rng.NextDouble() + rng.NextDouble() - 1.5) * 0.34;
+                    dir = (bin1 * (float)Math.Cos(t) + bin2 * (float)Math.Sin(t) + bandNormal * (float)spread).Normalized();
+                    if (dir.Y < 0.03f) dir = new Vector3(dir.X, 0.03f, dir.Z).Normalized();
+                    size = 0.15f + (float)Math.Pow(rng.NextDouble(), 3.0) * 0.15f;
+                    float b = 0.16f + (float)rng.NextDouble() * 0.18f;
+                    color = new Color(b * 0.75f, b * 0.82f, b);   // dim blue haze
+                }
+                else
+                {
+                    // Cosine-weighted across the sky, above the horizon.
+                    double az = rng.NextDouble() * Math.Tau;
+                    double el = Math.Asin(0.02 + rng.NextDouble() * 0.95);
+                    dir = new Vector3(
+                        (float)(Math.Cos(el) * Math.Cos(az)),
+                        (float)Math.Sin(el),
+                        (float)(Math.Cos(el) * Math.Sin(az)));
+                    // Magnitude distribution: many faint points, few bright ones.
+                    float m = (float)Math.Pow(rng.NextDouble(), 2.6);
+                    size = 0.14f + m * 0.46f;
+                    float b = 0.35f + (float)Math.Pow(rng.NextDouble(), 2.2) * 0.75f;
+                    float w = (float)rng.NextDouble();
+                    if (w < 0.78f) color = new Color(b, b, b);                    // white
+                    else if (w < 0.89f) color = new Color(b, b * 0.82f, b * 0.65f); // warm
+                    else color = new Color(b * 0.78f, b * 0.88f, b);                // cool
+                }
+                var pos = dir * 1500f;
+                var xf = new Transform3D(Basis.Identity, pos).Scaled(new Vector3(size, size, size));
                 mm.SetInstanceTransform(i, xf);
-                float b = 0.55f + (float)rng.NextDouble() * 0.45f;
-                mm.SetInstanceColor(i, new Color(b, b, b * 1.05f));
+                mm.SetInstanceColor(i, color);
             }
             var mmi = new MultiMeshInstance3D { Multimesh = mm, Name = "Stars" };
             mmi.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
@@ -960,6 +993,12 @@ namespace LunaQuest.Godot
                 // The visible disc sits at the opposite end of the light ray, so shadows always
                 // point away from the Sun you can see.
                 _sunDisc.Position = -(rot * new Vector3(0, 0, -1)) * 420f;
+            }
+            // Stars are points of light; the sun on the horizon washes them out.
+            if (_starMat != null)
+            {
+                _starMat.AlbedoColor = new Color(1f, 1f, 1f,
+                    Mathf.Clamp(1.15f - (0.8f + Mathf.Sin(phase * Mathf.Tau) * 0.7f) * 0.45f, 0.18f, 1f));
             }
             // Keep the Earth's phase in step with the colony's sun (same light, same direction).
             if (_earth?.MaterialOverride is ShaderMaterial em && em.Shader?.GetPath() == "res://shaders/earth.gdshader")

@@ -172,32 +172,39 @@ namespace LunaQuest.Unity
                 filterMode = FilterMode.Bilinear,
             };
             var pixels = new Color32[w * h];
-            var dark = new Color32(3, 4, 10, 255);
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = dark;
+            var black = new Color32(0, 0, 0, 255);
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = black;
 
             var rng = new System.Random(1972);
-            // A faint Milky Way band behind the sharp stars.
-            for (int i = 0; i < 9000; i++)
+            // A faint Milky Way band behind the sharp stars, along one great-circle axis.
+            for (int i = 0; i < 8500; i++)
             {
                 float x = (float)rng.NextDouble() * w;
                 float centre = h * 0.52f + Mathf.Sin(x / w * Mathf.PI * 2f) * h * 0.12f;
                 float y = centre + (float)(rng.NextDouble() + rng.NextDouble() + rng.NextDouble() - 1.5) * h * 0.11f;
                 if (y < 0 || y >= h) continue;
                 int idx = (int)y * w + (int)x;
-                byte v = (byte)(9 + rng.Next(8));
+                byte v = (byte)(7 + rng.Next(6));
                 pixels[idx] = new Color32(v, v, (byte)(v + 4), 255);
             }
-            for (int i = 0; i < 1700; i++)
+            // Bright points, magnitude-spread: many faint, few bright, slight colour variance.
+            for (int i = 0; i < 2400; i++)
             {
+                double m = Math.Pow(rng.NextDouble(), 2.4);
                 int x = rng.Next(w);
                 int y = rng.Next(h);
                 int idx = y * w + x;
-                byte v = (byte)(120 + rng.Next(136));
-                pixels[idx] = new Color32(v, v, v, 255);
-                if (rng.NextDouble() > 0.72)
+                byte v = (byte)(90 + m * 160.0);
+                double wtone = rng.NextDouble();
+                byte vr = v, vg = v, vb = v;
+                if (wtone < 0.78) { } // white
+                else if (wtone < 0.89) { vg = (byte)(v * 0.82); vb = (byte)(v * 0.65); } // warm
+                else { vr = (byte)(v * 0.78); vg = (byte)(v * 0.88); } // cool
+                pixels[idx] = new Color32(vr, vg, vb, 255);
+                if (rng.NextDouble() > 0.72 && v > 140)
                 {
                     int x2 = Mathf.Min(w - 1, x + 1);
-                    pixels[y * w + x2] = new Color32((byte)(v * 0.7f), (byte)(v * 0.7f), (byte)(v * 0.8f), 255);
+                    pixels[y * w + x2] = new Color32((byte)(vr * 0.7f), (byte)(vg * 0.7f), (byte)(vb * 0.7f), 255);
                 }
             }
             texture.SetPixels32(pixels);
