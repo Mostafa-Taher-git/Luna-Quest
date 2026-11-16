@@ -69,6 +69,11 @@ shot() { # shot <frame> <delay-seconds> [engine flags...]
     grep -E "SCRIPT ERROR|Parse Error|Unhandled exception" "$TMP/$frame.log" >&2
     exit 1
   fi
+  # QA/forensics: keep the raw Godot console when a log directory is requested.
+  if [ -n "${CAPTURE_LOG_DIR:-}" ]; then
+    mkdir -p "$CAPTURE_LOG_DIR"
+    cp "$TMP/$frame.log" "$CAPTURE_LOG_DIR/$frame.log"
+  fi
 }
 
 # Frames to capture: every argument is a substring filter (like the workflow's `only`
