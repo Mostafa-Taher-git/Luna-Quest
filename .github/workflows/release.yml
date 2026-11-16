@@ -162,9 +162,45 @@ jobs:
             out/LunaQuest-GDScript-Linux-x86_64
           if-no-files-found: warn
 
+  checksums:
+    name: Build SHA256SUMS
+    needs: [film, godot, gdscript]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Checksum every artifact
+        # SHA256SUMS covers everything the release will attach, named the way the release
+        # page shows it (flat basenames), so a download can be verified with sha256sum -c.
+        # This job runs even for a dry-run dispatch, so a rehearsal proves the checksums.
+        run: |
+          set -euo pipefail
+          cd artifacts
+          : > SHA256SUMS
+          find . -mindepth 2 -maxdepth 2 -type f | sort | while IFS= read -r f; do
+            dir=$(dirname "$f")
+            base=$(basename "$f")
+            ( cd "$dir" && sha256sum "$base" ) >> SHA256SUMS
+          done
+          cat SHA256SUMS
+          # Nothing may be attached without a checksum line.
+          missing=0
+          while IFS= read -r f; do
+            base=$(basename "$f")
+            grep -q "  ${base}\$" SHA256SUMS || { echo "no checksum for $base"; missing=1; }
+          done < <(find . -mindepth 2 -maxdepth 2 -type f)
+          exit $missing
+      - uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: artifacts/SHA256SUMS
+          if-no-files-found: error
+
   publish:
     name: Publish the release
-    needs: [film, godot, gdscript]
+    needs: [film, godot, gdscript, checksums]
     # A manual dispatch is a rehearsal by default: it builds and checks every artifact but
     # never creates a real release. Only an explicit dry_run=false or a real tag push publishes.
     if: always() && !inputs.dry_run
@@ -196,26 +232,6 @@ jobs:
           path: artifacts
       - name: Show what arrived
         run: find artifacts -type f -printf '%p  %s bytes\n' | sort
-      - name: Checksum every artifact
-        # SHA256SUMS covers everything the release will attach, named the way the release
-        # page shows it (flat basenames), so a download can be verified with sha256sum -c.
-        run: |
-          set -euo pipefail
-          cd artifacts
-          : > SHA256SUMS
-          find . -mindepth 2 -maxdepth 2 -type f | sort | while IFS= read -r f; do
-            dir=$(dirname "$f")
-            base=$(basename "$f")
-            ( cd "$dir" && sha256sum "$base" ) >> SHA256SUMS
-          done
-          cat SHA256SUMS
-          # Nothing may be attached without a checksum line.
-          missing=0
-          while IFS= read -r f; do
-            base=$(basename "$f")
-            grep -q "  ${base}\$" SHA256SUMS || { echo "no checksum for $base"; missing=1; }
-          done < <(find . -mindepth 2 -maxdepth 2 -type f)
-          exit $missing
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
@@ -246,4 +262,4 @@ jobs:
             artifacts/gdscript-builds/*.deb
             artifacts/gdscript-builds/*.x86_64
             artifacts/intro-film/*.mp4
-            artifacts/SHA256SUMS
+            artifacts/checksums/SHA256SUMS
