@@ -3,7 +3,10 @@
 ## v3.4 — three engines, one Moon, no browser build
 
 **Tag:** `v3.4` · **Previous release:** `v3.3` · **Date:** 16 November 2026
-**Engines shipped:** Godot 4.7.2 .NET · Godot 4.7.2 GDScript · Unity 6.3 LTS
+**Shipping desktop builds:** Godot 4.7.2 .NET · Godot 4.7.2 GDScript.
+**Unity 6000.3.0f1 (6.3 LTS):** source only — no Unity binary ships. Build it locally. Its
+playtest harness was extended (board + save/restore); compile-clean by review only, with
+compile/runtime verification PENDING.
 
 ### One Moon in every engine
 
@@ -54,8 +57,10 @@ archives, the raw Linux binary, a Debian package built by `tools/package-desktop
 
 ### Verification
 
-GDScript self-test 659 checks and scene audit 238; .NET rover test 81; LunaQuest.Tests 426; the
-Unity playtest is compile-clean by review. CI runs the parity and immutable-asset guards on every
+GDScript self-test 659 checks, scene audit 238, .NET rover test 81 and LunaQuest.Tests 426 —
+each count comes from a fresh local run. Unity: harness extended (board + save/restore),
+compile-clean by review only; compile/runtime PENDING — build locally in Unity 6000.3.0f1.
+CI runs the parity and immutable-asset guards on every
 push, builds the C# edition on every push and PR, and can recapture the README frames from the
 real game with `tools/capture-screenshots.sh`.
 
@@ -64,7 +69,9 @@ real game with `tools/capture-screenshots.sh`.
 ## ٣٫٤ — ثلاثة محركات، قمر واحد، بلا بناء للمتصفح
 
 **الوسم:** `v3.4` · **الإصدار السابق:** `v3.3` · **التاريخ:** ١٦ نوفمبر ٢٠٢٦
-**المحركات المُصدَّرة:** Godot 4.7.2 .NET · Godot 4.7.2 GDScript · Unity 6.3 LTS
+**البنيات المكتبية المُصدَّرة:** Godot 4.7.2 .NET · Godot 4.7.2 GDScript.
+**Unity 6000.3.0f1 (6.3 LTS):** مصدر فقط — لا تُصدَّر ثنائية Unity؛ ابنِها محلياً. موجّه الاختبار
+موسّع (اللوحة + الحفظ والاستعادة)، وسليم بالتدقيق فقط؛ التجميع والتشغيل قيد الانتظار.
 
 ### قمر واحد في كل المحركات
 
@@ -113,7 +120,9 @@ Cute Astronaut مثبّتان بـ SHA-256 في `docs/design/asset-lock.json`، 
 
 ### التحقق
 
-فحص GDScript الذاتي 659 وفحص المشهد 238؛ واختبار المركبة في .NET هو 81؛ وLunaQuest.Tests هو
-426؛ واختبار Unity سليم بالتدقيق. يشغّل CI حرّاس التكافؤ والأصول المقفلة عند كل دفع، ويبني
+فحص GDScript الذاتي 659 وفحص المشهد 238 واختبار المركبة في .NET 81 وLunaQuest.Tests 426 —
+كل رقم من تشغيل محلي حديث. أما Unity: فموجّه الاختبار موسّع (اللوحة + الحفظ والاستعادة)،
+وسليم بالتدقيق فقط؛ التجميع والتشغيل قيد الانتظار — ابنِه محلياً في Unity 6000.3.0f1.
+يشغّل CI حرّاس التكافؤ والأصول المقفلة عند كل دفع، ويبني
 إصدار C# عند كل دفع وطلب دمج، ويمكنه إعادة التقاط لقطات README من اللعبة الحقيقية عبر
 `tools/capture-screenshots.sh`.
