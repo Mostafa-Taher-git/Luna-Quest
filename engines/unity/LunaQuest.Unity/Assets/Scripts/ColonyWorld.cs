@@ -81,7 +81,7 @@ namespace LunaQuest.Unity
                 new Color(0.20f, 0.65f, 1.0f), 1.8f);
             _warmGlow = Mat(new Color(1.0f, 0.86f, 0.58f), 0.0f, 0.3f,
                 new Color(1.0f, 0.78f, 0.45f), 2.2f);
-            _regolith = Mat(new Color(0.165f, 0.160f, 0.152f), 0.0f, 0.96f);
+            _regolith = Mat(new Color(0.40f, 0.35f, 0.29f), 0.0f, 0.96f);
             _rock = Mat(new Color(0.115f, 0.112f, 0.108f), 0.0f, 0.98f);
         }
 
@@ -200,7 +200,7 @@ namespace LunaQuest.Unity
         private void BuildEnvironment()
         {
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.20f, 0.24f, 0.32f);
+            RenderSettings.ambientLight = new Color(0.30f, 0.25f, 0.20f);
             RenderSettings.fog = false;
             RenderSettings.skybox = BuildSkybox();
 
@@ -221,8 +221,8 @@ namespace LunaQuest.Unity
             fillGo.transform.rotation = Quaternion.Euler(42f, 28f, 0f);
             var fill = fillGo.AddComponent<Light>();
             fill.type = LightType.Directional;
-            fill.color = new Color(0.48f, 0.62f, 0.88f);
-            fill.intensity = 0.18f;
+            fill.color = new Color(0.38f, 0.47f, 0.72f);
+            fill.intensity = 0.10f;
             fill.shadows = LightShadows.None;
 
             // A small unshaded solar disc. At 89.9° S the Sun crawls along the horizon;
@@ -330,7 +330,7 @@ namespace LunaQuest.Unity
             {
                 float x = -half + ix * step, z = -half + iz * step;
                 verts[iz * n + ix] = new Vector3(x, (float)terrain.Height(x, z), z);
-                uv[iz * n + ix] = new Vector2(ix / (float)cells * 80f, iz / (float)cells * 80f);
+                uv[iz * n + ix] = new Vector2(ix / (float)cells * 240f, iz / (float)cells * 240f);
             }
             var tris = new int[cells * cells * 6];
             int t = 0;
@@ -371,7 +371,27 @@ namespace LunaQuest.Unity
             ground.isStatic = true;
             ground.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = ground.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = _regolith;
+            // The CC0 Moon Dusted 03 scan, white under lunar sun, tiled every ~3.5 m.
+            var reg = Resources.Load<Texture2D>("Textures/moon_dusted_03_albedo");
+            if (reg != null)
+            {
+                var regMat = new Material(Shader.Find("Standard"))
+                {
+                    mainTexture = reg,
+                    mainTextureScale = new Vector2(240f, 240f),
+                    mainTextureOffset = new Vector2(0f, 0f),
+                };
+                regMat.color = Color.white;
+                regMat.metallic = 0f;
+                regMat.smoothness = 0.04f;
+                regMat.enableInstancing = true;
+                regMat.mainTexture.wrapMode = TextureWrapMode.Repeat;
+                renderer.sharedMaterial = regMat;
+            }
+            else
+            {
+                renderer.sharedMaterial = _regolith;
+            }
             renderer.receiveShadows = true;
             ground.AddComponent<MeshCollider>().sharedMesh = mesh;
 

@@ -113,8 +113,9 @@ func _make_environment() -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.0, 0.0, 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.24, 0.27, 0.34)
-	env.ambient_light_energy = 0.55
+	# Near-zero lunar ambient: a very low warm regolith bounce, not sky fill.
+	env.ambient_light_color = Color(0.36, 0.30, 0.24)
+	env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.glow_enabled = true
 	env.glow_intensity = 0.35
@@ -130,6 +131,16 @@ func _make_environment() -> void:
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 180.0
 	add_child(sun)
+
+	# Faint cool earthshine: Earth reads as a small blue disc; it throws almost no light, but the
+	# shadow side never goes dead black.
+	var earthshine := DirectionalLight3D.new()
+	earthshine.name = "EarthShine"
+	earthshine.light_color = Color(0.38, 0.47, 0.72)
+	earthshine.light_energy = 0.13
+	earthshine.shadow_enabled = false
+	earthshine.rotation_degrees = Vector3(-38, 150, 0)
+	add_child(earthshine)
 
 
 ## Sun elevation 11° and the azimuth from the mission clock.
@@ -243,15 +254,16 @@ func _regolith_material() -> StandardMaterial3D:
 	if not ResourceLoader.exists(albedo_path):
 		return m
 	m.albedo_texture = load(albedo_path) as Texture2D
-	m.albedo_color = Color(0.62, 0.60, 0.56)
+	m.albedo_color = Color(1.0, 1.0, 1.0)
 	m.roughness = 1.0
 	m.metallic = 0.0
-	m.uv1_scale = Vector3(3.0, 3.0, 3.0)
+	# One tile per ~3.5 m (420 m span, x ~120 repeats) instead of 3 repeats over the whole site.
+	m.uv1_scale = Vector3(120.0, 120.0, 120.0)
 	var normal_path := dir + stem + "_normal.jpg"
 	if ResourceLoader.exists(normal_path):
 		m.normal_enabled = true
 		m.normal_texture = load(normal_path) as Texture2D
-		m.normal_scale = 1.1
+		m.normal_scale = 0.6
 	var rough_path := dir + stem + "_rough.jpg"
 	if ResourceLoader.exists(rough_path):
 		m.roughness_texture = load(rough_path) as Texture2D

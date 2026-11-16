@@ -22,6 +22,12 @@ var bob_time := 0.0
 var _pitch := 0.0
 var _arm_position := Vector3.ZERO
 var _head: Node3D
+var _foot_puff: CPUParticles3D = null
+var _suit_lamp: SpotLight3D = null
+var _thud: AudioStreamPlayer3D = null
+var _step_timer := 0.0
+var _was_airborne := false
+var _fall_vel := 0.0
 var _current_target: Dictionary = {}
 var rover: ColonyRover = null # set while driving the crew rover
 
@@ -57,6 +63,58 @@ func _ready() -> void:
 	shape.position = Vector3(0, 0.9, 0)
 	add_child(shape)
 
+	# F8: footsteps kick a whisper of dust, helmet lamp in first person, a thud on landing.
+	_foot_puff = CPUParticles3D.new()
+	_foot_puff.name = "FootDust"
+	_foot_puff.position = Vector3(0, 0.07, 0)
+	_foot_puff.one_shot = true
+	_foot_puff.amount = 6
+	_foot_puff.lifetime = 1.0
+	_foot_puff.explosiveness = 0.8
+	_foot_puff.direction = Vector3(0, 0.75, 0)
+	_foot_puff.spread = 75.0
+	_foot_puff.gravity = Vector3(0, -0.65, 0)
+	_foot_puff.initial_velocity_min = 0.25
+	_foot_puff.initial_velocity_max = 1.0
+	_foot_puff.scale_amount_min = 0.07
+	_foot_puff.scale_amount_max = 0.24
+	_foot_puff.emitting = false
+	var dust_mat := StandardMaterial3D.new()
+	dust_mat.albedo_color = Color(0.60, 0.56, 0.50, 0.5)
+	dust_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	dust_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_foot_puff.material_override = dust_mat
+	add_child(_foot_puff)
+
+	_suit_lamp = SpotLight3D.new()
+	_suit_lamp.name = "SuitLamp"
+	_suit_lamp.position = Vector3(0, 0.05, 0)
+	_suit_lamp.light_color = Color(0.86, 0.93, 1.0)
+	_suit_lamp.light_energy = 1.5
+	_suit_lamp.spot_range = 16.0
+	_suit_lamp.spot_angle = 34.0
+	_suit_lamp.spot_attenuation = 0.6
+	_suit_lamp.visible = not third_person
+	camera.add_child(_suit_lamp)
+
+	_thud = AudioStreamPlayer3D.new()
+	_thud.name = "LandThud"
+	var sample_rate := 16000
+	var frames := int(sample_rate * 0.35)
+	var tdata := PackedByteArray()
+	for i in range(frames):
+		var t := float(i) / float(sample_rate)
+		var v := sin(t * TAU * 48.0) * exp(-t * 14.0) * 0.9
+		tdata.append(int(v * 12000.0) & 0xFF)
+		tdata.append((int(v * 12000.0) >> 8) & 0xFF)
+	var thud_wav := AudioStreamWAV.new()
+	thud_wav.format = AudioStreamWAV.FORMAT_16_BITS
+	thud_wav.mix_rate = sample_rate
+	thud_wav.stereo = false
+	_thud.stream = thud_wav
+	_thud.max_distance = 18.0
+	add_child(_thud)
+
 	floor_max_angle = deg_to_rad(50.0)
 	floor_snap_length = 0.3
 
@@ -71,6 +129,8 @@ func set_third_person(on: bool) -> void:
 	third_person = on
 	if astronaut != null:
 		astronaut.visible = on
+	if _suit_lamp != null:
+		_suit_lamp.visible = not on
 
 ## Settings: the saved mouse sensitivity multiplies the default turn rate and the saved
 ## field-of-view overrides the default lens.
@@ -151,7 +211,37 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and Input.is_key_pressed(KEY_SPACE) and velocity.y < 0.1:
 		velocity.y = JUMP_VELOCITY
 
+	# F8: above 30 degrees of slope the suit starts to slide, doesn't stop dead.
+	if is_on_floor():
+		var slope := rad_to_deg(get_floor_angle())
+		if slope > 30.0:
+			var n := get_floor_normal()
+			var downhill := -Vector3(n.x, 0.0, n.z).normalized()
+			var excess := clampf((slope - 30.0) / 60.0, 0.0, 0.6)
+			velocity.x += downhill.x * excess * 6.5
+			velocity.z += downhill.z * excess * 6.5
+
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	if is_on_floor() and horizontal_speed > 1.0:
+		_step_timer += delta * (9.0 if running else 5.5)
+		if _step_timer >= 1.0:
+			_step_timer = 0.0
+			if _foot_puff != null:
+				_foot_puff.restart()
+
 	move_and_slide()
+
+	# Landing thump: a fall that ends harder than a step off a crate.
+	if is_on_floor():
+		if _was_airborne and _fall_vel < -2.4:
+			if _thud != null:
+				_thud.play()
+			if _foot_puff != null:
+				_foot_puff.restart()
+		_was_airborne = false
+	else:
+		_was_airborne = true
+		_fall_vel = velocity.y
 
 	if astronaut != null and third_person:
 		astronaut.position = Vector3(0, 0, 0)

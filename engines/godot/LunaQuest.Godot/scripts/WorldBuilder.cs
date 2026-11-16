@@ -75,7 +75,7 @@ namespace LunaQuest.Godot
                 // ambient light is earthshine, and it is weak. The old flat 0.82 energy filled
                 // every shadow and made the whole colony read as one washed-out white box.
                 AmbientLightSource = global::Godot.Environment.AmbientSource.Color,
-                AmbientLightColor = new Color(0.30f, 0.40f, 0.62f),
+                AmbientLightColor = new Color(0.35f, 0.29f, 0.23f),
                 AmbientLightEnergy = 0.17f,
                 TonemapMode = global::Godot.Environment.ToneMapper.Filmic,
                 TonemapExposure = 1.05f,
@@ -116,10 +116,10 @@ namespace LunaQuest.Godot
             var fill = new DirectionalLight3D
             {
                 Name = "EarthShine",
-                LightColor = new Color(0.42f, 0.58f, 0.88f),
-                LightEnergy = 0.22f,
+                LightColor = new Color(0.38f, 0.47f, 0.72f),
+                LightEnergy = 0.10f,
                 ShadowEnabled = false,
-                RotationDegrees = new Vector3(-35, 145, 0),
+                RotationDegrees = new Vector3(-38, 150, 0),
             };
             AddChild(fill);
 
@@ -307,6 +307,7 @@ namespace LunaQuest.Godot
                     sm.SetShaderParameter("use_detail", true);
                     sm.SetShaderParameter("detail_albedo", alb);
                     sm.SetShaderParameter("detail_normal", nrm);
+                    sm.SetShaderParameter("detail_tile", 3.5f);
                     if (rgh != null) sm.SetShaderParameter("detail_rough", rgh);
                 }
                 groundMaterial = sm;

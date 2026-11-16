@@ -29,6 +29,7 @@ namespace LunaQuest.Unity
         public string ContentError = "";
 
         private double _saveTimer;
+        private double _traverseWarnAt;
         // F6: hold-E physical jobs (durations in real seconds; 0 = instant station).
         private static float HoldDurationFor(string id) => id switch
         {
@@ -148,6 +149,22 @@ namespace LunaQuest.Unity
                     Hud.ShowSubtitle(L.T("EVA reserve empty. Charge the suit at the airlock.",
                         "نفد احتياط EVA. اشحن البدلة عند الأيرلوك."), 6f);
                 Sim.TickCargo(Time.deltaTime);
+                // F8: traverse warning at 90 m from centre; the rim holds at 118 m.
+                if (Player != null)
+                {
+                    float rim = new Vector2(Player.transform.position.x, Player.transform.position.z).magnitude;
+                    if (rim > 90f && Time.unscaledTimeAsDouble - _traverseWarnAt > 9.0)
+                    {
+                        _traverseWarnAt = Time.unscaledTimeAsDouble;
+                        Hud.ShowSubtitle(L.T("Survey rim approaching. Beyond 110 m is unsurveyed.",
+                            "خط الحدود يقترب. خارج 110 متر غير نشط."), 8f);
+                    }
+                    if (rim > 118f)
+                    {
+                        Vector2 v = new Vector2(Player.transform.position.x, Player.transform.position.z).normalized * 118f;
+                        Player.Teleport(new Vector3(v.x, Player.transform.position.y, v.y));
+                    }
+                }
 
                 _saveTimer += Time.deltaTime;
                 if (_saveTimer > 30.0) _saveTimer = 0.0;

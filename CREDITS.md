@@ -117,7 +117,9 @@ The game is fully playable with the sound off: every line also appears as a shor
   - `moon_rock_01`–`moon_rock_07` photoscanned rocks (glTF, 1K): <https://polyhaven.com/models>.
   - Files: `engines/godot/LunaQuest.Godot/assets/real/`, mirrored into the GDScript build
     by `tools/sync-gdscript-assets.sh`; the retired browser edition's own sync script is
-    kept at `archive/web/scripts/sync-assets.mjs`.
+    kept at `archive/web/scripts/sync-assets.mjs`. The Moon Dusted 03 albedo also lives in
+    `engines/unity/LunaQuest.Unity/Assets/Resources/Textures/moon_dusted_03_albedo.jpg`
+    (used as the Unity ground's scan albedo; same CC0 licence, same source).
 
 - **NASA Blue Marble Next Generation** — the Earth disc in the lunar sky.
   - Source: NASA Earth Observatory, <https://eoimages.gsfc.nasa.gov/>.

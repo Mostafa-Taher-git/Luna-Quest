@@ -381,6 +381,32 @@ namespace LunaQuest.Godot
                 if (_saveTimer > 30.0) { _saveTimer = 0; }
                 TickHold(delta);
                 TickEva(delta);
+
+                // F8: traverse warning at 90 m from centre; the rim holds at 118 m.
+
+                float rim = new Vector2(Player.GlobalPosition.X, Player.GlobalPosition.Z).Length();
+
+                if (rim > 90f && Time.GetTicksMsec() - _traverseWarnMsec > 9000)
+
+                {
+
+                    _traverseWarnMsec = Time.GetTicksMsec();
+
+                    Hud.ShowSubtitle(L.T("Survey rim approaching. Beyond 110 m is unsurveyed.",
+
+                        "خط الحدود يقترب. خارج 110 متر غير نشط."), 8.0);
+
+                }
+
+                if (rim > 118f)
+
+                {
+
+                    Vector2 v = new Vector2(Player.GlobalPosition.X, Player.GlobalPosition.Z).Normalized() * 118f;
+
+                    Player.GlobalPosition = new Vector3(v.X, Player.GlobalPosition.Y, v.Y);
+
+                }
             }
 
             Hud.UpdateState();
@@ -521,6 +547,7 @@ namespace LunaQuest.Godot
         private Interactable? _holdStation;
         private float _holdTime;
         private float _holdNeed = 1f;
+        private ulong _traverseWarnMsec;
 
         public void DoInteract(Interactable it)
         {

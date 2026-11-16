@@ -23,6 +23,7 @@ const HOLD_ACTIONS := {
 var _hold_target: Dictionary = {}
 var _hold_time := 0.0
 var _hold_need := 1.0
+var _traverse_warn_msec := 0
 var world: ColonyWorld
 var player: ColonyPlayer
 var crew: ColonyCrew
@@ -247,6 +248,19 @@ func _process(delta: float) -> void:
 	# not touch the simulation or the world.
 	if sim == null or world == null:
 		return
+
+	# F8: traverse warning at 90 m from centre; the rim holds at 118 m. The rim is marked with
+	# beacon posts and hazard sills — this warns, then holds the line instead of a hidden wall.
+	if playing and not paused and player != null:
+		var rim := Vector2(player.global_position.x, player.global_position.z).length()
+		if rim > 90.0 and Time.get_ticks_msec() - _traverse_warn_msec > 9000:
+			_traverse_warn_msec = Time.get_ticks_msec()
+			_subtitle_until = Time.get_ticks_msec() + 9000
+			hud.set_subtitle("خط الحدود يقترب. خارج 110 متر غير نشط." if arabic else "Survey rim approaching. Beyond 110 m is unsurveyed.")
+		if rim > 118.0:
+			var v := Vector2(player.global_position.x, player.global_position.z).normalized() * 118.0
+			player.global_position.x = v.x
+			player.global_position.z = v.y
 
 	# F6: EVA reserve drains outside, recharges indoors; the board-window timer runs down.
 	if playing and not paused:
