@@ -38,6 +38,91 @@ namespace LunaQuest.Godot
         private double _subtitleTimer;
         private bool _missionShown;
 
+        // ---- shift task board ------------------------------------------------
+        private PanelContainer _boardPanel = null!;
+        private VBoxContainer _boardBox = null!;
+        private Label _boardHeader = null!;
+        private readonly List<Label> _boardRows = new List<Label>();
+        private string _boardShift = "";
+
+        /// <summary>A finished row reads as a calm teal rather than a highlight: a done task is
+        /// settled, not urgent. Same teal as the other two engines.</summary>
+        public static readonly Color DoneColor = new Color(0.45f, 0.80f, 0.72f);
+        private static readonly Color RowColor = new Color(0.82f, 0.90f, 1f);
+        private static readonly Color RowHeadColor = new Color(0.55f, 0.72f, 0.90f);
+
+        /// <summary>
+        /// One row of the shift task board. <c>Kind</c> says how done is read (a journal entry,
+        /// one of the rover's own milestones, or the mission line), <c>Shift</c> says where the
+        /// row leads. The eleven objectives match content/learning.json exactly; learning.json
+        /// itself stays at 11 objectives — the board is 14 rows.
+        /// </summary>
+        public readonly struct BoardRowSpec
+        {
+            public readonly string Id, Kind, Shift, En, Ar, Hint;
+            public BoardRowSpec(string id, string kind, string shift, string en, string ar, string hint)
+            {
+                Id = id; Kind = kind; Shift = shift; En = en; Ar = ar; Hint = hint;
+            }
+        }
+
+        /// <summary>Which shift the clock is in, with its bilingual header.</summary>
+        public readonly struct ShiftSpec
+        {
+            public readonly string Id, En, Ar;
+            public ShiftSpec(string id, string en, string ar) { Id = id; En = en; Ar = ar; }
+        }
+
+        /// <summary>
+        /// The shift task board — 14 rows. Eleven are the learning objectives from
+        /// content/learning.json (done = a journal entry), two are the crew rover's own
+        /// milestones, and one is the mission line. Ported from the browser edition's
+        /// web/src/ui/hud.js taskList(); wording identical to the GDScript edition's hud.gd.
+        /// </summary>
+        public static readonly BoardRowSpec[] BoardRows =
+        {
+            new BoardRowSpec("obj_power_budget", "journal", "morning",
+                "Read the colony board in Mission Control", "اقرأ لوحة المستعمرة في مركز التحكم",
+                "E at the board · Mission Control"),
+            new BoardRowSpec("obj_solar_dust", "journal", "morning",
+                "Clean the solar array when dust cuts output", "نظّف الألواح الشمسية",
+                "Power farm"),
+            new BoardRowSpec("obj_water_filter", "journal", "morning",
+                "Check the water loop and back-flush the filter", "افحص الماء والفلتر",
+                "Life support"),
+            new BoardRowSpec("obj_sample", "journal", "afternoon",
+                "Collect a regolith sample at the ice site", "اجمع عينة من التربة في موقع الجليد",
+                "Ice site · sampler console"),
+            new BoardRowSpec("obj_rover_take", "rover_driven", "afternoon",
+                "Take the crew rover from the garage apron", "خذ مركبة الطاقم من أرضية المرآب",
+                "Garage · E to drive"),
+            new BoardRowSpec("obj_rover_ice", "rover_ice", "afternoon",
+                "Drive the crew rover out to the ice prospecting site",
+                "قد المركبة إلى موقع استكشاف الجليد", "Ice site · 52, -34"),
+            new BoardRowSpec("obj_sensor_dust", "journal", "afternoon",
+                "Brush the sensor heads and the antenna", "نظّف رؤوس الحساسات والهوائي",
+                "Comms tower"),
+            new BoardRowSpec("obj_plant_care", "journal", "afternoon",
+                "Harvest the grow pod", "احصد المحصول", "Greenhouse"),
+            new BoardRowSpec("obj_airlock_dust", "journal", "evening",
+                "Sweep the airlock dust before the next EVA", "نظّف غرفة المعادل قبل الخروج التالي",
+                "Airlock"),
+            new BoardRowSpec("obj_comms_relay", "journal", "evening",
+                "Realign the comms relay", "أعد ضبط مرحّل الاتصالات",
+                "Mission Control · comms desk"),
+            new BoardRowSpec("obj_air_scrubber", "journal", "evening",
+                "Restart electrolysis and log the scrubber",
+                "أعد تشغيل التحليل الكهربائي وسجّل الغسّال", "Life support"),
+            new BoardRowSpec("obj_crew_rest", "journal", "night",
+                "Rebalance the crew's rest plan", "أعد خطة الراحة للطاقم", "Habitat"),
+            new BoardRowSpec("obj_radiation", "journal", "night",
+                "Shelter the crew during a particle event", "احمِ الطاقم عند حدث الجسيمات",
+                "Habitat · shielded section"),
+            new BoardRowSpec("mission", "mission", "any",
+                "Survive the mission — day %d of 30", "أكمل المهمة — اليوم %d من 30",
+                ""),
+        };
+
         public void Bind(Main main)
         {
             _main = main;
@@ -86,6 +171,7 @@ namespace LunaQuest.Godot
             BuildVisor();
             BuildTopBar();
             BuildResourcePanel();
+            BuildBoard();
             BuildFeed();
             BuildPrompt();
             BuildSubtitle();
@@ -247,6 +333,50 @@ namespace LunaQuest.Godot
 
             _bars[key] = bar;
             _vals[key] = val;
+        }
+
+        /// <summary>
+        /// The shift task board: a panel to the right of the status panel, under the toast band
+        /// and clear of the crosshair, in the same style as the rest of the HUD — a header
+        /// naming the current shift, then the fourteen rows. The labels are built once in
+        /// canonical order and only moved when the shift changes, so a per-frame refresh costs a
+        /// text swap rather than a rebuild.
+        /// </summary>
+        private void BuildBoard()
+        {
+            _boardPanel = Panel(new Color(0.03f, 0.05f, 0.08f, 0.78f), new Color(0.2f, 0.35f, 0.5f, 0.45f));
+            _boardPanel.AnchorTop = 0;
+            _boardPanel.AnchorBottom = 0;
+            _boardPanel.OffsetLeft = 346;
+            _boardPanel.OffsetTop = 172;
+            _boardPanel.OffsetRight = 1016;
+            _boardPanel.OffsetBottom = 432;
+            _root.AddChild(_boardPanel);
+
+            var margin = new MarginContainer();
+            foreach (var m in new[] { "margin_left", "margin_right", "margin_top", "margin_bottom" })
+                margin.AddThemeConstantOverride(m, 8);
+            _boardPanel.AddChild(margin);
+
+            _boardBox = new VBoxContainer();
+            _boardBox.AddThemeConstantOverride("separation", 1);
+            margin.AddChild(_boardBox);
+
+            _boardHeader = new Label();
+            _boardHeader.AddThemeFontSizeOverride("font_size", 12);
+            _boardHeader.AddThemeColorOverride("font_color", RowHeadColor);
+            _boardBox.AddChild(_boardHeader);
+
+            foreach (var spec in BoardRows)
+            {
+                var line = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+                line.AddThemeFontSizeOverride("font_size", 11);
+                line.AddThemeColorOverride("font_color", RowColor);
+                _boardBox.AddChild(line);
+                _boardRows.Add(line);
+            }
+
+            UpdateBoard();
         }
 
         private void BuildFeed()
@@ -703,6 +833,14 @@ namespace LunaQuest.Godot
 
         // ---- runtime ---------------------------------------------------------
 
+        /// <summary>The board's own surface, box, header and row labels, for the playtest.
+        /// <c>BoardRowLabels[i]</c> always describes <c>BoardRows[i]</c> — reordering the shift
+        /// moves nodes, never this list.</summary>
+        public PanelContainer BoardPanel => _boardPanel;
+        public VBoxContainer BoardBox => _boardBox;
+        public Label BoardHeader => _boardHeader;
+        public IReadOnlyList<Label> BoardRowLabels => _boardRows;
+
         public void UpdateState()
         {
             var sim = _main.Sim;
@@ -720,6 +858,7 @@ namespace LunaQuest.Godot
             SetBar("dose", Math.Min(200, s.DoseRateMicroGyH), $"{s.DoseRateMicroGyH:0.0} µGy/h", s.SolarParticleEvent);
             SetBar("sig", s.SignalQuality * 100, $"{s.SignalQuality * 100:0}%", s.SignalQuality < 0.5);
 
+            UpdateBoard();
             if (_plantsPanel.Visible) RefreshPlants();
         }
 
@@ -729,6 +868,86 @@ namespace LunaQuest.Godot
             bar.Value = value;
             _vals[key].Text = text;
             _vals[key].Modulate = warn ? new Color(1f, 0.42f, 0.38f) : new Color(0.82f, 0.9f, 1f);
+        }
+
+        /// <summary>
+        /// Which shift the clock is in, with its bilingual header. Six to twelve is morning,
+        /// twelve to eighteen is afternoon, eighteen and later is evening, everything before
+        /// six is night.
+        /// </summary>
+        public static ShiftSpec CurrentShift(double hour)
+        {
+            if (hour >= 6.0 && hour < 12.0)
+                return new ShiftSpec("morning", "Morning shift - power, water, air",
+                    "مناوبة الصباح - الطاقة والماء والهواء");
+            if (hour >= 12.0 && hour < 18.0)
+                return new ShiftSpec("afternoon", "Afternoon shift - samples and crops",
+                    "مناوبة الظهيرة - العينات والمحاصيل");
+            if (hour >= 18.0)
+                return new ShiftSpec("evening", "Evening shift - dust, comms, oxygen",
+                    "مناوبة المساء - الغبار والاتصالات والأكسجين");
+            return new ShiftSpec("night", "Night shift - rest and radiation watch",
+                "مناوبة الليل - الراحة ومراقبة الإشعاع");
+        }
+
+        /// <summary>
+        /// Paint the board: the header names the shift, the row that leads is the one for the
+        /// shift the clock says it is, and a finished row gets the check and the teal colour.
+        /// The labels keep their canonical identity, so only their position in the box ever
+        /// changes with the shift — a per-frame refresh is a text swap.
+        /// </summary>
+        private void UpdateBoard()
+        {
+            if (_boardRows.Count == 0 || _main?.Sim == null) return;
+            var sim = _main.Sim;
+            var shift = CurrentShift(sim.Clock.HourOfDay);
+            _boardHeader.Text = L.T(shift.En, shift.Ar);
+
+            if (shift.Id != _boardShift)
+            {
+                _boardShift = shift.Id;
+                // The current shift leads and everything behind it keeps its canonical order, so
+                // pulling the leading rows to the front in a single pass leaves the board sorted.
+                int at = 1; // index 0 is the header
+                for (int i = 0; i < BoardRows.Length; i++)
+                {
+                    if (BoardRows[i].Shift != shift.Id) continue;
+                    _boardBox.MoveChild(_boardRows[i], at);
+                    at++;
+                }
+            }
+
+            var rover = _main.Rover;
+            int day = Mathf.Min(sim.Clock.Day, 30);
+            for (int i = 0; i < BoardRows.Length; i++)
+            {
+                var row = BoardRows[i];
+                string label = L.T(row.En, row.Ar);
+                string hint = row.Hint;
+                bool done;
+                switch (row.Kind)
+                {
+                    case "journal":
+                        done = sim.Learning.HasEntry(row.Id);
+                        break;
+                    case "rover_driven":
+                        done = rover != null && rover.HasDriven;
+                        break;
+                    case "rover_ice":
+                        done = rover != null && rover.ReachedIce;
+                        break;
+                    default: // mission
+                        done = sim.Clock.Day > 30;
+                        label = L.T($"Survive the mission — day {day} of 30",
+                            $"أكمل المهمة — اليوم {day} من 30");
+                        hint = $"{sim.Clock.MissionProgress * 100.0:0}%";
+                        break;
+                }
+                string text = hint.Length > 0 ? $"{label}  ·  {hint}" : label;
+                if (done) text = "✓ " + text;
+                _boardRows[i].Text = text;
+                _boardRows[i].AddThemeColorOverride("font_color", done ? DoneColor : RowColor);
+            }
         }
 
         public void SetPrompt(string text)
@@ -1034,6 +1253,7 @@ namespace LunaQuest.Godot
             if (_journalPanel.Visible) RefreshJournal();
             if (_plantsPanel.Visible) RefreshPlants();
             if (_dialoguePanel.Visible) RefreshDialogue();
+            UpdateBoard();
         }
 
         // ---- helpers ---------------------------------------------------------
