@@ -19,8 +19,8 @@ const TRIM := {
 
 const ASTRONAUT_SCENE := "res://assets/astronaut/cute_astronaut.glb"
 
-## Standing height shared by the player and every human crew member (metres). The web runtime
-## reads the same value from web/src/world/crew-metrics.js.
+## Standing height shared by the player and every human crew member (metres). The retired
+## web runtime read the same value from archive/web/src/world/crew-metrics.js.
 const CREW_HEIGHT_M := 1.75
 
 var members: Array = []

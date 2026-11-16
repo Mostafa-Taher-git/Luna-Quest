@@ -21,11 +21,63 @@ const ACCENT := Color(0.91, 0.58, 0.23)
 const TEXT := Color(0.90, 0.92, 0.95)
 const DIM := Color(0.66, 0.70, 0.76)
 const PANEL_BG := Color(0.06, 0.08, 0.11, 0.92)
+## Finished rows read as a calm teal rather than a highlight: a done task is settled, not urgent.
+const DONE := Color(0.45, 0.80, 0.72)
+
+## The shift task board — 14 rows. Eleven are the learning objectives from content/learning.json
+## (done = a journal entry), two are the crew rover's own milestones, and one is the mission line.
+## `kind` says how `done` is read, `shift` says where the row leads. Ported from the retired
+## browser edition (archive/web/src/ui/hud.js) taskList(); learning.json stays at 11 objectives (H9).
+const BOARD_ROWS: Array = [
+	{"id": "obj_power_budget", "kind": "journal", "shift": "morning",
+		"en": "Read the colony board in Mission Control", "ar": "اقرأ لوحة المستعمرة في مركز التحكم",
+		"hint": "E at the board · Mission Control"},
+	{"id": "obj_solar_dust", "kind": "journal", "shift": "morning",
+		"en": "Clean the solar array when dust cuts output", "ar": "نظّف الألواح الشمسية",
+		"hint": "Power farm"},
+	{"id": "obj_water_filter", "kind": "journal", "shift": "morning",
+		"en": "Check the water loop and back-flush the filter", "ar": "افحص الماء والفلتر",
+		"hint": "Life support"},
+	{"id": "obj_sample", "kind": "journal", "shift": "afternoon",
+		"en": "Collect a regolith sample at the ice site", "ar": "اجمع عينة من التربة في موقع الجليد",
+		"hint": "Ice site · sampler console"},
+	{"id": "obj_rover_take", "kind": "rover_driven", "shift": "afternoon",
+		"en": "Take the crew rover from the garage apron", "ar": "خذ مركبة الطاقم من أرضية المرآب",
+		"hint": "Garage · E to drive"},
+	{"id": "obj_rover_ice", "kind": "rover_ice", "shift": "afternoon",
+		"en": "Drive the crew rover out to the ice prospecting site",
+		"ar": "قد المركبة إلى موقع استكشاف الجليد", "hint": "Ice site · 52, -34"},
+	{"id": "obj_sensor_dust", "kind": "journal", "shift": "afternoon",
+		"en": "Brush the sensor heads and the antenna", "ar": "نظّف رؤوس الحساسات والهوائي",
+		"hint": "Comms tower"},
+	{"id": "obj_plant_care", "kind": "journal", "shift": "afternoon",
+		"en": "Harvest the grow pod", "ar": "احصد المحصول", "hint": "Greenhouse"},
+	{"id": "obj_airlock_dust", "kind": "journal", "shift": "evening",
+		"en": "Sweep the airlock dust before the next EVA", "ar": "نظّف غرفة المعادل قبل الخروج التالي",
+		"hint": "Airlock"},
+	{"id": "obj_comms_relay", "kind": "journal", "shift": "evening",
+		"en": "Realign the comms relay", "ar": "أعد ضبط مرحّل الاتصالات",
+		"hint": "Mission Control · comms desk"},
+	{"id": "obj_air_scrubber", "kind": "journal", "shift": "evening",
+		"en": "Restart electrolysis and log the scrubber",
+		"ar": "أعد تشغيل التحليل الكهربائي وسجّل الغسّال", "hint": "Life support"},
+	{"id": "obj_crew_rest", "kind": "journal", "shift": "night",
+		"en": "Rebalance the crew's rest plan", "ar": "أعد خطة الراحة للطاقم", "hint": "Habitat"},
+	{"id": "obj_radiation", "kind": "journal", "shift": "night",
+		"en": "Shelter the crew during a particle event", "ar": "احمِ الطاقم عند حدث الجسيمات",
+		"hint": "Habitat · shielded section"},
+	{"id": "mission", "kind": "mission", "shift": "any",
+		"en": "Survive the mission — day %d of 30", "ar": "أكمل المهمة — اليوم %d من 30",
+		"hint": ""},
+]
 
 var root: Control
 var hud_layer: Control
 var top_values: Dictionary = {}
-var mission_label: Label
+var board_box: VBoxContainer
+var board_header: Label
+var board_row_labels: Array = []
+var _board_shift := ""
 var crosshair: Control
 var prompt_label: Label
 var subtitle_label: Label
@@ -140,12 +192,27 @@ func _build_hud() -> void:
 		row.add_child(cell)
 		top_values[key] = value_label
 
-	# Mission line under the gauges.
-	mission_label = _label("", 14, DIM)
-	mission_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	mission_label.offset_left = 20
-	mission_label.offset_top = 92
-	hud_layer.add_child(mission_label)
+	# The shift task board under the gauges: a header naming the current shift, then the 14 rows.
+	# The nodes are built once in canonical order and only moved when the shift changes, so a
+	# per-frame refresh costs a text swap rather than a rebuild.
+	board_box = VBoxContainer.new()
+	board_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	board_box.offset_left = 20
+	board_box.offset_top = 92
+	board_box.offset_right = 690
+	board_box.add_theme_constant_override("separation", 2)
+	board_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_layer.add_child(board_box)
+
+	board_header = _label("", 15, ACCENT)
+	board_box.add_child(board_header)
+	board_row_labels.clear()
+	for _spec in BOARD_ROWS:
+		var line := _label("", 14, TEXT)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		board_box.add_child(line)
+		board_row_labels.append(line)
 
 	# Crosshair: a dot you can find on a bright module and lose against a black sky, with a thin
 	# ring so the eye reads it without hunting.
@@ -219,7 +286,7 @@ func _gauge_name(key: String) -> String:
 		_: return key.to_upper()
 
 
-func refresh(sim: LQSim) -> void:
+func refresh(sim: LQSim, rover = null) -> void:
 	if top_values.is_empty():
 		return
 	top_values["day"].text = sim.clock.stamp(arabic)
@@ -242,35 +309,87 @@ func refresh(sim: LQSim) -> void:
 	_colour(top_values["dose"], sim.state["doseRateMicroGyH"] > 60.0)
 	_colour(top_values["signal"], sim.state["signalQuality"] < 0.45)
 
-	var tasks := sim.journal.size()
-	var total := Content.objectives.size()
-	var samples := int(sim.state["samplesCollected"])
-	var morale := int(round(sim.state["averageMorale"] * 100.0))
-	var next := _next_objective(sim)
-	if arabic:
-		mission_label.text = "المهام: %d من %d   ·   العينات: %d   ·   الروح المعنوية: %d%%" % [
-			tasks, total, samples, morale]
-		if next != "":
-			mission_label.text += "\nالتالي: %s" % next
-	else:
-		mission_label.text = "Tasks: %d of %d   ·   Samples: %d   ·   Morale: %d%%" % [
-			tasks, total, samples, morale]
-		if next != "":
-			mission_label.text += "\nNext: %s" % next
+	_update_board(sim, rover)
 
 
-## The first task the commander has not finished, so a new player always has somewhere to walk.
-func _next_objective(sim: LQSim) -> String:
-	for objective in Content.objectives:
-		var id := str(objective.get("id", ""))
+## Which shift the clock is in, with its bilingual header. Six to twelve is morning, twelve to
+## eighteen is afternoon, eighteen and later is evening, and everything before six is night.
+static func current_shift(hour: float) -> Dictionary:
+	if hour >= 6.0 and hour < 12.0:
+		return {"id": "morning", "en": "Morning shift - power, water, air",
+			"ar": "مناوبة الصباح - الطاقة والماء والهواء"}
+	if hour >= 12.0 and hour < 18.0:
+		return {"id": "afternoon", "en": "Afternoon shift - samples and crops",
+			"ar": "مناوبة الظهيرة - العينات والمحاصيل"}
+	if hour >= 18.0:
+		return {"id": "evening", "en": "Evening shift - dust, comms, oxygen",
+			"ar": "مناوبة المساء - الغبار والاتصالات والأكسجين"}
+	return {"id": "night", "en": "Night shift - rest and radiation watch",
+		"ar": "مناوبة الليل - الراحة ومراقبة الإشعاع"}
+
+
+## Every row resolved against the live simulation: the label in the requested language, the hint
+## that says where to stand, and whether the row is finished. The rover rows read the rover's own
+## milestones; `rover` may be null before the vehicle exists, which simply leaves them pending.
+static func board_rows(sim: LQSim, rover = null, arabic := false) -> Array:
+	var out: Array = []
+	var day: int = mini(sim.clock.day(), 30)
+	for row in BOARD_ROWS:
+		var kind := str(row["kind"])
+		var id := str(row["id"])
+		var label := str(row["ar"]) if arabic else str(row["en"])
+		var hint := str(row["hint"])
 		var done := false
-		for entry in sim.journal:
-			if str(entry.get("objectiveId", "")) == id:
-				done = true
-				break
-		if not done:
-			return str(objective.get("titleAr", "")) if arabic else str(objective.get("titleEn", ""))
-	return ""
+		match kind:
+			"journal":
+				done = sim.has_entry(id)
+			"rover_driven":
+				done = rover != null and rover.has_driven
+			"rover_ice":
+				done = rover != null and rover.reached_ice
+			"mission":
+				done = sim.clock.day() > 30
+				if arabic:
+					label = "أكمل المهمة — اليوم %d من 30" % day
+				else:
+					label = "Survive the mission — day %d of 30" % day
+				hint = "%d%%" % int(round(sim.clock.mission_progress() * 100.0))
+		out.append({"id": id, "kind": kind, "shift": str(row["shift"]),
+			"label": label, "hint": hint, "done": done})
+	return out
+
+
+## Paint the board. The nodes keep their canonical identity — `board_row_labels[i]` always
+## describes `BOARD_ROWS[i]` — so only their position in the box ever changes with the shift.
+func _update_board(sim: LQSim, rover) -> void:
+	if board_row_labels.is_empty():
+		return
+	var shift: Dictionary = current_shift(sim.clock.hour_of_day())
+	board_header.text = str(shift["ar"]) if arabic else str(shift["en"])
+
+	var shift_id := str(shift["id"])
+	if shift_id != _board_shift:
+		_board_shift = shift_id
+		# The current shift leads and everything behind it keeps its canonical order, so pulling
+		# the leading rows to the front in a single pass leaves the whole board correctly sorted.
+		var at := 1 # index 0 is the header
+		for i in BOARD_ROWS.size():
+			if str(BOARD_ROWS[i]["shift"]) == shift_id:
+				board_box.move_child(board_row_labels[i], at)
+				at += 1
+
+	var rows := board_rows(sim, rover, arabic)
+	for i in BOARD_ROWS.size():
+		var row: Dictionary = rows[i]
+		var text := str(row["label"])
+		var hint := str(row["hint"])
+		if hint != "":
+			text = "%s  ·  %s" % [text, hint]
+		if bool(row["done"]):
+			text = "✓ " + text
+		var line: Label = board_row_labels[i]
+		line.text = text
+		line.add_theme_color_override("font_color", DONE if bool(row["done"]) else TEXT)
 
 
 func _colour(label: Label, warn: bool) -> void:
@@ -572,7 +691,7 @@ func _build_start_screen() -> void:
 	load_button.pressed.connect(func(): resume_requested.emit())
 	column.add_child(load_button)
 
-	var note := _label("Pure GDScript build · Web, Windows and Linux exports · "
+	var note := _label("Pure GDScript build · Windows and Linux exports · "
 		+ "the same content and save file as the Godot .NET and Unity projects", 13, DIM)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

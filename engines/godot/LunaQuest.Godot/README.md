@@ -91,10 +91,24 @@ Godot --path engines/godot/LunaQuest.Godot \
 # Close-up portrait for astronaut checks
 Godot --path engines/godot/LunaQuest.Godot \
   --autostart --portrait --screenshot=/tmp/portrait.png --shot-delay=5
+
+# Take the crew rover's wheel for a drive-by frame (--drive is capture-only: with no hands
+# on the keyboard it supplies the throttle until the frame is saved)
+Godot --path engines/godot/LunaQuest.Godot \
+  --autostart --no-intro --spawn=-11,-25 --drive --look=3.54,-0.3 \
+  --screenshot=/tmp/rover.png --shot-delay=4.5
+
+# Portrait with the shift task board kept off the picture (--no-board; the board sits in
+# the centre of the frame, exactly where the visor lands). With --portrait, --look is
+# applied after the portrait camera — --portrait --look=0,-0.04 frames the suit's back.
+Godot --path engines/godot/LunaQuest.Godot \
+  --autostart --portrait --no-board --screenshot=/tmp/portrait.png --shot-delay=4.5
 ```
 
 These flags are inert during normal play. The screenshot path can be absolute or a
-`res://`/`user://` path.
+`res://`/`user://` path. `tools/capture-screenshots.sh` runs these captures to refresh
+`docs/screenshots/` (a virtual display is required — `--headless` has no renderer to
+photograph).
 
 ---
 

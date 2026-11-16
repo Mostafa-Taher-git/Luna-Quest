@@ -2,7 +2,7 @@
 
 > **30 Earth days. Six crew, one commander and NEXO the robot. One shared simulation. Every kilogram and every second counted.**
 
-![Luna-Quest v3.3 - nine in-game views](docs/screenshots/preview-candidates.jpg)
+![Luna-Quest — the colony at Shackleton rim](docs/screenshots/colony.png)
 
 ## Download and play
 
@@ -55,11 +55,11 @@ listen and move the player; the simulation is one deterministic core with a shar
 | Shared simulation core | Complete, `netstandard2.1`, 426 automated checks passing |
 | Content (buildings, crew, incidents, crops, learning) | Complete, seven JSON files including the voice manifest |
 | Godot 4.7.2 .NET project | Complete; built, launched, screenshotted and played on Linux |
-| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Web, Windows and Linux** |
+| **GDScript project (stock Godot, no .NET)** | **Complete; parses, boots and flies a full thirty-day mission headlessly, 544 rule checks and 190 scene checks passing, exported for Windows and Linux** |
 | Unity 6.3 LTS project | Complete; compile-checked with 0 errors against Unity reference assemblies, **not opened in a Unity editor in this build environment** |
 | Voice pack | Real recorded MP3 lines, bilingual subtitles, no runtime cloud TTS |
-| Browser edition (Three.js) | **Retired (2026-11).** Kept in-tree only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
-| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Web/Windows/Linux exports), `release.yml` (web ZIP, intro film, Godot .NET and GDScript Windows/Linux/Web), plus a `desktop` job in `release.yml` that publishes the fixed-name `LunaQuest-Windows.exe` and `LunaQuest-Linux-amd64.deb` single-file builds together with `SHA256SUMS` on every tag - the `releases/latest/download/` direct links never expire |
+| Browser edition (Three.js) | **Retired (2026-11).** Kept under `archive/` only for the locked intro poster and historical tests; no new development. The game targets Godot .NET, Godot GDScript and Unity. |
+| CI and releases | `ci.yml` (content + C# core + engine parity), `godot-gdscript.yml` (parse, self-test, scene audit, Windows/Linux exports), `release.yml` (Godot .NET and GDScript Windows/Linux zips, the GDScript `.deb` and raw Linux binary, `SHA256SUMS` over every attached file, intro film) on every tag - no browser artifact of any kind (H1/A1) |
 | GitHub remote | [Public repository](https://github.com/Mostafa-Taher-git/Luna-Quest), branch `main` |
 
 > The Unity adapter deliberately uses only built-in Unity modules, the built-in render
@@ -75,10 +75,10 @@ listen and move the player; the simulation is one deterministic core with a shar
 ### Browser edition - retired
 
 The Three.js browser edition is no longer developed, built or deployed. Luna-Quest targets
-exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The `web/` folder
-stays in the tree only because `web/static/intro-poster.jpg` is a locked asset
-(`docs/design/asset-lock.json`) and the folder holds the historical test suite. Play the
-GDScript, Godot .NET or Unity builds instead.
+exactly three engines: **Godot .NET**, **Godot GDScript** and **Unity**. The retired
+edition now lives under `archive/web/`, which carries the locked intro poster
+(`archive/web/static/intro-poster.jpg`, `docs/design/asset-lock.json`) and the
+historical test suite. Play the GDScript, Godot .NET or Unity builds instead.
 
 Walk up to the crew rover on the garage apron and press `E` to drive: `W`/`S` throttle, `A`/`D`
 steer, `Shift` boost, `Space` handbrake, `E` to park and step out. The battery recharges on the
@@ -102,8 +102,8 @@ Requirements: **Godot 4.7.2 .NET** and a .NET SDK that supports `netstandard2.1`
 ### GDScript (stock Godot - no .NET anywhere)
 
 A third project, `engines/godot-gdscript/LunaQuest.GDScript`, is the same game written in plain
-GDScript. It needs nothing but a standard Godot 4.7.2 editor, and - unlike the .NET project - it
-exports to the web, which is what CI ships as `LunaQuest-GDScript-Web.zip`.
+GDScript. It needs nothing but a standard Godot 4.7.2 editor; CI exports it for Windows and
+Linux, and the release attaches those archives with the `.deb` package and `SHA256SUMS`.
 
 ```bash
 # one-time: copy the shared astronaut, kit models, intro film and voice pack in
@@ -364,13 +364,14 @@ Luna-Quest-Game/
 +-- docs/                    design docs, research, screenshots, licenses
 +-- engines/
 |   +-- godot/LunaQuest.Godot/          Godot 4.7.2 .NET edition (C#)
-|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, web-exportable)
+|   +-- godot-gdscript/LunaQuest.GDScript/  stock Godot edition (GDScript, no .NET)
 |   +-- unity/LunaQuest.Unity/
 +-- shared/
 |   +-- LunaQuest.Core/      simulation, content loader, save contract
 |   +-- LunaQuest.Tests/     console test harness
-+-- web/                     RETIRED browser edition (kept for the locked intro poster
-|                            and historical tests; no new development)
++-- archive/                 retired material: the browser edition (with its locked
+|                            intro poster and historical tests), web-era screenshots,
+|                            superseded one-shot tools
 +-- tools/                   content sync, astronaut bake, voice-pack generator,
 |                            sync-gdscript-assets.sh
 +-- README.md
@@ -432,6 +433,16 @@ Godot --path engines/godot/LunaQuest.Godot --autostart \
 # Front portrait for model checks
 Godot --path engines/godot/LunaQuest.Godot --autostart --portrait \
   --screenshot=/tmp/portrait.png --shot-delay=5
+
+# Take the crew rover's wheel for a drive-by frame (capture-only throttle)
+Godot --path engines/godot/LunaQuest.Godot --autostart --no-intro \
+  --spawn=-11,-25 --drive --look=3.54,-0.3 \
+  --screenshot=/tmp/rover.png --shot-delay=4.5
+
+# Portrait with the shift task board off the picture — the board sits centre screen,
+# exactly where the visor lands
+Godot --path engines/godot/LunaQuest.Godot --autostart --portrait --no-board \
+  --screenshot=/tmp/portrait.png --shot-delay=4.5
 
 # Start in the helmet view, at a fixed position and look direction
 Godot --path engines/godot/LunaQuest.Godot --autostart --first-person \

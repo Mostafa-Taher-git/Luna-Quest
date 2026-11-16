@@ -57,11 +57,11 @@ __pycache__/
 
 build/
 
-# ---- web build -------------------------------------------------------------
-web/node_modules/
-web/public/
-web/dist/
-web/.vite/
+# ---- retired web build (the edition now lives under archive/) --------------
+archive/web/node_modules/
+archive/web/public/
+archive/web/dist/
+archive/web/.vite/
 out/
 
 # ---- capture / local only ---------------------------------------------------

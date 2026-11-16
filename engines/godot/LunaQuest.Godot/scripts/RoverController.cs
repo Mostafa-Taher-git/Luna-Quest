@@ -131,10 +131,19 @@ namespace LunaQuest.Godot
             p.RestoreWalkCamera();
         }
 
+        /// <summary>
+        /// Capture-only throttle for `--drive` (see Main.cs): a screenshot run has no hands on
+        /// the keyboard, so the flag supplies the pedal. Zero in normal play, where the keys
+        /// decide the throttle exactly as before.
+        /// </summary>
+        public static float CaptureThrottle;
+
         /// <summary>Called by PlayerController._PhysicsProcess while the commander is at the wheel.</summary>
         public void Drive(float dt, PlayerController p)
         {
-            float throttle = (Input.IsActionPressed("move_forward") ? 1f : 0f) - (Input.IsActionPressed("move_back") ? 1f : 0f);
+            float throttle = CaptureThrottle != 0f
+                ? CaptureThrottle
+                : (Input.IsActionPressed("move_forward") ? 1f : 0f) - (Input.IsActionPressed("move_back") ? 1f : 0f);
             float steerIn = (Input.IsActionPressed("move_left") ? 1f : 0f) - (Input.IsActionPressed("move_right") ? 1f : 0f);
             bool handbrake = Input.IsActionPressed("jump");
             bool boost = Input.IsActionPressed("sprint");

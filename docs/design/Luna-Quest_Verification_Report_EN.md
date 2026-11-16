@@ -52,7 +52,8 @@ new mission), BUG-5 verified geometrically (§4).
 ## 3. New guards, so none of this can come back silently
 
 * **`ci.yml` → `parity` job** (T1): parity + immutable assets on every push. The retired browser
-  job and `pages.yml` are gone, and the release workflow no longer builds or publishes `web/`.
+  job and `pages.yml` are gone; from v3.4 the release workflow builds no web export either —
+  the GDScript `Web` preset was deleted with it (H1/A1).
 * **`godot-dotnet.yml`** (new): builds the C# edition (Debug *and* Release), imports the project,
   runs 600 frames and then `-- --rover-test`. This is the first CI job that ever compiled this
   engine.

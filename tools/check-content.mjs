@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Content and asset validation shared by both engines and the web build.
+ * Content and asset validation shared by all three engines.
  *
  *   node tools/check-content.mjs
  *
