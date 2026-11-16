@@ -296,6 +296,6 @@ jobs:
             artifacts/gdscript-builds/*.zip
             artifacts/gdscript-builds/*.exe
             artifacts/gdscript-builds/*.deb
-            artifacts/gdscript-builds/*.x86_64
+            artifacts/gdscript-builds/LunaQuest-Linux-x86_64
             artifacts/intro-film/*.mp4
             artifacts/checksums/SHA256SUMS
