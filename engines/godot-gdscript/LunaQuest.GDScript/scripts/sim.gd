@@ -803,6 +803,17 @@ func _notice(raised: Array, id: String, condition: bool, cooldown: float, kind: 
 ## Console entry point. Unmapped interaction ids are observation stations: reading one unlocks
 ## its journal objective, which is exactly how the C# core behaves.
 func interact(building_id: String, interaction_id: String) -> Dictionary:
+	# F6: the ice drill and the custody cache are explicitly routed before any generic action.
+	if interaction_id == "collect_sample" or interaction_id == "drill_sample":
+		return drill_sample()
+	if interaction_id == "cache_log":
+		if sample_in_hand:
+			return log_sample_cache()
+		return _read_station(building_id, interaction_id)
+	if interaction_id == "parts" and cargo_carried:
+		return complete_cargo()
+	if interaction_id == "cargo_crate":
+		return start_cargo()
 	var mapped: String = ACTION_ALIASES.get(interaction_id, "")
 	if mapped == "repair_o2":
 		state["o2GeneratorRunning"] = true
@@ -1199,3 +1210,137 @@ func summary() -> Dictionary:
 		"foodDays": food_days_remaining(),
 		"dataPoints": state["dataPoints"],
 	}
+
+
+# ---- F6: EVA reserve, sample custody, cargo run ---------------------------
+# Mirrors shared/LunaQuest.Core/Sim/ColonySimulation.cs 1:1 — do not change one side only.
+
+const EVA_DRAIN := 0.0035
+const EVA_RECHARGE := 0.02
+var _eva_warned_25 := false
+var _eva_warned_10 := false
+var _eva_note_posted := false
+var sample_in_hand := false
+var cargo_carried := false
+var cargo_deadline := -1.0
+const CARGO_WINDOW := 150.0
+
+func tick_eva(inside: bool, real_seconds: float) -> int:
+	if inside:
+		state["suitEnergy"] = minf(1.0, float(state["suitEnergy"]) + EVA_RECHARGE * real_seconds)
+		if state["suitEnergy"] > 0.3:
+			_eva_warned_25 = false
+			_eva_warned_10 = false
+		if state["suitEnergy"] > 0.15:
+			_eva_note_posted = false
+		return 0
+	state["suitEnergy"] = maxf(0.0, float(state["suitEnergy"]) - EVA_DRAIN * real_seconds)
+	var e := float(state["suitEnergy"])
+	if e <= 0.0 and not _eva_note_posted:
+		_eva_note_posted = true
+		_append_journal("eva_drain",
+			"Suits are lived systems",
+			"البدلات أنظمة حية",
+			"The EVA reserve ran dry during outside work. Recharge at the airlock; plan the route before opening the door.",
+			"نفد احتياط البدلة أثناء العمل الخارجي. أعد الشحن عند الأيرلوك؛ خطط للمسار قبل فتح الباب.",
+			"health")
+		return 3
+	if e <= 0.10 and not _eva_warned_10:
+		_eva_warned_10 = true
+		return 2
+	if e <= 0.25 and not _eva_warned_25:
+		_eva_warned_25 = true
+		return 1
+	return 0
+
+func require_eva() -> Dictionary:
+	if float(state["suitEnergy"]) > 0.0:
+		return {"ok": true}
+	return {"ok": false, "en":
+		"EVA reserve empty. The suit limits further outside work until it recharges at the airlock.",
+		"ar": "احتياط البدلة فارغ. تمنع البدلة أي عمل خارجي حتى تعيد الشحن عند الأيرلوك."}
+
+func drill_sample() -> Dictionary:
+	if sample_in_hand:
+		return _say(false,
+			"Sample already in the carrier. Log it at the ice cache before drilling another.",
+			"العينة في الحامل بالفعل. سجّلها في مستودع موقع الجليد قبل حفر عينة أخرى.")
+	var gate := require_eva()
+	if not gate.get("ok", false):
+		return _say(false, str(gate["en"]), str(gate["ar"]))
+	sample_in_hand = true
+	return _say(true,
+		"Drill into the ice-laced regolith — the sample is in the carrier. Log the chain of custody at the ice site cache.",
+		"احفر في الريغوليث الحامل للجليد — العينة في الحامل. سجّل سلسلة التوريد في مستودع موقع الجليد.")
+
+func log_sample_cache() -> Dictionary:
+	if not sample_in_hand:
+		return _say(false,
+			"No sample in the carrier. Drill one at the ice site first.",
+			"لا توجد عينة في الحامل. احفر عينة من موقع الجليد أولًا.")
+	sample_in_hand = false
+	state["samplesCollected"] = int(state["samplesCollected"]) + 1
+	state["dataPoints"] = float(state["dataPoints"]) + 10.0
+	_complete("obj_sample", "collect_sample")
+	return _say(true,
+		"Chain of custody sealed: ice-laced regolith drilled and logged at the cache with grid coordinates. +10 data (%d logged)." % int(state["samplesCollected"]),
+		"أُغلقت سلسلة التوريد: ريغوليث حامل للجليد حُفر وسُجل في المستودع مع إحداثيات الشبكة. +10 بيانات (%d مسجلة)." % int(state["samplesCollected"]))
+
+func start_cargo() -> Dictionary:
+	if cargo_carried:
+		return _say(true,
+			"Cargo already secured. Deliver it to the workshop spares desk.",
+			"البضاعة مؤمنة بالفعل. سلّمها إلى مكتب قطع غيار الورشة.")
+	cargo_carried = true
+	cargo_deadline = CARGO_WINDOW
+	return _say(true,
+		"Cargo secured on the pad: 12 kg of filters and coolant, manifest in the carrier. Deliver to the workshop spares desk before the board window closes.",
+		"تم تأمين الشحنة في المنصة: 12 كجم فلاتر ومبرد، القائمة في الحامل. سلّمها إلى مكتب قطع غيار الورشة قبل إغلاق نافذة اللوحة.")
+
+func tick_cargo(real_seconds: float) -> void:
+	if cargo_carried and cargo_deadline >= 0.0:
+		cargo_deadline = maxf(0.0, cargo_deadline - real_seconds)
+
+func complete_cargo() -> Dictionary:
+	if not cargo_carried:
+		return _say(false,
+			"No cargo in the carrier. Collect the supply crate at the landing pad.",
+			"لا توجد شحنة في الحامل. اجمع صندوق الإمداد من منصة الهبوط.")
+	var on_time := cargo_deadline > 0.0
+	cargo_carried = false
+	cargo_deadline = -1.0
+	if on_time:
+		state["dataPoints"] = float(state["dataPoints"]) + 15.0
+		_append_journal("cargo_run",
+			"Every kilogram has an owner",
+			"كل كيلوغرام له مسؤول",
+			"Supply crate delivered before the board window closed: the 12 kg manifest matched the pad load list. +15 data — the run counted because the paperwork did.",
+			"تم تسليم صندوق الإمداد قبل إغلاق نافذة اللوحة: طابقت قائمة الـ12 كجم حمولة المنصة. +15 بيانات — نجحت الرحلة لأن الورق كان مرتبًا.",
+			"engineering")
+		return _say(true,
+			"Workshop resupplied. Manifest signed, +15 data.",
+			"أعادت الورشة الإمداد. وُقعت القائمة، +15 بيانات.")
+	state["dataPoints"] = float(state["dataPoints"]) + 8.0
+	_append_journal("cargo_run_late",
+		"Late is a delivery too",
+		"التسليم المتأخر تسليم أيضًا",
+		"The supply crate arrived after the board window. Checklists save time, not just pride. +8 data.",
+		"وصل صندوق الإمداد بعد نافذة اللوحة. القوائم توفر الوقت، لا الفخر فقط. +8 بيانات.",
+		"engineering")
+	return _say(true,
+		"Delivered late. +8 data. The board logs it honestly.",
+		"سلّمت متأخرًا. +8 بيانات. تسجل اللوحة ذلك بأمانة.")
+
+
+func _append_journal(objective_id: String, title_en: String, title_ar: String,
+	body_en: String, body_ar: String, skill: String) -> void:
+	for entry in journal:
+		if str(entry.get("objectiveId", "")) == objective_id:
+			return
+	journal.append({
+		"objectiveId": objective_id,
+		"titleEn": title_en, "titleAr": title_ar,
+		"bodyEn": body_en, "bodyAr": body_ar,
+		"skill": skill, "evidenceClass": "real-world", "source": "Luna-Quest",
+		"unlockedAtMinute": clock.total_minutes,
+	})

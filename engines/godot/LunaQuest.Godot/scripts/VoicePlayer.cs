@@ -33,7 +33,45 @@ namespace LunaQuest.Godot
             ["npc_mostafa"] = "mostafa",
         };
 
+        /// <summary>Spoken lines can be silenced from the settings panel; subtitles still run.</summary>
+        public bool Enabled = true;
+
         public void Bind(Hud hud) => _hud = hud;
+
+        /// <summary>F10: NEXO's happy chirp — the colony finished something, it delights.
+        /// Runtime-generated two-note sweep; downloads nothing.</summary>
+        public void PlayChirp()
+        {
+            const int sampleRate = 22050;
+            var frames = sampleRate * 38 / 100;
+            var data = new byte[frames * 2];
+            for (int i = 0; i < frames; i++)
+            {
+                float t = i / (float)sampleRate;
+                float p = t / 0.38f;
+                float f = 1180f + 1900f * p;
+                float v = Mathf.Sin(t * Mathf.Tau * f + Mathf.Sin(t * Mathf.Tau * 13f) * 1.1f) * 0.72f * Mathf.Sin(p * Mathf.Pi) * (1f - p * 0.35f);
+                short s = (short)(v * 9200f);
+                data[i * 2] = (byte)(s & 0xFF);
+                data[i * 2 + 1] = (byte)((s >> 8) & 0xFF);
+            }
+            var player = new AudioStreamPlayer3D
+            {
+                Name = "NexoChirp",
+                MaxDistance = 16f,
+                VolumeDb = -6f,
+                Stream = new AudioStreamWav
+                {
+                    Format = AudioStreamWav.FormatEnum.Format16Bits,
+                    MixRate = sampleRate,
+                    Stereo = false,
+                    Data = data,
+                },
+            };
+            Main.Instance?.AddChild(player);
+            player.Play();
+            player.Finished += player.QueueFree;
+        }
 
         public bool IsPlaying => _voice != null && _voice.Playing;
 
@@ -60,6 +98,7 @@ namespace LunaQuest.Godot
 
         public void Speak(NpcProfile profile, bool greeting)
         {
+            if (!Enabled) return;
             // A greeting is a direct answer to the player and always plays. Ambient barks
             // keep their cooldown so the colony does not chatter over itself.
             if (_barkCooldown > 0 && !greeting) return;
@@ -79,6 +118,7 @@ namespace LunaQuest.Godot
 
         public void SpeakEvent(SimEvent e, bool arabic)
         {
+            if (!Enabled) return;
             string key = $"inc.{e.Id}";
             if (!_file.TryGetValue(key, out string? file)) return;
             string text = arabic
@@ -93,6 +133,7 @@ namespace LunaQuest.Godot
         /// </summary>
         public void SpeakTopic(DialogueTopic topic)
         {
+            if (!Enabled) return;
             string text = L.Arabic ? topic.LineAr : topic.LineEn;
             if (_file.TryGetValue(topic.VoiceKey, out string? file))
                 SpeakFile(file, text, 7.0);
@@ -138,6 +179,7 @@ namespace LunaQuest.Godot
 
         public void SpeakFile(string file, string subtitle, double seconds = 5.0)
         {
+            if (!Enabled) return;
             var path = $"res://assets/voice/{file}";
             if (ResourceLoader.Exists(path))
             {

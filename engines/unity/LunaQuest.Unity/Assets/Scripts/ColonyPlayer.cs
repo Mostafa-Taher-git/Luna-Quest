@@ -19,11 +19,24 @@ namespace LunaQuest.Unity
         public Camera Camera;
         public bool ThirdPerson = true;
 
+        /// <summary>F6: shown instead of the focus prompt while a job is being held.</summary>
+        public string HoldPrompt = "";
+
+        /// <summary>Settings-controlled turn rate multiplier (default 1.0).</summary>
+        public float MouseSensitivity = 1.0f;
+        /// <summary>Settings-controlled field of view (default 70).</summary>
+        public float BaseFov = 70f;
+
         public Station FocusStation { get; private set; }
         public CrewAgent FocusCrew { get; private set; }
 
         private CharacterController _controller;
         private Transform _pivot;
+        private float _stepTimer, _fallVel;
+        private bool _wasAirborne;
+        private ParticleSystem _footPuff;
+        private AudioSource _thud;
+        private bool _feelBuilt;
         private Light _suitLight;
         private float _yaw = 180f;
         private float _pitch = -8f;
@@ -67,6 +80,13 @@ namespace LunaQuest.Unity
         public bool NearIncident =>
             Game != null && Game.Sim.Incidents.Active.Exists(a => !a.Resolved && !a.Ignored);
 
+        /// <summary>F0 contract: W moves toward the way the camera looks. Static for regression tests.</summary>
+        public static Vector3 CameraRelativeDirection(Vector2 input, float yawDegrees)
+        {
+            Vector3 dir = Quaternion.Euler(0f, yawDegrees, 0f) * new Vector3(input.x, 0f, input.y);
+            return dir.sqrMagnitude > 1f ? dir.normalized : dir;
+        }
+
         public static ColonyPlayer Create(LunaQuestGame game)
         {
             var go = new GameObject("Commander");
@@ -74,6 +94,7 @@ namespace LunaQuest.Unity
             var player = go.AddComponent<ColonyPlayer>();
             player.Game = game;
 
+            player.BuildFeel();
             player._controller = go.AddComponent<CharacterController>();
             player._controller.radius = 0.34f;
             player._controller.height = 1.75f;
@@ -150,8 +171,8 @@ namespace LunaQuest.Unity
 
             if (Game.InputActive && Cursor.lockState == CursorLockMode.Locked)
             {
-                _yaw += Input.GetAxis("Mouse X") * 2.1f;
-                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * 2.1f, -72f, 72f);
+                _yaw += Input.GetAxis("Mouse X") * 2.1f * MouseSensitivity;
+                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * 2.1f * MouseSensitivity, -72f, 72f);
             }
 
             if (Input.GetKeyDown(KeyCode.V) && Game.InputActive)
@@ -163,25 +184,31 @@ namespace LunaQuest.Unity
             {
                 // Dialogue and menus do not stop time, so the wheel itself has to be gated:
                 // without this the rover keeps driving behind an open dialogue box.
-                if (Game.InputActive) Rover.Drive(dt, this);
+                if (Game.InputActive)
+                {
+                    // The chase camera follows the vehicle heading every frame so W drives
+                    // toward the view (F0 contract).
+                    SyncCameraToRover();
+                    Rover.Drive(dt, this);
+                }
                 return;
             }
 
-            Vector3 input = Vector3.zero;
+            Vector2 moveInput = Vector2.zero;
             bool sprinting = false;
             if (Game.InputActive)
             {
-                if (Input.GetKey(KeyCode.W)) input.z += 1f;
-                if (Input.GetKey(KeyCode.S)) input.z -= 1f;
-                if (Input.GetKey(KeyCode.D)) input.x += 1f;
-                if (Input.GetKey(KeyCode.A)) input.x -= 1f;
-                sprinting = Input.GetKey(KeyCode.LeftShift) && input.sqrMagnitude > 0.01f;
+                if (Input.GetKey(KeyCode.W)) moveInput.y += 1f;
+                if (Input.GetKey(KeyCode.S)) moveInput.y -= 1f;
+                if (Input.GetKey(KeyCode.D)) moveInput.x += 1f;
+                if (Input.GetKey(KeyCode.A)) moveInput.x -= 1f;
+                sprinting = Input.GetKey(KeyCode.LeftShift) && moveInput.sqrMagnitude > 0.01f;
                 if (Input.GetKeyDown(KeyCode.Space)) _jumpBuffer = JumpBufferSeconds;
             }
 
             if (_jumpBuffer > 0f) _jumpBuffer = Mathf.Max(0f, _jumpBuffer - dt);
 
-            Vector3 dir = Quaternion.Euler(0f, _yaw, 0f) * input.normalized;
+            Vector3 dir = CameraRelativeDirection(moveInput, _yaw);
             float speed = sprinting ? RunSpeed : WalkSpeed;
             Vector3 target = dir * speed;
 
@@ -190,7 +217,7 @@ namespace LunaQuest.Unity
             else _coyote = Mathf.Max(0f, _coyote - dt);
 
             float accel = grounded
-                ? (input.sqrMagnitude > 0.01f ? GroundAcceleration : GroundDeceleration)
+                ? (moveInput.sqrMagnitude > 0.01f ? GroundAcceleration : GroundDeceleration)
                 : AirAcceleration;
             _horizontal = Vector3.Lerp(_horizontal, target, 1f - Mathf.Exp(-accel * dt));
 
@@ -204,8 +231,53 @@ namespace LunaQuest.Unity
                 _coyote = 0f;
             }
 
+            // F8: above 30 degrees of slope the suit starts to slide, not stop dead.
+            if (_controller.isGrounded)
+            {
+                if (Physics.Raycast(transform.position + Vector3.up * 1.0f, Vector3.down, out RaycastHit slopeHit,
+                        2.2f, ~(1 << 2)))
+                {
+                    float slope = Mathf.RadToDeg(Mathf.Acos(Mathf.Clamp(slopeHit.normal.y, 0f, 1f)));
+                    if (slope > 30f && slope < 88f)
+                    {
+                        Vector3 downhill = new Vector3(-slopeHit.normal.x, 0f, -slopeHit.normal.z);
+                        float excess = Mathf.Clamp((slope - 30f) / 60f, 0f, 0.6f);
+                        _horizontal += downhill.normalized * excess * 6.5f;
+                    }
+                }
+            }
+
+            // F8: heel-strike dust on the walk, thud on the landing.
+            Vector2 horizontal = new Vector2(_horizontal.x, _horizontal.z);
+            if (_controller.isGrounded && horizontal.sqrMagnitude > 1f)
+            {
+                _stepTimer += dt * (sprinting ? 8f : 5f);
+                if (_stepTimer >= 1f)
+                {
+                    _stepTimer = 0f;
+                    if (_footPuff != null)
+                        _footPuff.Emit(6);
+                }
+            }
+
             Vector3 velocity = new Vector3(_horizontal.x, _vertical, _horizontal.z);
             _controller.Move(velocity * dt);
+
+            bool groundedAfter = _controller.isGrounded;
+            if (groundedAfter)
+            {
+                if (_wasAirborne && _fallVel < -2.4f)
+                {
+                    if (_thud != null && _thud.clip != null) _thud.Play();
+                    if (_footPuff != null) _footPuff.Emit(12);
+                }
+                _wasAirborne = false;
+            }
+            else
+            {
+                _wasAirborne = true;
+                _fallVel = _vertical;
+            }
 
             if (dir.sqrMagnitude > 0.01f)
             {
@@ -214,7 +286,7 @@ namespace LunaQuest.Unity
                     Quaternion.Euler(0f, targetYaw, 0f), dt * 12f);
             }
 
-            float targetFov = ThirdPerson ? 70f : 78f;
+            float targetFov = BaseFov + (ThirdPerson ? 0f : 8f);
             if (sprinting) targetFov += 4f;
             Camera.fieldOfView = Mathf.Lerp(Camera.fieldOfView, targetFov, 1f - Mathf.Exp(-8f * dt));
 
@@ -285,6 +357,57 @@ namespace LunaQuest.Unity
             Camera.transform.localPosition = new Vector3(0f, 0f, ThirdPerson ? -7.5f : -0.05f);
         }
 
+        public void SyncCameraToRover()
+        {
+            if (Rover == null) return;
+            _yaw = Rover.transform.eulerAngles.y;
+            _pivot.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        }
+
+        /// <summary>F8: heel-strike dust, landing thud. Runtime-built, downloads nothing.</summary>
+        private void BuildFeel()
+        {
+            _feelBuilt = true;
+            var dustGo = new GameObject("FootDust");
+            dustGo.transform.SetParent(transform, false);
+            dustGo.transform.localPosition = new Vector3(0f, 0.07f, 0f);
+            _footPuff = dustGo.AddComponent<ParticleSystem>();
+            var main = _footPuff.main;
+            main.startColor = new Color(0.60f, 0.56f, 0.50f, 0.6f);
+            main.startLifetime = 0.9f;
+            main.startSpeed = 1.1f;
+            main.startSize = 0.2f;
+            main.maxParticles = 12;
+            main.gravityModifier = 0.05f;
+            main.loop = false;
+            var emission = _footPuff.emission;
+            emission.rateOverTime = 0f;
+            emission.bursts = new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 6f) };
+            var shape = _footPuff.shape;
+            shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 40f;
+            shape.radius = 0.16f;
+            _footPuff.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            const int sampleRate = 16000;
+            int frames = sampleRate * 35 / 100;
+            var samples = new float[frames];
+            for (int i = 0; i < frames; i++)
+            {
+                float t = i / (float)sampleRate;
+                samples[i] = Mathf.Sin(t * Mathf.PI * 2f * 48f) * Mathf.Exp(-t * 14f) * 0.8f;
+            }
+            var clip = AudioClip.Create("land_thud", samples.Length, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            var thudGo = new GameObject("LandThud");
+            thudGo.transform.SetParent(transform, false);
+            _thud = thudGo.AddComponent<AudioSource>();
+            _thud.spatialBlend = 1f;
+            _thud.minDistance = 1.2f;
+            _thud.maxDistance = 18f;
+            _thud.clip = clip;
+        }
+
         public void RestoreWalkCamera()
         {
             _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.45f : 1.58f, 0f);
@@ -297,7 +420,7 @@ namespace LunaQuest.Unity
             Visual.gameObject.SetActive(ThirdPerson);
             _suitLight.enabled = !ThirdPerson;
             _pivot.localPosition = new Vector3(0f, ThirdPerson ? 1.45f : 1.58f, 0f);
-            Camera.fieldOfView = ThirdPerson ? 70f : 78f;
+            Camera.fieldOfView = BaseFov + (ThirdPerson ? 0f : 8f);
             Camera.transform.localPosition = new Vector3(0f, 0f, -0.05f);
             _bob = 0f;
             if (Rover != null) ConfigureDriveCamera();

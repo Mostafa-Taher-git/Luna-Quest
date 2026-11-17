@@ -14,6 +14,7 @@ signal restart_requested
 signal topic_requested(npc_id: String, topic_id: String)
 signal dialogue_closed
 signal language_toggled
+signal settings_changed(data: Dictionary)
 
 const FONT_LATIN := "res://assets/noto-sans-latin.woff"
 const FONT_ARABIC := "res://assets/noto-sans-arabic.woff"
@@ -97,6 +98,9 @@ var intro_skip: Button
 var name_edit: LineEdit
 var lang_button: Button
 var arabic := false
+var settings_panel: PanelContainer
+var settings_body: VBoxContainer
+var settings_data: Dictionary = {}
 var ui_theme := Theme.new()
 var _dialogue_npc := ""
 
@@ -409,7 +413,14 @@ func set_prompt(text: String) -> void:
 	prompt_label.text = text
 
 
+var _subtitles_enabled := true
+
+func set_subtitles_enabled(on: bool) -> void:
+	_subtitles_enabled = on
+
 func set_subtitle(text: String) -> void:
+	if not _subtitles_enabled:
+		return
 	subtitle_label.text = text
 
 
@@ -487,6 +498,10 @@ func _build_panels() -> void:
 	lang_button.text = "Language: English"
 	lang_button.pressed.connect(func(): language_toggled.emit())
 	pause_body.add_child(lang_button)
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings · الإعدادات"
+	settings_btn.pressed.connect(open_settings)
+	pause_body.add_child(settings_btn)
 	var restart := Button.new()
 	restart.text = "Restart the mission  ·  إعادة المهمة"
 	restart.pressed.connect(func(): restart_requested.emit())
@@ -498,6 +513,7 @@ func _build_panels() -> void:
 	pause_panel.visible = false
 	root.add_child(pause_panel)
 
+	_build_settings_panel()
 	var dialogue := _make_panel("", "")
 	dialogue_panel = dialogue["panel"]
 	dialogue_body = dialogue["body"]
@@ -635,6 +651,123 @@ func set_language(arabic_on: bool) -> void:
 		lang_button.text = "Language: العربية" if arabic_on else "Language: English"
 
 
+func _build_settings_panel() -> void:
+	var settings := _make_panel("Settings", "الإعدادات")
+	settings_panel = settings["panel"]
+	settings_body = settings["body"]
+	settings_panel.visible = false
+	root.add_child(settings_panel)
+
+
+func open_settings() -> void:
+	if settings_panel == null:
+		return
+	if settings_data.is_empty():
+		settings_data = GameSettings.load()
+	settings_panel.visible = true
+	for c in settings_body.get_children():
+		c.queue_free()
+	_fill_settings_panel()
+	var done := Button.new()
+	done.text = "Done · تم"
+	done.pressed.connect(_save_and_close_settings)
+	settings_body.add_child(done)
+
+
+func _fill_settings_panel() -> void:
+	var data := settings_data
+	# Camera view: first or third person.
+	settings_body.add_child(_label("Camera · الكامرہ", 16, ACCENT))
+	var cam := HBoxContainer.new()
+	cam.add_theme_constant_override("separation", 16)
+	cam.alignment = BoxContainer.ALIGNMENT_CENTER
+	settings_body.add_child(cam)
+	for pair in [["First person", false], ["Third person", true]]:
+		var btn := Button.new()
+		btn.text = pair[0]
+		btn.disabled = pair[1] == bool(data["third_person"])
+		btn.pressed.connect(_set_setting.bind("third_person", pair[1]))
+		cam.add_child(btn)
+
+	# Language.
+	settings_body.add_child(_label("Language · اللغة", 16, ACCENT))
+	var lang := HBoxContainer.new()
+	lang.add_theme_constant_override("separation", 16)
+	lang.alignment = BoxContainer.ALIGNMENT_CENTER
+	settings_body.add_child(lang)
+	for pair in [["English", "en"], ["العربية", "ar"]]:
+		var btn := Button.new()
+		btn.text = pair[0]
+		btn.disabled = pair[1] == str(data["language"])
+		btn.pressed.connect(_set_setting.bind("language", pair[1]))
+		lang.add_child(btn)
+
+	# Sliders.
+	_settings_slider("Mouse sensitivity · حساسية الماوس", "mouse_sensitivity", 0.5, 2.0, 0.05, data)
+	_settings_slider("Field of view · مجال الرؤية", "fov", 55.0, 85.0, 1.0, data)
+	_settings_slider("Master volume · مستوى الصوت", "master_volume", 0.0, 1.0, 0.05, data)
+
+	# Toggles.
+	_settings_toggle("Voice · الصوت", "voice", data)
+	_settings_toggle("Subtitles · الترجمة", "subtitles", data)
+	_settings_toggle("Fullscreen · ملء الشاشة", "fullscreen", data)
+
+	# Quality preset.
+	settings_body.add_child(_label("Quality · الجودة", 16, ACCENT))
+	var quality := HBoxContainer.new()
+	quality.add_theme_constant_override("separation", 12)
+	quality.alignment = BoxContainer.ALIGNMENT_CENTER
+	settings_body.add_child(quality)
+	for q in ["low", "medium", "high"]:
+		var btn := Button.new()
+		btn.text = q.capitalize()
+		btn.disabled = q == str(data["quality"])
+		btn.pressed.connect(_set_setting.bind("quality", q))
+		quality.add_child(btn)
+
+
+func _settings_slider(label_text: String, key: String, min_value: float, max_value: float, step: float, data: Dictionary) -> void:
+	settings_body.add_child(_label(label_text, 16, ACCENT))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	settings_body.add_child(row)
+	var slider := HSlider.new()
+	slider.min_value = min_value
+	slider.max_value = max_value
+	slider.step = step
+	slider.value = float(data[key])
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var current := _label("%.2f" % float(data[key]), 17, TEXT)
+	current.custom_minimum_size = Vector2(72, 0)
+	slider.value_changed.connect(func(v: float):
+		_set_setting(key, v)
+		current.text = "%.2f" % v)
+	row.add_child(slider)
+	row.add_child(current)
+
+
+func _settings_toggle(label_text: String, key: String, data: Dictionary) -> void:
+	settings_body.add_child(_label(label_text, 16, ACCENT))
+	var btn := Button.new()
+	var enabled := bool(data[key])
+	btn.text = "On" if enabled else "Off"
+	btn.pressed.connect(func():
+		var is_on := not bool(settings_data[key])
+		settings_data[key] = is_on
+		btn.text = "On" if is_on else "Off")
+	settings_body.add_child(btn)
+
+
+func _set_setting(key: String, value) -> void:
+	settings_data[key] = value
+
+
+func _save_and_close_settings() -> void:
+	settings_panel.visible = false
+	var captured := settings_data.duplicate(true)
+	settings_changed.emit(captured)
+
+
 # ---- start and end screens -------------------------------------------------
 
 func _build_start_screen() -> void:
@@ -690,6 +823,12 @@ func _build_start_screen() -> void:
 	load_button.custom_minimum_size = Vector2(360, 40)
 	load_button.pressed.connect(func(): resume_requested.emit())
 	column.add_child(load_button)
+
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings · الإعدادات"
+	settings_btn.custom_minimum_size = Vector2(360, 40)
+	settings_btn.pressed.connect(open_settings)
+	column.add_child(settings_btn)
 
 	var note := _label("Pure GDScript build · Windows and Linux exports · "
 		+ "the same content and save file as the Godot .NET and Unity projects", 13, DIM)

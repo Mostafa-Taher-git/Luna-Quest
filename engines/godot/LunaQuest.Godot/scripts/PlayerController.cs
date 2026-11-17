@@ -25,17 +25,92 @@ namespace LunaQuest.Godot
 
         public Node3D Visual = null!;
         public Camera3D Camera = null!;
+
+        /// <summary>F0 contract: W moves toward the way the camera looks. Static for regression tests.</summary>
+        public static Vector3 CameraRelativeDirection(Vector2 input, float yaw)
+        {
+            Vector3 wish = new Vector3(input.X, 0f, input.Y).Rotated(Vector3.Up, yaw);
+            return wish.LengthSquared() > 1f ? wish.Normalized() : wish;
+        }
         public bool ThirdPerson = true;
+
+        /// <summary>Settings-controlled turn rate multiplier (default 1.0).</summary>
+        public float MouseSensitivity = 1.0f;
+        /// <summary>Settings-controlled field of view (default 70).</summary>
+        public float BaseFov = 70f;
         public bool InputLocked = true;
 
         private SpringArm3D _arm = null!;
         private SpotLight3D _suitLight = null!;
+        /// <summary>F8: builds the footstep puff and the landing thud. Called once at _Ready.</summary>
+        private void BuildFeel()
+        {
+            var footMat = new StandardMaterial3D
+            {
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                AlbedoColor = new Color(0.60f, 0.56f, 0.50f, 0.5f),
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            };
+            _footPuff = new GpuParticles3D
+            {
+                Name = "FootDust",
+                Position = new Vector3(0, 0.06f, 0),
+                OneShot = true,
+                Amount = 6,
+                Lifetime = 1.0f,
+                Explosiveness = 0.8f,
+                Emitting = false,
+                ProcessMaterial = new ParticleProcessMaterial
+                {
+                    Direction = new Vector3(0, 0.75f, 0),
+                    Spread = 75f,
+                    Gravity = new Vector3(0, -0.65f, 0),
+                    InitialVelocityMin = 0.25f,
+                    InitialVelocityMax = 1.0f,
+                    ScaleMin = 0.07f,
+                    ScaleMax = 0.24f,
+                },
+                MaterialOverride = footMat,
+                DrawPasses = 1,
+                DrawPass1 = new SphereMesh { Radius = 0.09f, Height = 0.18f, RadialSegments = 6, Rings = 3 },
+            };
+            AddChild(_footPuff);
+
+            const int sampleRate = 16000;
+            int frames = sampleRate * 35 / 100;
+            var data = new byte[frames * 2];
+            for (int i = 0; i < frames; i++)
+            {
+                float t = i / (float)sampleRate;
+                float v = Mathf.Sin(t * Mathf.Tau * 48f) * Mathf.Exp(-t * 14f) * 0.9f;
+                short s = (short)(v * 12000f);
+                data[i * 2] = (byte)(s & 0xFF);
+                data[i * 2 + 1] = (byte)((s >> 8) & 0xFF);
+            }
+            _thud = new AudioStreamPlayer3D
+            {
+                Name = "LandThud",
+                MaxDistance = 18f,
+                Stream = new AudioStreamWav
+                {
+                    Format = AudioStreamWav.FormatEnum.Format16Bits,
+                    MixRate = sampleRate,
+                    Stereo = false,
+                    Data = data,
+                },
+            };
+            AddChild(_thud);
+        }
         private float _yaw;
         private float _pitch = -0.12f;
         private float _bob;
         private float _coyote;
         private float _jumpBuffer;
         private Interactable? _focus;
+        private float _stepTimer, _fallVel;
+        private bool _wasAirborne;
+        private GpuParticles3D? _footPuff;
+        private AudioStreamPlayer3D? _thud;
         private AstronautAnimator? _animator;
         public RoverController? Rover;
 
@@ -86,6 +161,7 @@ namespace LunaQuest.Godot
                 Visible = false,
             };
             _arm.AddChild(_suitLight);
+            BuildFeel();
 
             // The arm points backwards along +Z; start behind the player looking north.
             _arm.Rotation = new Vector3(_pitch, _yaw, 0);
@@ -96,8 +172,8 @@ namespace LunaQuest.Godot
             if (InputLocked) return;
             if (e is InputEventMouseMotion mm && Input.MouseMode == Input.MouseModeEnum.Captured)
             {
-                _yaw -= mm.Relative.X * 0.0028f;
-                _pitch = Mathf.Clamp(_pitch - mm.Relative.Y * 0.0022f, -1.18f, 1.18f);
+                _yaw -= mm.Relative.X * 0.0028f * MouseSensitivity;
+                _pitch = Mathf.Clamp(_pitch - mm.Relative.Y * 0.0022f * MouseSensitivity, -1.18f, 1.18f);
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             if (e.IsActionPressed("toggle_view")) ToggleView();
@@ -123,7 +199,10 @@ namespace LunaQuest.Godot
 
             if (Rover != null)
             {
+                // F0: the chase camera follows the vehicle heading every frame so W drives
+                // toward the view.
                 Rover.Drive(dt, this);
+                SyncCameraToRover();
                 return;
             }
 
@@ -131,8 +210,7 @@ namespace LunaQuest.Godot
             else _jumpBuffer = Mathf.Max(0f, _jumpBuffer - dt);
 
             Vector2 input = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
-            Vector3 wish = new Vector3(input.X, 0, input.Y).Rotated(Vector3.Up, _yaw);
-            if (wish.LengthSquared() > 1f) wish = wish.Normalized();
+            Vector3 wish = CameraRelativeDirection(input, _yaw);
 
             bool sprinting = Input.IsActionPressed("sprint") && wish.LengthSquared() > 0.01f;
             float targetSpeed = sprinting ? RunSpeed : WalkSpeed;
@@ -166,6 +244,45 @@ namespace LunaQuest.Godot
                 v.Y = JumpSpeed;
                 _jumpBuffer = 0f;
                 _coyote = 0f;
+            }
+
+            // F8: above 30 degrees of slope the suit starts to slide, not stop dead.
+            float slopeDeg = Mathf.RadToDeg(GetFloorAngle());
+            if (onFloor && slopeDeg > 30f && slopeDeg < 90f)
+            {
+                Vector3 n = GetFloorNormal();
+                Vector3 downhill = new Vector3(-n.X, 0f, -n.Z).Normalized();
+                float excess = Mathf.Clamp((slopeDeg - 30f) / 60f, 0f, 0.6f);
+                v = Velocity;
+                v.X += downhill.X * excess * 6.5f;
+                v.Z += downhill.Z * excess * 6.5f;
+                Velocity = v;
+            }
+
+            // F8: footstep whisper, landing thump.
+            if (IsOnFloor())
+            {
+                float horizontal = new Vector2(Velocity.X, Velocity.Z).Length();
+                if (horizontal > 1f)
+                {
+                    _stepTimer += dt * (sprinting ? 8f : 5f);
+                    if (_stepTimer >= 1f)
+                    {
+                        _stepTimer = 0f;
+                        if (_footPuff != null) { _footPuff.Emitting = false; _footPuff.Restart(); }
+                    }
+                }
+                if (_wasAirborne && _fallVel < -2.4f)
+                {
+                    _thud?.Play();
+                    if (_footPuff != null) { _footPuff.Emitting = false; _footPuff.Restart(); }
+                }
+                _wasAirborne = false;
+            }
+            else
+            {
+                _wasAirborne = true;
+                _fallVel = Velocity.Y;
             }
 
             Velocity = v;
@@ -221,7 +338,7 @@ namespace LunaQuest.Godot
 
         private void UpdateFov(float dt, bool sprinting)
         {
-            float target = ThirdPerson ? 70f : 78f;
+            float target = BaseFov + (ThirdPerson ? 0f : 8f);
             if (sprinting) target += 4f;
             Camera.Fov = Mathf.Lerp(Camera.Fov, target, 1f - Mathf.Exp(-8f * dt));
         }
@@ -296,14 +413,14 @@ namespace LunaQuest.Godot
             {
                 _arm.SpringLength = 3.9f;
                 _arm.Position = new Vector3(0, 1.45f, 0);
-                Camera.Fov = 70;
+                Camera.Fov = BaseFov;
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             else
             {
                 _arm.SpringLength = 0.05f;
                 _arm.Position = new Vector3(0, 1.58f, 0);
-                Camera.Fov = 78;
+                Camera.Fov = BaseFov + 8f;
                 _arm.Rotation = new Vector3(_pitch, _yaw, 0);
             }
             if (Rover != null) ConfigureDriveCamera();
@@ -337,6 +454,14 @@ namespace LunaQuest.Godot
         {
             _yaw = yaw;
             _pitch = Mathf.Clamp(pitch, -1.18f, 1.18f);
+            _arm.Rotation = new Vector3(_pitch, _yaw, 0);
+        }
+
+        /// <summary>F0 contract: the chase camera follows the vehicle heading every frame.</summary>
+        public void SyncCameraToRover()
+        {
+            if (Rover == null) return;
+            _yaw = Rover.Rotation.Y;
             _arm.Rotation = new Vector3(_pitch, _yaw, 0);
         }
     }

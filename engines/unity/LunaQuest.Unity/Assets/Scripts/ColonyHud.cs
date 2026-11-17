@@ -38,6 +38,10 @@ namespace LunaQuest.Unity
         private float _subtitleTimer;
 
         private bool _journalOpen;
+        private bool _settingsOpen;
+
+        /// <summary>Open the settings panel (from the start screen or the pause menu).</summary>
+        public void OpenSettings() => _settingsOpen = true;
         private bool _helpOpen;
         private bool _mathOpen;
         private bool _dialogueOpen;
@@ -67,7 +71,7 @@ namespace LunaQuest.Unity
         public bool[] BoardDone => _boardDone;
         public int[] BoardOrder => _boardOrder;
 
-        public bool OverlayOpen => _journalOpen || _helpOpen || _mathOpen || _dialogueOpen;
+        public bool OverlayOpen => _journalOpen || _helpOpen || _mathOpen || _dialogueOpen || _settingsOpen;
 
         public ColonyHud(LunaQuestGame game)
         {
@@ -102,6 +106,7 @@ namespace LunaQuest.Unity
 
         public void ShowSubtitle(string text, float seconds = 4f)
         {
+            if (_game?.LiveSettings != null && !_game.LiveSettings.Subtitles) return;
             _subtitle = text ?? "";
             _subtitleTimer = Mathf.Max(0.1f, seconds);
         }
@@ -359,6 +364,7 @@ namespace LunaQuest.Unity
             if (!_game.Started)
             {
                 DrawStart(w, h);
+                if (_settingsOpen) DrawSettings(w, h);
                 GUI.matrix = Matrix4x4.identity;
                 return;
             }
@@ -383,9 +389,96 @@ namespace LunaQuest.Unity
             }
 
             if (_game.Paused) DrawPause(w, h);
+            if (_settingsOpen) DrawSettings(w, h);
 
             GUI.matrix = Matrix4x4.identity;
         }
+
+        /// <summary>The settings panel: every row applies live and persists to
+        /// @Application.persistentDataPath/settings.json@ — never the shared save file. Rows are plain
+        /// buttons, so the panel is keyboard- and mouse-navigable, and bilingual by construction.</summary>
+        private void DrawSettings(float w, float h)
+        {
+            GUI.DrawTexture(new Rect(0f, 0f, w, h), DrawWhite(), ScaleMode.StretchToFill, true, 0f,
+                new Color(0f, 0f, 0f, 0.55f), 0f, 0f);
+
+            var s = _game.LiveSettings;
+            var panel = new Rect(w * 0.5f - 330f, h * 0.5f - 250f, 660f, 500f);
+            Panel(panel, new Color(0.02f, 0.035f, 0.055f, 0.98f), new Color(0.35f, 0.75f, 0.95f, 0.7f));
+            Text(new Rect(panel.x, panel.y + 22f, panel.width, 34f),
+                L.T("Settings", "الإعدادات"), 24, new Color(0.94f, 0.97f, 1f), TextAnchor.MiddleCenter, true);
+
+            float y = panel.y + 66f;
+            const float rowH = 36f;
+            const float pad = 10f;
+
+            // camera
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Camera view · الكاميرا",
+                    s.ThirdPerson ? "Third person · الثالثة" : "First person · الأولى"))
+            { s.ThirdPerson = !s.ThirdPerson; _game.ApplySettings(s); }
+            y += rowH + pad;
+            // language
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Language · اللغة",
+                    s.Language == "ar" ? "العربية" : "English"))
+            { s.Language = s.Language == "ar" ? "en" : "ar"; _game.ApplySettings(s); }
+            y += rowH + pad;
+            // sensitivity
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Sensitivity · حساسية الماوس",
+                    SensText(s.MouseSensitivity)))
+            { s.MouseSensitivity = NextSens(s.MouseSensitivity); _game.ApplySettings(s); }
+            y += rowH + pad;
+            // fov
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Field of view · مجال الرؤية",
+                    Mathf.RoundToInt(s.Fov).ToString() + "°"))
+            { s.Fov = NextFov(s.Fov); _game.ApplySettings(s); }
+            y += rowH + pad;
+            // master volume
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Master volume · مستوى الصوت",
+                    VolumeText(s.MasterVolume)))
+            { s.MasterVolume = NextVolume(s.MasterVolume); _game.ApplySettings(s); }
+            y += rowH + pad;
+            // voice
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Voice · الصوت المنطوق",
+                    s.Voice ? OnOff(true) : OnOff(false)))
+            { s.Voice = !s.Voice; _game.ApplySettings(s); }
+            y += rowH + pad;
+            // subtitles
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Subtitles · الترجمة",
+                    s.Subtitles ? OnOff(true) : OnOff(false)))
+            { s.Subtitles = !s.Subtitles; _game.ApplySettings(s); }
+            y += rowH + pad;
+            // quality
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Quality · الجودة",
+                    QualityText(s.Quality)))
+            { s.Quality = NextQuality(s.Quality); _game.ApplySettings(s); }
+            y += rowH + pad;
+            // fullscreen
+            if (SettingRow(new Rect(panel.x + 32f, y, panel.width - 64f, rowH), "Fullscreen · ملء الشاشة",
+                    s.Fullscreen ? OnOff(true) : OnOff(false)))
+            { s.Fullscreen = !s.Fullscreen; _game.ApplySettings(s); }
+            y += rowH + pad;
+
+            if (Button(new Rect(panel.x + 120f, y + 4f, panel.width - 240f, 40f), "Done · تم", 15))
+                _settingsOpen = false;
+        }
+
+        private bool SettingRow(Rect rect, string label, string value)
+        {
+            Text(new Rect(rect.x, rect.y, rect.width * 0.58f, rect.height),
+                label, 13, new Color(0.85f, 0.9f, 1f), TextAnchor.MiddleLeft, false, true);
+            return Button(new Rect(rect.x + rect.width * 0.62f, rect.y, rect.width * 0.38f, rect.height), value, 13);
+        }
+
+        private static string OnOff(bool on) => L.T(on ? "On" : "Off", on ? "يعمل" : "متوقف");
+        private static string SensText(float v) => "×" + (v <= 0.75f ? "0.5" : v <= 1.25f ? "1.0" : v <= 1.75f ? "1.5" : "2.0");
+        private static float NextSens(float v) => v <= 0.75f ? 1.0f : v <= 1.25f ? 1.5f : v <= 1.75f ? 2.0f : 0.5f;
+        private static float NextFov(float v) => v <= 66f ? 70f : v <= 74f ? 78f : 62f;
+        private static string VolumeText(float v) => L.T(v <= 0.01f ? "Off" : v <= 0.6f ? "Low" : v <= 0.9f ? "Medium" : "High",
+            v <= 0.01f ? "متوقف" : v <= 0.6f ? "منخفض" : v <= 0.9f ? "متوسط" : "عالٍ");
+        private static float NextVolume(float v) => v <= 0.01f ? 0.4f : v <= 0.6f ? 0.8f : v <= 0.9f ? 1.0f : 0.0f;
+        private static string QualityText(string q) => L.T(q == "low" ? "Low" : q == "medium" ? "Medium" : "High",
+            q == "low" ? "منخفضة" : q == "medium" ? "متوسطة" : "عالية");
+        private static string NextQuality(string q) => q == "low" ? "medium" : q == "medium" ? "high" : "low";
 
         private void DrawPause(float w, float h)
         {
@@ -400,6 +493,9 @@ namespace LunaQuest.Unity
                 L.T("The colony clock is stopped. Nothing is consumed while you are away.",
                     "ساعة المستعمرة متوقفة. لا يُستهلك شيء أثناء غيابك."),
                 13, new Color(0.65f, 0.78f, 0.9f), TextAnchor.MiddleCenter, false, true);
+            if (Button(new Rect(panel.x + 130f, panel.y + 108f, panel.width - 260f, 40f),
+                    "Settings · الإعدادات", 15))
+                OpenSettings();
             if (Button(new Rect(panel.x + 130f, panel.y + 158f, panel.width - 260f, 42f),
                     L.T("Resume", "استئناف"), 15))
                 _game.ResumeGame();
@@ -543,7 +639,10 @@ namespace LunaQuest.Unity
             if (Button(new Rect(panel.x + 246f, rowY, 140f, 34f), "العربية", 14))
                 _game.SetLanguage(true);
 
-            if (Button(new Rect(panel.x + 48f, rowY + 56f, panel.width - 96f, 44f),
+            if (Button(new Rect(panel.x + 118f, rowY + 56f, panel.width - 236f, 38f),
+                    "Settings · الإعدادات", 14))
+                OpenSettings();
+            if (Button(new Rect(panel.x + 48f, rowY + 102f, panel.width - 96f, 44f),
                     L.T("Begin the mission", "ابدأ المهمة"), 17))
                 Begin();
 
@@ -781,7 +880,9 @@ namespace LunaQuest.Unity
         {
             if (!OverlayOpen)
             {
-                string prompt = _game.Player != null ? _game.Player.FocusPrompt : "";
+                string prompt = _game.Player != null
+                    ? (_game.Player.HoldPrompt?.Length > 0 ? _game.Player.HoldPrompt : _game.Player.FocusPrompt)
+                    : "";
                 if (!string.IsNullOrEmpty(prompt))
                 {
                     var rect = new Rect(w * 0.5f - 280f, h - 132f, 560f, 42f);

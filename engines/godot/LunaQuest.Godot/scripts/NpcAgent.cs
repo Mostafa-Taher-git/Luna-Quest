@@ -19,6 +19,9 @@ namespace LunaQuest.Godot
 
         private const float WalkSpeed = 1.55f;
         private Node3D _visual = null!;
+
+        /// <summary>Public so the playtest harness can measure the suit.</summary>
+        public Node3D Visual => _visual;
         private AstronautAnimator? _animator;
         private Label3D _name = null!;
         private Label3D _activity = null!;

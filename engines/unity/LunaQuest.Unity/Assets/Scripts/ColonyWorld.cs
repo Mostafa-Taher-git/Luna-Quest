@@ -81,7 +81,7 @@ namespace LunaQuest.Unity
                 new Color(0.20f, 0.65f, 1.0f), 1.8f);
             _warmGlow = Mat(new Color(1.0f, 0.86f, 0.58f), 0.0f, 0.3f,
                 new Color(1.0f, 0.78f, 0.45f), 2.2f);
-            _regolith = Mat(new Color(0.165f, 0.160f, 0.152f), 0.0f, 0.96f);
+            _regolith = Mat(new Color(0.40f, 0.35f, 0.29f), 0.0f, 0.96f);
             _rock = Mat(new Color(0.115f, 0.112f, 0.108f), 0.0f, 0.98f);
         }
 
@@ -109,12 +109,98 @@ namespace LunaQuest.Unity
             return material;
         }
 
+        private readonly List<string> _shells = new List<string>();
+        private readonly List<string> _porches = new List<string>();
+        public int ShellCount => _shells.Count;
+        public int PorchCount => _porches.Count;
+
+        /// <summary>
+        /// F2: wrap the module in a high-fidelity primitive shell — Unity cannot load .glb kit
+        /// modules (no glTFast without a real editor), so the shell is built to the kit
+        /// silhouettes: a cylinder hull, vertical ribs, gold MLI flank panels and a cable tray.
+        /// Colliders stay live; only the plain box wall meshes are disabled.
+        /// </summary>
+        private void BuildShell(Transform root, BuildingDefinition b, float w, float d, float h)
+        {
+            var shell = new GameObject("Shell_" + b.Id);
+            shell.transform.SetParent(root, false);
+
+            Color baseColor;
+            if (!ColorUtility.TryParseHtmlString(b.ColorHex, out baseColor))
+                baseColor = new Color(0.78f, 0.81f, 0.85f);
+            var hull = Mat(baseColor * 0.92f, 0.05f, 0.30f);
+            var dark = Mat(new Color(0.28f, 0.30f, 0.35f), 0.30f, 0.35f);
+            var gold = Mat(new Color(0.92f, 0.62f, 0.18f), 0.35f, 0.55f,
+                new Color(0.95f, 0.66f, 0.2f), 0.25f);
+
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            body.name = "ShellCore";
+            Destroy(body.GetComponent<Collider>());
+            body.transform.SetParent(shell.transform, false);
+            body.transform.localPosition = new Vector3(0f, h * 0.5f - 0.08f, 0f);
+            body.transform.localScale = new Vector3(w, h * 0.5f - 0.16f, d);
+            body.GetComponent<Renderer>().sharedMaterial = hull;
+
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = i * Mathf.PI * 2f / 6f;
+                Vector3 dir = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
+                Vector3 pos = new Vector3(dir.x * w * 0.46f, h * 0.5f, dir.z * d * 0.46f);
+                var rib = Box(shell.transform, "Rib_" + i, pos, new Vector3(0.28f, h * 0.86f, 0.28f), dark);
+                rib.transform.SetParent(shell.transform, true);
+                rib.transform.localRotation = Quaternion.Euler(0f, angle * Mathf.Rad2Deg, 0f);
+            }
+            for (int s = -1; s <= 1; s += 2)
+            {
+                Box(shell.transform, "GoldPanel_" + s, new Vector3(s * w * 0.34f, h * 0.56f, -d * 0.46f),
+                    new Vector3(w * 0.22f, h * 0.34f, 0.07f), gold);
+            }
+            Box(shell.transform, "CableTray", new Vector3(w * 0.5f + 0.14f, h * 0.74f, 0f),
+                new Vector3(0.24f, 0.15f, d * 0.82f), dark);
+            _shells.Add(b.Id);
+        }
+
+        /// <summary>An airlock-style porch: gold collar, gold foil panels, handrails and a
+        /// hazard-stripe sill, on the door side.</summary>
+        private void BuildPorch(Transform root, float w, float d, float h)
+        {
+            var porch = new GameObject("Porch");
+            porch.transform.SetParent(root, false);
+            porch.transform.localPosition = new Vector3(0f, 0f, d * 0.5f);
+            var gold = Mat(new Color(0.95f, 0.68f, 0.20f), 0.45f, 0.55f,
+                new Color(0.98f, 0.72f, 0.24f), 0.3f);
+            var alloy = Mat(new Color(0.55f, 0.58f, 0.62f), 0.35f, 0.55f);
+            var hazard = Mat(new Color(0.84f, 0.68f, 0.14f), 0.75f, 0.1f);
+            var black = Mat(new Color(0.12f, 0.11f, 0.10f), 0.85f, 0.05f);
+
+            Box(porch.transform, "GoldCollar", new Vector3(0f, 0.3f, 0.35f),
+                new Vector3(3.6f, 0.6f, 0.55f), gold);
+            foreach (int s in new[] { -1, 1 })
+            {
+                Box(porch.transform, "GoldEdge_" + s, new Vector3(s * 1.42f, 1.62f, 0.16f),
+                    new Vector3(0.5f, 2.8f, 0.64f), gold);
+                var rail = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                rail.name = "Handrail_" + s;
+                Destroy(rail.GetComponent<Collider>());
+                rail.transform.SetParent(porch.transform, false);
+                rail.transform.localPosition = new Vector3(s * 1.08f, 0.58f, 0.62f);
+                rail.transform.localScale = new Vector3(0.11f, 0.575f, 0.11f);
+                rail.GetComponent<Renderer>().sharedMaterial = alloy;
+            }
+            Box(porch.transform, "HazardSill", new Vector3(0f, 0.028f, 0.54f),
+                new Vector3(2.4f, 0.06f, 0.34f), hazard);
+            foreach (int s in new[] { -1, 1 })
+                Box(porch.transform, "HazardEnd_" + s, new Vector3(s * 1.05f, 0.04f, 0.54f),
+                    new Vector3(0.35f, 0.07f, 0.35f), black);
+            _porches.Add(root.name);
+        }
+
         // ---- environment -----------------------------------------------------
 
         private void BuildEnvironment()
         {
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.20f, 0.24f, 0.32f);
+            RenderSettings.ambientLight = new Color(0.30f, 0.25f, 0.20f);
             RenderSettings.fog = false;
             RenderSettings.skybox = BuildSkybox();
 
@@ -135,8 +221,8 @@ namespace LunaQuest.Unity
             fillGo.transform.rotation = Quaternion.Euler(42f, 28f, 0f);
             var fill = fillGo.AddComponent<Light>();
             fill.type = LightType.Directional;
-            fill.color = new Color(0.48f, 0.62f, 0.88f);
-            fill.intensity = 0.18f;
+            fill.color = new Color(0.38f, 0.47f, 0.72f);
+            fill.intensity = 0.10f;
             fill.shadows = LightShadows.None;
 
             // A small unshaded solar disc. At 89.9° S the Sun crawls along the horizon;
@@ -146,10 +232,13 @@ namespace LunaQuest.Unity
             NoCollider(disc);
 
             // Earth: the real day map from Solar System Scope, credited in CREDITS.md.
+            // Standard (lit) material: the directional LowSun lights the day side and the side
+            // away from it goes dark — no glowing ball. Sized to read ~2 degrees across (the Moon
+            // sees Earth about 1.9 degrees wide), essentially fixed over the ridge.
             var texture = Resources.Load<Texture2D>("Textures/earth");
-            _earthMat = Unlit(Color.white, texture);
+            _earthMat = new Material(Shader.Find("Standard")) { mainTexture = texture };
             var earth = Sphere(transform, "Earth", new Vector3(95f, 118f, -305f),
-                new Vector3(26f, 26f, 26f), _earthMat);
+                new Vector3(12f, 12f, 12f), _earthMat);
             earth.transform.rotation = Quaternion.Euler(8f, 160f, -12f);
             NoCollider(earth);
             var earthLight = earth.AddComponent<Light>();
@@ -169,32 +258,39 @@ namespace LunaQuest.Unity
                 filterMode = FilterMode.Bilinear,
             };
             var pixels = new Color32[w * h];
-            var dark = new Color32(3, 4, 10, 255);
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = dark;
+            var black = new Color32(0, 0, 0, 255);
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = black;
 
             var rng = new System.Random(1972);
-            // A faint Milky Way band behind the sharp stars.
-            for (int i = 0; i < 9000; i++)
+            // A faint Milky Way band behind the sharp stars, along one great-circle axis.
+            for (int i = 0; i < 8500; i++)
             {
                 float x = (float)rng.NextDouble() * w;
                 float centre = h * 0.52f + Mathf.Sin(x / w * Mathf.PI * 2f) * h * 0.12f;
                 float y = centre + (float)(rng.NextDouble() + rng.NextDouble() + rng.NextDouble() - 1.5) * h * 0.11f;
                 if (y < 0 || y >= h) continue;
                 int idx = (int)y * w + (int)x;
-                byte v = (byte)(9 + rng.Next(8));
+                byte v = (byte)(7 + rng.Next(6));
                 pixels[idx] = new Color32(v, v, (byte)(v + 4), 255);
             }
-            for (int i = 0; i < 1700; i++)
+            // Bright points, magnitude-spread: many faint, few bright, slight colour variance.
+            for (int i = 0; i < 2400; i++)
             {
+                double m = Math.Pow(rng.NextDouble(), 2.4);
                 int x = rng.Next(w);
                 int y = rng.Next(h);
                 int idx = y * w + x;
-                byte v = (byte)(120 + rng.Next(136));
-                pixels[idx] = new Color32(v, v, v, 255);
-                if (rng.NextDouble() > 0.72)
+                byte v = (byte)(90 + m * 160.0);
+                double wtone = rng.NextDouble();
+                byte vr = v, vg = v, vb = v;
+                if (wtone < 0.78) { } // white
+                else if (wtone < 0.89) { vg = (byte)(v * 0.82); vb = (byte)(v * 0.65); } // warm
+                else { vr = (byte)(v * 0.78); vg = (byte)(v * 0.88); } // cool
+                pixels[idx] = new Color32(vr, vg, vb, 255);
+                if (rng.NextDouble() > 0.72 && v > 140)
                 {
                     int x2 = Mathf.Min(w - 1, x + 1);
-                    pixels[y * w + x2] = new Color32((byte)(v * 0.7f), (byte)(v * 0.7f), (byte)(v * 0.8f), 255);
+                    pixels[y * w + x2] = new Color32((byte)(vr * 0.7f), (byte)(vg * 0.7f), (byte)(vb * 0.7f), 255);
                 }
             }
             texture.SetPixels32(pixels);
@@ -234,7 +330,7 @@ namespace LunaQuest.Unity
             {
                 float x = -half + ix * step, z = -half + iz * step;
                 verts[iz * n + ix] = new Vector3(x, (float)terrain.Height(x, z), z);
-                uv[iz * n + ix] = new Vector2(ix / (float)cells * 80f, iz / (float)cells * 80f);
+                uv[iz * n + ix] = new Vector2(ix / (float)cells * 240f, iz / (float)cells * 240f);
             }
             var tris = new int[cells * cells * 6];
             int t = 0;
@@ -275,7 +371,27 @@ namespace LunaQuest.Unity
             ground.isStatic = true;
             ground.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = ground.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = _regolith;
+            // The CC0 Moon Dusted 03 scan, white under lunar sun, tiled every ~3.5 m.
+            var reg = Resources.Load<Texture2D>("Textures/moon_dusted_03_albedo");
+            if (reg != null)
+            {
+                var regMat = new Material(Shader.Find("Standard"))
+                {
+                    mainTexture = reg,
+                    mainTextureScale = new Vector2(240f, 240f),
+                    mainTextureOffset = new Vector2(0f, 0f),
+                };
+                regMat.color = Color.white;
+                regMat.metallic = 0f;
+                regMat.smoothness = 0.04f;
+                regMat.enableInstancing = true;
+                regMat.mainTexture.wrapMode = TextureWrapMode.Repeat;
+                renderer.sharedMaterial = regMat;
+            }
+            else
+            {
+                renderer.sharedMaterial = _regolith;
+            }
             renderer.receiveShadows = true;
             ground.AddComponent<MeshCollider>().sharedMesh = mesh;
 
@@ -380,6 +496,21 @@ namespace LunaQuest.Unity
             }
             var antenna = Cylinder(lander.transform, "Antenna", new Vector3(1.0f, 6.0f, 0f), 0.05f, 2.4f, ascent);
             antenna.transform.localRotation = Quaternion.Euler(0f, 0f, -18f);
+
+            // F6: the supply crate — a hold-E cargo delivery for the workshop spares desk.
+            var crate = Box(root.transform, "SupplyCrate", new Vector3(6.8f, 0.62f, 3.0f),
+                new Vector3(1.5f, 1.25f, 1.15f), Mat(new Color(0.42f, 0.35f, 0.27f), 0.75f, 0.05f));
+            Box(crate.transform, "CrateStripe", new Vector3(0f, -0.18f, 0f),
+                new Vector3(1.52f, 0.18f, 1.17f), Mat(new Color(0.84f, 0.68f, 0.14f), 0.45f, 0.35f,
+                    new Color(0.9f, 0.78f, 0.3f), 0.4f));
+            var crateStation = crate.AddComponent<Station>();
+            crateStation.BuildingId = "";
+            crateStation.InteractionId = "cargo_crate";
+            crateStation.PromptEn = "Supply Crate";
+            crateStation.PromptAr = "صندوق الإمداد";
+            crateStation.Kind = "job";
+            MakeText(crate.transform, "CrateStencil", new Vector3(0f, 0.75f, 0f),
+                0.16f, new Color(0.92f, 0.66f, 0.22f), "SUPPLY", "SUPPLY", true);
         }
 
         // ---- buildings -------------------------------------------------------
@@ -512,6 +643,19 @@ namespace LunaQuest.Unity
             // Interior: room mats, low partitions, a table and a light strip.
             BuildInterior(root.transform, b, wall, floor, dark);
             BuildStations(root.transform, b);
+            // F2: hide the plain box wall meshes (colliders stay live inside the kit shell).
+            foreach (var t in root.GetComponentsInChildren<Transform>())
+            {
+                if (t.gameObject.name is "FrontL" or "FrontR" or "Lintel" or "Back" or "BackL" or "BackR"
+                    or "BackLintel" or "SideL" or "SideR")
+                {
+                    var r = t.GetComponent<Renderer>();
+                    if (r != null) r.enabled = false;
+                }
+            }
+            BuildShell(root.transform, b, w, d, h);
+            BuildPorch(root.transform, w, d, h);
+
             BuildInteriorLight(root.transform, b);
 
             // Warm porch light at the important doors.
@@ -806,28 +950,137 @@ namespace LunaQuest.Unity
             }
         }
 
-        /// <summary>NEXO: a hovering white sphere robot with a blue band and a dark screen face.</summary>
+        /// <summary>NEXO v2: rounded white shell, cyan accent ring, antenna with orange tip,
+        /// solar fins, dark curved visor, two glowing eyes (warned-by-signals).</summary>
         private GameObject CreateRobot()
         {
             var root = new GameObject("NEXO");
-            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(body.GetComponent<Collider>());
-            body.transform.SetParent(root.transform, false);
-            body.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-            body.transform.localScale = new Vector3(0.52f, 0.46f, 0.52f);
-            body.GetComponent<Renderer>().material.color = new Color(0.95f, 0.96f, 0.98f);
-            var face = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(face.GetComponent<Collider>());
-            face.transform.SetParent(body.transform, false);
-            face.transform.localPosition = new Vector3(0f, 0.06f, 0.22f);
-            face.transform.localScale = new Vector3(0.75f, 0.55f, 0.6f);
-            face.GetComponent<Renderer>().material.color = new Color(0.03f, 0.06f, 0.1f);
-            var band = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            Destroy(band.GetComponent<Collider>());
-            band.transform.SetParent(body.transform, false);
-            band.transform.localPosition = new Vector3(0f, -0.15f, 0f);
-            band.transform.localScale = new Vector3(1.04f, 0.06f, 1.04f);
-            band.GetComponent<Renderer>().material.color = new Color(0.16f, 0.45f, 0.86f);
+
+            var shellMat = Mat(new Color(0.88f, 0.90f, 0.92f), 0.3f, 0.15f);
+            var darkTrim = Mat(new Color(0.28f, 0.30f, 0.33f), 0.55f, 0f);
+            var cyan = Mat(new Color(0.10f, 0.55f, 0.70f), 0.2f, 0.2f,
+                new Color(0.25f, 0.85f, 1.0f), 1.5f);
+            var finMat = Mat(new Color(0.10f, 0.16f, 0.30f), 0.55f, 0.25f,
+                new Color(0.07f, 0.16f, 0.38f), 0.5f);
+
+            var shell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            shell.name = "Shell";
+            Destroy(shell.GetComponent<Collider>());
+            shell.transform.SetParent(root.transform, false);
+            shell.transform.localPosition = new Vector3(0f, 1.12f, 0f);
+            shell.transform.localScale = new Vector3(0.88f, 0.86f, 0.86f);
+            shell.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            foreach (float frac in new[] { -0.17f, 0.16f })
+            {
+                var seam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                seam.name = "PanelSeam";
+                Destroy(seam.GetComponent<Collider>());
+                seam.transform.SetParent(root.transform, false);
+                seam.transform.localPosition = new Vector3(0f, 1.12f + frac, 0f);
+                seam.transform.localScale = new Vector3(0.87f, 0.02f, 0.87f);
+                seam.GetComponent<Renderer>().sharedMaterial = darkTrim;
+            }
+
+            var visor = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            visor.name = "Visor";
+            Destroy(visor.GetComponent<Collider>());
+            visor.transform.SetParent(root.transform, false);
+            visor.transform.localPosition = new Vector3(0f, 1.14f, 0.29f);
+            visor.transform.localScale = new Vector3(0.66f, 0.50f, 0.24f);
+            visor.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.02f, 0.025f, 0.035f), 0.4f, 0.08f);
+
+            var eyes = new GameObject("NEXO_Eyes");
+            eyes.transform.SetParent(root.transform, false);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var eye = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                eye.name = side < 0 ? "EyeL" : "EyeR";
+                Destroy(eye.GetComponent<Collider>());
+                eye.transform.SetParent(eyes.transform, false);
+                eye.transform.localPosition = new Vector3(side * 0.135f, 1.18f, 0.42f);
+                eye.transform.localScale = new Vector3(0.115f, 0.115f, 0.115f);
+                eye.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.05f, 0.30f, 0.38f), 0.2f, 0.1f,
+                    new Color(0.30f, 0.85f, 1.0f), 2.2f);
+            }
+
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "WaistRing";
+            Destroy(ring.GetComponent<Collider>());
+            ring.transform.SetParent(root.transform, false);
+            ring.transform.localPosition = new Vector3(0f, 1.03f, 0f);
+            ring.transform.localScale = new Vector3(0.875f, 0.035f, 0.875f);
+            ring.GetComponent<Renderer>().sharedMaterial = cyan;
+
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var fin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                fin.name = side < 0 ? "FinL" : "FinR";
+                Destroy(fin.GetComponent<Collider>());
+                fin.transform.SetParent(root.transform, false);
+                fin.transform.localPosition = new Vector3(side * 0.48f, 1.34f, 0f);
+                fin.transform.localScale = new Vector3(0.02f, 0.22f, 0.34f);
+                fin.transform.localRotation = Quaternion.Euler(0f, 0f, side * 12f);
+                fin.GetComponent<Renderer>().sharedMaterial = finMat;
+            }
+
+            var stalk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            stalk.name = "Antenna";
+            Destroy(stalk.GetComponent<Collider>());
+            stalk.transform.SetParent(root.transform, false);
+            stalk.transform.localPosition = new Vector3(0f, 1.66f, 0f);
+            stalk.transform.localScale = new Vector3(0.026f, 0.12f, 0.026f);
+            stalk.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            var tip = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            tip.name = "AntennaTip";
+            Destroy(tip.GetComponent<Collider>());
+            tip.transform.SetParent(root.transform, false);
+            tip.transform.localPosition = new Vector3(0f, 1.80f, 0f);
+            tip.transform.localScale = new Vector3(0.065f, 0.065f, 0.065f);
+            tip.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.9f, 0.45f, 0.08f), 0.2f, 0.1f,
+                new Color(1.0f, 0.6f, 0.2f), 1.8f);
+
+            var skirt = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            skirt.name = "Skirt";
+            Destroy(skirt.GetComponent<Collider>());
+            skirt.transform.SetParent(root.transform, false);
+            skirt.transform.localPosition = new Vector3(0f, 0.72f, 0f);
+            skirt.transform.localScale = new Vector3(0.72f, 0.21f, 0.48f);
+            skirt.GetComponent<Renderer>().sharedMaterial = shellMat;
+
+            var thruster = new GameObject("ThrusterGlow");
+            thruster.transform.SetParent(root.transform, false);
+            thruster.transform.localPosition = new Vector3(0f, 0.34f, 0f);
+            var glow = thruster.AddComponent<Light>();
+            glow.type = LightType.Point;
+            glow.color = new Color(0.35f, 0.78f, 0.91f);
+            glow.range = 2.0f;
+            glow.intensity = 1.6f;
+            glow.shadows = LightShadows.None;
+
+            var pointer = new GameObject("ObjectivePointer");
+            pointer.transform.SetParent(root.transform, false);
+            pointer.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+            var cone = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            cone.name = "PointerTip";
+            Destroy(cone.GetComponent<Collider>());
+            cone.transform.SetParent(pointer.transform, false);
+            cone.transform.localScale = new Vector3(0.09f, 0.115f, 0.09f);
+            cone.transform.localRotation = Quaternion.Euler(70f, 0f, 0f);
+            cone.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.18f, 0.55f, 0.62f), 0.2f, 0.1f,
+                new Color(0.25f, 0.85f, 1.0f), 1.5f);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                blade.name = side < 0 ? "PointerL" : "PointerR";
+                Destroy(blade.GetComponent<Collider>());
+                blade.transform.SetParent(pointer.transform, false);
+                blade.transform.localPosition = new Vector3(side * 0.115f, 0.14f, 0.07f);
+                blade.transform.localScale = new Vector3(0.11f, 0.04f, 0.05f);
+                blade.transform.localRotation = Quaternion.Euler(0f, side * 41f, 0f);
+                blade.GetComponent<Renderer>().sharedMaterial = cone.GetComponent<Renderer>().sharedMaterial;
+            }
             return root;
         }
         public bool DoorPoint(string buildingId, out Vector3 point)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 using LunaQuest.Core.Domain;
 using LunaQuest.Core.Sim;
@@ -16,7 +17,6 @@ namespace LunaQuest.Godot
         public WorldBuilder World = null!;
         private Node3D _body = null!;
         private ShaderMaterial _face = null!;
-        private OmniLight3D _glow = null!;
         private MeshInstance3D _thruster = null!;
         private Label3D _name = null!;
         private Label3D _activity = null!;
@@ -50,50 +50,189 @@ namespace LunaQuest.Godot
             GlobalPosition = spawn + new Vector3(1.2f, FollowHeight, 1.0f);
         }
 
+        private Node3D? _pointer;
+        private OmniLight3D? _thrusterGlow;
+
+        private static T? FindChild<T>(Node root) where T : Node
+        {
+            if (root is T match) return match;
+            foreach (Node c in root.GetChildren())
+            {
+                var nested = FindChild<T>(c);
+                if (nested != null) return nested;
+            }
+            return null;
+        }
+
         private void BuildModel()
         {
             _body = new Node3D { Name = "Body" };
             AddChild(_body);
-            var white = new StandardMaterial3D { AlbedoColor = new Color(0.95f, 0.96f, 0.98f), Roughness = 0.35f, Metallic = 0.05f, ClearcoatEnabled = true, Clearcoat = 0.6f };
-            var blue = new StandardMaterial3D { AlbedoColor = new Color(0.16f, 0.45f, 0.86f), Roughness = 0.4f, Metallic = 0.2f };
-            var orange = new StandardMaterial3D { AlbedoColor = new Color(1f, 0.55f, 0.15f), EmissionEnabled = true, Emission = new Color(1f, 0.45f, 0.1f), EmissionEnergyMultiplier = 1.6f };
-            var glowMat = new StandardMaterial3D { ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded, AlbedoColor = new Color(0.45f, 0.8f, 1f), EmissionEnabled = true, Emission = new Color(0.45f, 0.8f, 1f) };
-            // Head-body: a slightly squashed sphere, like the cartoon.
-            var shell = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.26f, Height = 0.46f, RadialSegments = 32, Rings = 16 }, MaterialOverride = white };
-            _body.AddChild(shell);
-            // Blue equator band.
-            var band = new MeshInstance3D { Mesh = new TorusMesh { InnerRadius = 0.245f, OuterRadius = 0.275f, Rings = 40, RingSegments = 10 }, MaterialOverride = blue, Position = new Vector3(0, -0.07f, 0) };
-            _body.AddChild(band);
-            // Screen face on the front (+Z): a flattened disc with the eye shader.
-            _face = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/nexo_face.gdshader") };
-            var face = new MeshInstance3D
+            // The CC0 Quaternius Animated LowPoly Robot body (nexo_robot.glb, ~1.05 m once
+            // scaled); the procedural v2 body is the fresh-clone fallback.
+            const string glbPath = "res://assets/models/nexo_robot/nexo_robot.glb";
+            if (ResourceLoader.Exists(glbPath) && GD.Load<PackedScene>(glbPath) is { } scene)
             {
-                Mesh = new SphereMesh { Radius = 0.2f, Height = 0.4f, RadialSegments = 32, Rings = 16 },
-                MaterialOverride = _face,
-                Position = new Vector3(0, 0.03f, 0.105f),
-                Scale = new Vector3(0.95f, 0.72f, 0.55f),
-            };
-            _body.AddChild(face);
-            // Ear pods.
-            foreach (float side in new[] { -1f, 1f })
-            {
-                var pod = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.07f, BottomRadius = 0.07f, Height = 0.08f }, MaterialOverride = blue, Position = new Vector3(side * 0.26f, 0.02f, 0), Rotation = new Vector3(0, 0, Mathf.Pi / 2) };
-                _body.AddChild(pod);
+                var model = scene.Instantiate<Node3D>();
+                var raw = MeasureRawBounds(model);
+                if (raw.Size.Y > 0.001f)
+                {
+                    float s = 1.05f / raw.Size.Y;
+                    model.Scale = new Vector3(s, s, s);
+                    _body.AddChild(model);
+                    var fitted = MeasureRawBounds(model);
+                    model.Position = new Vector3(0, -fitted.Position.Y, 0);
+                }
+                else
+                {
+                    _body.AddChild(model);
+                }
+                var anim = FindChild<AnimationPlayer>(model);
+                if (anim != null)
+                {
+                    string[] names = anim.GetAnimationList();
+                    string want = "";
+                    foreach (string n in names)
+                        if (n.ToLowerInvariant().Contains("idle")) { want = n; break; }
+                    if (want != "")
+                    {
+                        var clip = anim.GetAnimation(want);
+                        if (clip != null)
+                        {
+                            clip.LoopMode = Animation.LoopModeEnum.Linear;
+                            anim.Play(want);
+                        }
+                    }
+                }
+                BuildGLBFace();
+                BuildNexoExtras();
+                return;
             }
-            // Antenna with an orange tip.
-            var stalk = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.008f, BottomRadius = 0.012f, Height = 0.16f }, MaterialOverride = white, Position = new Vector3(0, 0.29f, 0) };
-            _body.AddChild(stalk);
-            var tip = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.025f, Height = 0.05f }, MaterialOverride = orange, Position = new Vector3(0, 0.38f, 0) };
-            _body.AddChild(tip);
-            // Hover thruster underneath and its glow.
-            _thruster = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.09f, BottomRadius = 0.05f, Height = 0.06f }, MaterialOverride = glowMat, Position = new Vector3(0, -0.23f, 0) };
-            _body.AddChild(_thruster);
-            _glow = new OmniLight3D { LightColor = new Color(0.45f, 0.78f, 1f), LightEnergy = 0.9f, OmniRange = 2.2f, Position = new Vector3(0, -0.35f, 0), ShadowEnabled = false };
-            _body.AddChild(_glow);
-            foreach (var n in _body.GetChildren())
-                if (n is GeometryInstance3D g) g.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
+            BuildPrimitiveBody();
+            BuildNexoExtras();
         }
 
+        /// <summary>A visor with two eyes afloat in front of the low-poly face — the warning
+        /// pair that turns orange in incidents. Parented to the body, not the skeleton.</summary>
+        private void BuildGLBFace()
+        {
+            _face = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/nexo_face.gdshader") };
+            var visor = new MeshInstance3D
+            {
+                Mesh = new SphereMesh { Radius = 0.115f, Height = 0.23f, RadialSegments = 24, Rings = 12 },
+                MaterialOverride = new StandardMaterial3D
+                {
+                    AlbedoColor = new Color(0.02f, 0.025f, 0.035f),
+                    Roughness = 0.08f,
+                    Metallic = 0.4f,
+                },
+                Scale = new Vector3(1.0f, 0.60f, 0.30f),
+                Position = new Vector3(0, 0.86f, 0.335f),
+            };
+            _body.AddChild(visor);
+            var eyes = new MeshInstance3D
+            {
+                Mesh = new QuadMesh { Size = new Vector2(0.11f, 0.05f) },
+                MaterialOverride = _face,
+                Position = new Vector3(0, 0.90f, 0.372f),
+            };
+            _body.AddChild(eyes);
+        }
+
+        /// <summary>Bounds helper that includes skinned meshes — only safe on this one asset.</summary>
+        private static Aabb MeasureRawBounds(Node3D node)
+        {
+            Aabb? aabb = null;
+            void Walk(Node3D n3, Transform3D xform)
+            {
+                var next = xform * n3.Transform;
+                if (n3 is MeshInstance3D mi && mi.Mesh != null)
+                {
+                    var local = next * mi.Mesh.GetAabb();
+                    aabb = aabb == null ? local : aabb.Value.Merge(local);
+                }
+                foreach (Node child in n3.GetChildren())
+                    if (child is Node3D c3) Walk(c3, next);
+            }
+            Walk(node, Transform3D.Identity);
+            return aabb ?? new Aabb(Vector3.Zero, Vector3.One);
+        }
+
+        /// <summary>The upgraded procedural body — the fresh-clone fallback, full hardware:
+        /// panel seams, curved dark visor, cyan accent ring, antenna with orange tip, solar fins,
+        /// hover skirt. NEXO is a robot, never a human suit.</summary>
+        private void BuildPrimitiveBody()
+        {
+            var white = new StandardMaterial3D { AlbedoColor = new Color(0.88f, 0.90f, 0.92f), Roughness = 0.3f, Metallic = 0.15f };
+            var darkTrim = new StandardMaterial3D { AlbedoColor = new Color(0.28f, 0.30f, 0.33f), Roughness = 0.55f };
+            var visorMat = new StandardMaterial3D { AlbedoColor = new Color(0.02f, 0.025f, 0.035f), Roughness = 0.08f, Metallic = 0.4f, EmissionEnabled = true, Emission = new Color(0.03f, 0.04f, 0.06f), EmissionEnergyMultiplier = 0.4f };
+            var cyan = new StandardMaterial3D { AlbedoColor = new Color(0.10f, 0.55f, 0.70f), EmissionEnabled = true, Emission = new Color(0.25f, 0.85f, 1.0f), EmissionEnergyMultiplier = 1.5f, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+            var eye = new StandardMaterial3D { AlbedoColor = new Color(0.05f, 0.30f, 0.38f), EmissionEnabled = true, Emission = new Color(0.30f, 0.85f, 1.0f), EmissionEnergyMultiplier = 2.2f };
+            var fin = new StandardMaterial3D { AlbedoColor = new Color(0.10f, 0.16f, 0.30f), Metallic = 0.55f, Roughness = 0.25f, EmissionEnabled = true, Emission = new Color(0.07f, 0.16f, 0.38f), EmissionEnergyMultiplier = 0.5f };
+
+            var shell = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.42f, Height = 0.84f, RadialSegments = 32, Rings = 16 }, MaterialOverride = white, Position = new Vector3(0, 1.12f, 0) };
+            _body.AddChild(shell);
+            foreach (float frac in new[] { -0.18f, 0.18f })
+            {
+                var seam = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.422f, BottomRadius = 0.422f, Height = 0.018f, RadialSegments = 32 }, MaterialOverride = darkTrim, Position = new Vector3(0, 1.12f + frac, 0) };
+                _body.AddChild(seam);
+            }
+            var visor = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.34f, Height = 0.55f, RadialSegments = 28, Rings = 12 }, MaterialOverride = visorMat, Scale = new Vector3(1.0f, 0.62f, 0.32f), Position = new Vector3(0, 1.14f, 0.30f) };
+            _body.AddChild(visor);
+            var ring = new MeshInstance3D { Mesh = new TorusMesh { InnerRadius = 0.42f, OuterRadius = 0.445f, Rings = 36, RingSegments = 10 }, MaterialOverride = cyan, Position = new Vector3(0, 1.02f, 0), Rotation = new Vector3(Mathf.Pi / 2f, 0, 0) };
+            _body.AddChild(ring);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var eyeNode = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.055f, Height = 0.11f, RadialSegments = 12, Rings = 8 }, MaterialOverride = eye, Position = new Vector3(side * 0.13f, 1.18f, 0.42f) };
+                _body.AddChild(eyeNode);
+                var solar = new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.02f, 0.22f, 0.34f) }, MaterialOverride = fin, Position = new Vector3(side * 0.50f, 1.36f, 0), Rotation = new Vector3(0, 0, side * 0.22f) };
+                _body.AddChild(solar);
+            }
+            var stalk = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.012f, BottomRadius = 0.018f, Height = 0.24f, RadialSegments = 8 }, MaterialOverride = white, Position = new Vector3(0, 1.68f, 0) };
+            _body.AddChild(stalk);
+            var tip = new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.032f, Height = 0.064f, RadialSegments = 10, Rings = 6 }, MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.9f, 0.45f, 0.08f), EmissionEnabled = true, Emission = new Color(1.0f, 0.6f, 0.2f), EmissionEnergyMultiplier = 1.8f }, Position = new Vector3(0, 1.82f, 0) };
+            _body.AddChild(tip);
+            var skirt = new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.34f, BottomRadius = 0.12f, Height = 0.42f, RadialSegments = 20 }, MaterialOverride = white, Position = new Vector3(0, 0.72f, 0) };
+            _body.AddChild(skirt);
+        }
+
+        /// <summary>Hover thruster glow + objective pointer — always present, GLB or primitive.</summary>
+        private void BuildNexoExtras()
+        {
+            _thrusterGlow = new OmniLight3D
+            {
+                Name = "ThrusterGlow",
+                LightColor = new Color(0.35f, 0.78f, 0.91f),
+                LightEnergy = 1.6f,
+                OmniRange = 2.0f,
+                Position = new Vector3(0, 0.16f, 0),
+                ShadowEnabled = false,
+            };
+            _body.AddChild(_thrusterGlow);
+
+            _pointer = new Node3D { Name = "ObjectivePointer", Position = new Vector3(0, 0.28f, 0) };
+            var penMat = new StandardMaterial3D { AlbedoColor = new Color(0.18f, 0.55f, 0.62f), EmissionEnabled = true, Emission = new Color(0.25f, 0.85f, 1.0f), EmissionEnergyMultiplier = 1.5f, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+            var tip = new MeshInstance3D
+            {
+                Mesh = new CylinderMesh { TopRadius = 0f, BottomRadius = 0.065f, Height = 0.19f, RadialSegments = 8 },
+                MaterialOverride = penMat,
+                Position = new Vector3(0, 0.1f, 0f),
+                Rotation = new Vector3(Mathf.Pi * 0.4f, 0f, 0f),
+            };
+            _pointer.AddChild(tip);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                var blade = new MeshInstance3D
+                {
+                    Mesh = new BoxMesh { Size = new Vector3(0.11f, 0.04f, 0.05f) },
+                    MaterialOverride = penMat,
+                    Position = new Vector3(side * 0.115f, 0.16f, 0.07f),
+                    Rotation = new Vector3(0, side * 0.72f, 0),
+                };
+                _pointer.AddChild(blade);
+            }
+            _body.AddChild(_pointer);
+        }
         private Label3D MakeLabel(string text, int size, Color c, float y)
         {
             var l = new Label3D
@@ -118,7 +257,8 @@ namespace LunaQuest.Godot
             Vector3 right = basis * Vector3.Right;
             Vector3 back = basis * Vector3.Back;
             Vector3 anchor = player.GlobalPosition + Vector3.Up * 1.45f;
-            Vector3 desired = player.GlobalPosition + right * 1.05f + back * 0.55f + Vector3.Up * FollowHeight;
+            // F10 — the polite distance: trail 3.2 m behind-and-beside, never crowd the commander.
+            Vector3 desired = player.GlobalPosition + right * 1.3f + back * 2.0f + Vector3.Up * FollowHeight;
             if (!main.Started) desired = GlobalPosition;
             // Keep out of walls: clamp the target to the first thing between the commander and it.
             var space = GetWorld3D().DirectSpaceState;
@@ -137,6 +277,19 @@ namespace LunaQuest.Godot
             Vector3 next = GlobalPosition + _vel * dt;
             if (next.DistanceTo(desired) > 9f) { next = desired; _vel = Vector3.Zero; }
             GlobalPosition = next;
+            // F10: objective pointer — yaws toward the first unfinished objective's building.
+            if (_pointer != null && main?.Sim != null)
+            {
+                var objectiveTarget = NextObjectiveBuilding(main);
+                if (objectiveTarget != default)
+                {
+                    float worldYaw = Mathf.Atan2(objectiveTarget.X - GlobalPosition.X, objectiveTarget.Z - GlobalPosition.Z);
+                    float rel = worldYaw - Mathf.Tau * Mathf.Round((worldYaw - _body.Rotation.Y) / Mathf.Tau);
+                    rel = Mathf.LerpAngle(_pointer.Rotation.Y, rel, dt * 6f);
+                    _pointer.Rotation = new Vector3(0, rel, 0);
+                }
+            }
+
             // Look where the commander looks, banking a little into turns.
             float yaw = player.Yaw + Mathf.Pi;
             float bank = Mathf.Clamp(-_vel.Dot(right) * 0.12f, -0.35f, 0.35f);
@@ -149,10 +302,44 @@ namespace LunaQuest.Godot
             _body.Position = new Vector3(0, (float)Math.Sin(_t * 2.1) * 0.05f, 0);
         }
 
+        private static readonly Dictionary<string, string> ObjectiveTargets = new()
+        {
+            ["obj_solar_dust"] = "power_farm",
+            ["obj_sensor_dust"] = "comms_tower",
+            ["obj_airlock_dust"] = "airlock",
+            ["obj_water_filter"] = "life_support",
+            ["obj_air_scrubber"] = "life_support",
+            ["obj_plant_care"] = "greenhouse",
+            ["obj_radiation"] = "storm_shelter",
+            ["obj_comms_relay"] = "comms_tower",
+            ["obj_crew_rest"] = "habitat",
+            ["obj_sample"] = "ice_site",
+            ["obj_power_budget"] = "power_farm",
+            ["obj_rover_take"] = "garage",
+            ["obj_rover_ice"] = "ice_site",
+        };
+
+        /// <summary>The building the next unfinished objective points at.</summary>
+        private static Vector3 NextObjectiveBuilding(LunaQuest.Godot.Main main)
+        {
+            var sim = main.Sim;
+            var content = sim.Content;
+            foreach (var objective in content.Learning)
+            {
+                if (sim.Learning.HasEntry(objective.Id)) continue;
+                var targetId = ObjectiveTargets.GetValueOrDefault(objective.Id, "habitat");
+                var building = content.Building(targetId);
+                if (building == null) continue;
+                return new Vector3(building.PositionX, 0f, building.PositionZ);
+            }
+            var mc = content.Building("mission_control");
+            return mc != null ? new Vector3(mc.PositionX, 0f, mc.PositionZ) : Vector3.Zero;
+        }
+
         public override void _Process(double delta)
         {
             var main = Main.Instance;
-            if (main == null) return;
+            if (main == null || _name == null) return;
             // Blink every few seconds.
             _blinkTimer -= delta;
             if (_blinkTimer <= 0) { _blinkT = 0; _blinkTimer = 2.5 + GD.Randf() * 3.5; }
@@ -166,11 +353,26 @@ namespace LunaQuest.Godot
             var s = main.Sim.State;
             bool warn = s.O2Kg < 40 || s.BatteryKwh < 25 || s.WaterL < 250 || s.SolarParticleEvent || !s.EarthLinkUp;
             _alert = Mathf.Lerp(_alert, warn ? 1f : 0f, (float)delta * 3f);
-            _face.SetShaderParameter("blink", blink);
-            _face.SetShaderParameter("alert", _alert);
-            _face.SetShaderParameter("mood", 1f - _alert * 0.85f);
-            _glow.LightEnergy = 0.7f + (float)Math.Sin(_t * 7.0) * 0.15f;
-
+            if (_face != null)
+            {
+                _face.SetShaderParameter("blink", blink);
+                _face.SetShaderParameter("alert", _alert);
+                _face.SetShaderParameter("mood", 1f - _alert * 0.85f);
+            }
+            // The thruster pulses orange during incidents regardless of body path.
+            if (_thrusterGlow != null)
+            {
+                if (_alert > 0.12f)
+                {
+                    _thrusterGlow.LightColor = new Color(1.0f, 0.55f + 0.25f * Mathf.Abs(Mathf.Sin((float)_t * 7.0f)), 0.15f);
+                    _thrusterGlow.LightEnergy = 1.1f + 0.8f * Mathf.Abs(Mathf.Sin((float)_t * 7.0f));
+                }
+                else
+                {
+                    _thrusterGlow.LightColor = new Color(0.35f, 0.78f, 0.91f);
+                    _thrusterGlow.LightEnergy = 1.25f + 0.2f * Mathf.Abs(Mathf.Sin((float)_t * 2.4f));
+                }
+            }
             var st = main.Sim.Npcs.State(Profile.Id);
             _name.Text = L.Arabic ? Profile.DisplayNameAr : Profile.DisplayNameEn;
             _name.Font = L.Arabic ? L.ArabicFont : L.LatinFont;

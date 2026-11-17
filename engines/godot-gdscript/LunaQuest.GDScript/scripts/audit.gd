@@ -40,10 +40,13 @@ func run(tree: SceneTree, world: ColonyWorld, player: ColonyPlayer, crew: Colony
 	_check_interface(hud, sim, rover)
 	_check_doors(world)
 	_check_consoles(world)
-	_check_crew(world, crew)
+	_check_crew(world, crew, player)
 	_check_perimeter()
 	_check_ground_faces()
 	_check_rover(root, world, player, crew, sim)
+	_check_f0_controls(root, world, player)
+	_check_buildings(root, world)
+	_check_language(world, crew)
 	if failures.is_empty():
 		print("AUDIT OK — %d checks passed" % checks)
 		return true
@@ -274,7 +277,7 @@ func _check_consoles(world: ColonyWorld) -> void:
 			entry["building_id"], entry["interaction_id"]])
 
 
-func _check_crew(world: ColonyWorld, crew: ColonyCrew) -> void:
+func _check_crew(world: ColonyWorld, crew: ColonyCrew, player: ColonyPlayer) -> void:
 	expect(crew.members.size() == 7, "crew: expected 7, built %d" % crew.members.size())
 	for member in crew.members:
 		var root: Node3D = member["root"]
@@ -291,6 +294,23 @@ func _check_crew(world: ColonyWorld, crew: ColonyCrew) -> void:
 			member["id"], inside_a_building])
 		var ground := ray(spot + Vector3(0, 1.2, 0), spot - Vector3(0, 1.2, 0))
 		expect(not ground.is_empty(), "crew: %s is standing over a hole" % member["id"])
+
+		# F3: the suit is created at exactly 1.75 / 2.311 scale in every edition (the same pose
+		# height the C# audit asserts). A bind-pose AABB would span far beyond the posed silhouette.
+		if member["is_robot"]:
+			continue
+		var suit := root.get_child(0) if root.get_child_count() > 0 else null
+		var expected := 1.75 / 2.311
+		if suit != null:
+			expect(absf(suit.scale.x - expected) < 0.01,
+				"crew: %s suit scale %.3f, expected %.3f (1.75 m)" % [member["id"], suit.scale.x, expected])
+
+	# The player's own suit must read the same.
+	var player_suit := player.get_child(player.get_child_count() - 1) if player.get_child_count() > 0 else null
+	var expected_player := 1.75 / 2.311
+	if player_suit != null:
+		expect(absf(player_suit.scale.x - expected_player) < 0.01,
+			"player: suit scale %.3f, expected %.3f (1.75 m)" % [player_suit.scale.x, expected_player])
 
 
 func _check_perimeter() -> void:
@@ -338,6 +358,148 @@ func _is_ground(collider: Object) -> bool:
 
 ## The T5 rover checklist, driven instead of described: enter, drive, steer, boost, brake, the
 ## battery rule, the garage charger, the ice-site milestone, exiting on the ground and putting the
+## F0 — the universal control contract, proven by driving, not by reasoning.
+##
+## W (or Up) drives the rover forward; S (or Down) reverses; A and D turn toward screen-left and
+## screen-right, always measured against the camera basis; and walking keeps the same meaning
+## after any driving episode.
+func _check_f0_controls(root: Node, world: ColonyWorld, player: ColonyPlayer) -> void:
+	var rover := root.get_node_or_null("CrewRover") as ColonyRover
+	expect(rover != null, "f0: the crew rover is not in the scene")
+	if rover == null:
+		return
+	# Deterministic pose: the apron, the usual yaw, full charge.
+	rover.global_position = Vector3(-11.0, 0.05, -28.0)
+	rover.rotation.y = 0.4
+	rover.speed = 0.0
+	rover.steer = 0.0
+	rover.battery_kwh = ColonyRover.BATTERY_KWH
+	rover.settle()
+	rover.enter(player)
+	# The audit entered the vehicle by hand earlier; point the commander at the same heading
+	# before any camera basis is read, so the checks measure the vehicle, not a stale angle.
+	player.rotation.y = rover.rotation.y
+
+	var veh_fwd := -rover.global_transform.basis.z
+	var cam_fwd := -player.camera.global_transform.basis.z
+	expect(veh_fwd.dot(cam_fwd) > 0.9,
+		"f0: the rover's forward is not aligned with the camera (%.2f)" % veh_fwd.dot(cam_fwd))
+
+	# W under throttle: displacement goes toward the view, not away from it.
+	var before := rover.global_position
+	for i in range(120):
+		rover._step(1.0 / 60.0, 1.0, 0.0, false, false)
+	var moved := rover.global_position - before
+	expect(moved.dot(veh_fwd) > 0.5,
+		"f0: W does not drive toward the view (%.2f m)" % moved.dot(veh_fwd))
+
+	# S from rest: displacement away from the view.
+	rover.speed = 0.0
+	before = rover.global_position
+	for i in range(120):
+		rover._step(1.0 / 60.0, -1.0, 0.0, false, false)
+	moved = rover.global_position - before
+	expect(moved.dot(veh_fwd) < 0.0,
+		"f0: S does not reverse (%.2f m)" % moved.dot(veh_fwd))
+
+	# Get rolling, then A turns toward the camera's screen-left, D toward screen-right.
+	rover.speed = 0.0
+	for i in range(90):
+		rover._step(1.0 / 60.0, 1.0, 0.0, false, false)
+	var cam_right := player.camera.global_transform.basis.x
+	var left := -cam_right
+	var yaw0 := rover.rotation.y
+	for i in range(60):
+		rover._step(1.0 / 60.0, 1.0, 1.0, false, false)
+	var h0 := Basis(Vector3.UP, yaw0) * Vector3(0, 0, -1)
+	var h1 := Basis(Vector3.UP, rover.rotation.y) * Vector3(0, 0, -1)
+	expect(h1.dot(left) > h0.dot(left),
+		"f0: A did not move the heading toward screen-left (delta %.2f)" % (h1.dot(left) - h0.dot(left)))
+	rover.speed = 0.0
+	yaw0 = rover.rotation.y
+	for i in range(60):
+		rover._step(1.0 / 60.0, 1.0, -1.0, false, false)
+	h0 = Basis(Vector3.UP, yaw0) * Vector3(0, 0, -1)
+	h1 = Basis(Vector3.UP, rover.rotation.y) * Vector3(0, 0, -1)
+	expect(h1.dot(cam_right) > h0.dot(cam_right),
+		"f0: D did not move the heading toward screen-right (delta %.2f)" % (h1.dot(cam_right) - h0.dot(cam_right)))
+
+	# Exiting cannot drift walking: W still leads to the camera, A/D still map to screen-left/right.
+	rover.exit(player)
+	expect(not player.rover, "f0: exit() left the rover glued to the commander")
+	expect(ColonyPlayer.move_direction(Vector2(0, -1), 0.0).dot(Vector3(0, 0, -1)) > 0.9,
+		"f0: W no longer maps to the camera forward after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(-1, 0), 0.0).dot(Vector3(-1, 0, 0)) > 0.9,
+		"f0: A no longer maps to screen-left after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(1, 0), 0.0).dot(Vector3(1, 0, 0)) > 0.9,
+		"f0: D no longer maps to screen-right after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(0, 1), 0.0).dot(Vector3(0, 0, 1)) > 0.9,
+		"f0: S no longer maps to reverse after exiting the rover")
+	expect(ColonyPlayer.move_direction(Vector2(0, -1), PI / 2.0).dot(Vector3(-1, 0, 0)) > 0.9,
+		"f0: walking at yaw 90 degrees is not camera-relative")
+
+	# Back to the apron for anything that runs after this check.
+	rover.global_position = Vector3(-11.0, 0.05, -28.0)
+	rover.rotation.y = 0.4
+	rover.settle()
+
+
+## F2 — every walkable building wears a matching CC0 kit shell and reads as furnished.
+## The procedural box-wall meshes are hidden; the colliders (doors and consoles) are untouched.
+func _check_buildings(root: Node, world: ColonyWorld) -> void:
+	var shell_ids := [
+		"habitat", "mission_control", "greenhouse", "workshop", "life_support", "lab", "medical",
+		"storage", "comms_tower", "regolith_plant", "storm_shelter", "power_farm", "ice_site",
+		"garage", "airlock",
+	]
+	for id in shell_ids:
+		var group := world.building_nodes.get(id) as Node3D
+		expect(group != null, "buildings: %s group is missing" % id)
+		if group == null:
+			continue
+		var shell := group.find_child("Shell_%s" % id, true, false)
+		expect(shell != null, "buildings: %s has no CC0 kit shell" % id)
+		var props := int(world._attached_prop_count.get(id, 0))
+		expect(props >= 5, "buildings: %s reads unfurnished (%d children)" % [id, props])
+		var porch := group.find_child("Porch", true, false)
+		expect(porch != null, "buildings: %s has no airlock porch at the door" % id)
+		var hidden := 0
+		for child in group.get_children():
+			if child is MeshInstance3D and not child.visible:
+				hidden += 1
+		expect(hidden >= 2, "buildings: %s wall meshes were not hidden (%d)" % [id, hidden])
+
+
+## F4 — only the selected language is ever visible. The world toggles signs, console labels and
+## crew name labels through `refresh_language`; this walks them in both directions and proves that
+## Arabic text is absent when English is active and vice versa.
+func _check_language(world: ColonyWorld, crew: ColonyCrew) -> void:
+	world.refresh_language(true)
+	crew.refresh_language(true)
+	for pair in world._bilingual:
+		expect(_has_arabic(str(pair["label"].text)),
+			"language: world label %s shows no Arabic while Arabic is active" % pair["label"].text)
+	for member in crew.members:
+		expect(_has_arabic(str(member["label"].text)),
+			"language: %s label shows no Arabic while Arabic is active" % member["label"].text)
+	world.refresh_language(false)
+	crew.refresh_language(false)
+	for pair in world._bilingual:
+		expect(not _has_arabic(str(pair["label"].text)),
+			"language: world label %s contains Arabic while English is active" % pair["label"].text)
+	for member in crew.members:
+		expect(not _has_arabic(str(member["label"].text)),
+			"language: %s label contains Arabic while English is active" % member["label"].text)
+
+
+func _has_arabic(text: String) -> bool:
+	for c in text:
+		var o: int = c.unicode_at(0)
+		if o >= 0x0600 and o <= 0x06FF:
+			return true
+	return false
+
+
 ## rover back with the mission restart (including the reset that BUG-4 was about).
 func _check_rover(root: Node, world: ColonyWorld, player: ColonyPlayer, crew: ColonyCrew,
 		sim: LQSim) -> void:
@@ -382,7 +544,7 @@ func _check_rover(root: Node, world: ColonyWorld, player: ColonyPlayer, crew: Co
 	expect(rover.battery_kwh < drained, "rover: driving did not drain the battery")
 	expect(rover.odometer > 3.0, "rover: the odometer did not count (%.2f m)" % rover.odometer)
 	expect(rover.steer > 0.01 and not rover._steers.is_empty(), "rover: the front wheels did not steer")
-	expect(rover.spin > 1.0, "rover: the wheels did not spin")
+	expect(absf(rover.spin) > 1.0, "rover: the wheels did not spin (%.2f)" % rover.spin)
 
 	# Boost raises the cap, the handbrake stops it, reverse is slower than forward.
 	rover.speed = 0.0

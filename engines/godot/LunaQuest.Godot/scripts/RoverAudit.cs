@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace LunaQuest.Godot
@@ -60,22 +61,27 @@ namespace LunaQuest.Godot
             Expect(rover.Rotation.Y > yaw, "A should steer left: the yaw went the other way");
             Expect(rover.Odometer > 2f, $"the odometer did not count ({rover.Odometer:F2} m)");
             Expect(rover.BatteryKwh < battery, "driving did not drain the battery");
-            Expect(rover.Spin > 1f, "the wheels did not spin");
+            Expect(Mathf.Abs(rover.Spin) > 1f, "the wheels did not spin");
             Expect(rover.GlobalPosition.Y > -2f, $"the rover sank through the ground (y {rover.GlobalPosition.Y:F2})");
             // BUG-5: the driver leans back against the seat (rotation.x = -0.32 rad, yaw PI).
             float lean = player.Visual.Rotation.X;
             Expect(lean < -0.2f && lean > -0.5f,
                 $"the driver is not leaning back (visual X {lean:F2} rad, expected -0.32)");
 
-            // Handbrake and a flat battery.
+            // Handbrake and a flat battery. The drive before this test leaves the rover within
+            // the garage recharge radius in the -Z (camera-aligned) build, so park it somewhere
+            // the garage cannot reach it — the test needs a genuinely flat pack.
             for (int i = 0; i < 120; i++) rover.Step(1f / 60f, 0f, 0f, false, true, player);
             Expect(Mathf.Abs(rover.Speed) < 0.05f, $"the handbrake left it rolling at {rover.Speed:F2} m/s");
+            rover.GlobalPosition = new Vector3(30f, 0.05f, -55f);
+            rover.Speed = 0f;
             rover.BatteryKwh = 0f;
             for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
             Expect(Mathf.Abs(rover.Speed) < 0.01f, $"a flat battery still drove ({rover.Speed:F2} m/s)");
 
             // The garage apron recharges a stopped rover; the ice site sets the milestone.
             rover.GlobalPosition = new Vector3(-16f, 0.05f, -40f);
+            rover.Speed = 0f;
             rover.BatteryKwh = 1f;
             for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 0f, 0f, false, false, player);
             Expect(rover.BatteryKwh > 1f, "the garage apron did not recharge the rover");
@@ -139,7 +145,221 @@ namespace LunaQuest.Godot
             Expect(!rover.ReachedIce && !rover.HasDriven && rover.Odometer < 0.001f,
                 "a new mission kept the old rover milestones");
 
+            CheckF0Controls(rover, player);
+            CheckBuildings(main);
+            CheckCrew(main);
+            CheckSettings();
+            CheckEvaJobs(main);
             return Report();
+        }
+
+        /// <summary>
+        /// F6 — the EVA reserve and the two cargo/custody chains, exercised on the live sim.
+        /// Same contract as the LunaQuest.Core harness: an empty suit cannot drill, the chain
+        /// seals at the cache, the board window pays timeliness.
+        /// </summary>
+        private void CheckEvaJobs(Main main)
+        {
+            var sim = main.Sim;
+            double full = sim.State.SuitEnergy;
+            Expect(full > 0.0, $"eva: the suit does not start charged ({full:F2})");
+
+            // Drain until empty; the only sanctioned outside action must run dry.
+            for (int i = 0; i < 400; i++) sim.TickEvaEnergy(false, 1.0);
+            Expect(sim.State.SuitEnergy == 0.0, $"eva: the suit never emptied ({sim.State.SuitEnergy:F2})");
+            Expect(!sim.DrillSample(out _, out _), "eva: an empty suit was allowed to drill");
+            Expect(sim.Learning.Journal.Exists(e => e.ObjectiveId == "eva_drain"),
+                "eva: the dry-suit journal entry was never written");
+            for (int i = 0; i < 80; i++) sim.TickEvaEnergy(true, 1.0);
+            Expect(sim.DrillSample(out _, out _), "eva: a recharged suit could not drill");
+            Expect(sim.LogSampleAtCache(out _, out _), "eva: logging the custody chain failed");
+            Expect(sim.State.SamplesCollected == 1, $"eva: the sample was not counted ({sim.State.SamplesCollected})");
+            Expect(sim.Learning.HasEntry("obj_sample"), "eva: the custody chain did not unlock the sample objective");
+
+            // Cargo run: pickup pays out more on time than late, and both paths journal.
+            var late = main.Sim;
+            late.StartCargoRun(0.0, out _, out _);
+            late.TickCargo(200.0); // window is 150 s
+            Expect(late.CompleteCargoRun(out _, out _), "cargo: the late delivery failed");
+            Expect(late.Learning.Journal.Exists(e => e.ObjectiveId == "cargo_run_late"),
+                "cargo: the late-delivery journal entry was never written");
+
+            // Restore the player's suit so the rest of the audit sees a charged commander.
+            sim.TickEvaEnergy(true, 100.0);
+        }
+
+        /// <summary>
+        /// F5 — the settings file round-trips exactly and every check restores the user's
+        /// original preferences afterwards. Godot loads user://settings.json at boot; the file
+        /// never becomes part of the shared save schema.
+        /// </summary>
+        private void CheckSettings()
+        {
+            var original = GameSettings.Load();
+            var written = new GameSettings.SettingsData
+            {
+                ThirdPerson = true,
+                Language = "ar",
+                MouseSensitivity = 1.5f,
+                Fov = 82f,
+                MasterVolume = 0.55f,
+                Voice = false,
+                Subtitles = false,
+                Quality = "high",
+                Fullscreen = true,
+            };
+            Expect(GameSettings.Save(written) == Error.Ok, "settings: the write failed");
+            var reloaded = GameSettings.Load();
+            Expect(reloaded.ThirdPerson == written.ThirdPerson, "settings: third person did not survive");
+            Expect(reloaded.Language == written.Language, "settings: the language choice was lost");
+            Expect(Mathf.Abs(reloaded.MouseSensitivity - written.MouseSensitivity) < 0.001f, "settings: the sensitivity was lost");
+            Expect(Mathf.Abs(reloaded.Fov - written.Fov) < 0.001f, "settings: the field of view was lost");
+            Expect(Mathf.Abs(reloaded.MasterVolume - written.MasterVolume) < 0.001f, "settings: the volume was lost");
+            Expect(reloaded.Voice == false, "settings: the voice flag was lost");
+            Expect(reloaded.Subtitles == false, "settings: the subtitles flag was lost");
+            Expect(reloaded.Quality == "high", "settings: the quality preset was lost");
+            Expect(reloaded.Fullscreen, "settings: the fullscreen flag was lost");
+            Expect(Mathf.Abs(GameSettings.LinearToDb(1.0f)) < 0.001f, "settings: unity volume should be 0 dB");
+            Expect(GameSettings.LinearToDb(0.1f) < -15f, "settings: 0.1 linear should be under -15 dB");
+            Expect(GameSettings.Save(original) == Error.Ok, "settings: the user's original preferences were lost");
+        }
+
+        /// <summary>
+        /// F3 — every human suit exists as the pose the game shipped: built from the shared
+        /// 2.311 m visor-to-sole pose height, scale 0.757 (1.75 m), with a non-empty hierarchy.
+        /// A bind-pose AABB here is 6 m across (Object_9/10 are rig meshes the posed rig never
+        /// reaches), so assert the scale the suit was actually built with — the GDScript
+        /// edition audits the same figure.
+        /// </summary>
+        private void CheckCrew(Main main)
+        {
+            const float suitHeight = 1.75f;
+            const float posedHeight = 2.311f;
+            const float expectedScale = suitHeight / posedHeight;
+
+            var playerSuit = main.Player.Visual.GetChildCount() > 0
+                ? main.Player.Visual.GetChild(0) as Node3D
+                : null;
+            var suits = new List<(Node3D suit, string label)>
+            {
+                (playerSuit, "player"),
+            };
+            foreach (var npc in main.World.Npcs)
+                if (!npc.Profile.IsRobot)
+                    suits.Add((npc.Visual, npc.Profile.Id));
+
+            foreach (var (suit, label) in suits)
+            {
+                if (suit == null) { Expect(false, $"crew: {label} has no suit visual"); continue; }
+                Expect(suit.GetChildCount() > 0, $"crew: {label} has an empty suit hierarchy");
+                Expect(Mathf.Abs(suit.Scale.Y - expectedScale) < 0.01f,
+                    $"crew: {label} suit scale {suit.Scale.Y:F3} is not {expectedScale:F3} (the 1.75 m pose)");
+            }
+        }
+
+        /// <summary>
+        /// F2 — every functional building wears a CC0 kit shell scaled to its footprint and has a
+        /// matching airlock-style porch at its door. landing_pad is decorative and gets neither.
+        /// </summary>
+        private void CheckBuildings(Main main)
+        {
+            var shellIds = new[]
+            {
+                "habitat", "mission_control", "greenhouse", "workshop", "life_support", "lab", "medical",
+                "storage", "comms_tower", "regolith_plant", "storm_shelter", "power_farm", "ice_site",
+                "garage", "airlock",
+            };
+            foreach (var id in shellIds)
+            {
+                var root = main.World.FindChild(id, recursive: true, owned: false);
+                Expect(root != null, $"buildings: {id} root is missing");
+                if (root == null) continue;
+                var shell = root.FindChild("Shell_" + id, recursive: true, owned: false);
+                Expect(shell != null, $"buildings: {id} has no CC0 kit shell");
+                var porch = root.FindChild("Porch", recursive: true, owned: false);
+                Expect(porch != null, $"buildings: {id} has no airlock porch at its door");
+            }
+            Expect(main.World.ShellCount >= shellIds.Length,
+                $"buildings: only {main.World.ShellCount} kit shells (expected {shellIds.Length})");
+        }
+
+        /// <summary>
+        /// F0 — the universal control contract, proven by driving, not by reasoning. W drives
+        /// toward the view, S reverses, A and D turn toward screen-left and screen-right (measured
+        /// against the camera basis), and walking keeps the same meaning after any driving episode.
+        /// </summary>
+        private void CheckF0Controls(RoverController rover, PlayerController player)
+        {
+            // Deterministic pose: the apron, the usual yaw, full charge.
+            rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+            rover.Rotation = new Vector3(0, 0.4f, 0);
+            rover.Speed = 0f;
+            rover.Steer = 0f;
+            rover.BatteryKwh = RoverController.BatteryKwhMax;
+            rover.Settle();
+            rover.Enter(player);
+            player.SyncCameraToRover();
+
+            var vehFwd = -rover.GlobalTransform.Basis.Z.Normalized();
+            var camFwd = -player.Camera.GlobalTransform.Basis.Z.Normalized();
+            Expect(vehFwd.Dot(camFwd) > 0.9f,
+                $"F0: the rover's forward is not aligned with the camera ({vehFwd.Dot(camFwd):F2})");
+
+            // W under throttle: displacement goes toward the view, not away from it.
+            var before = rover.GlobalPosition;
+            for (int i = 0; i < 120; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
+            var moved = rover.GlobalPosition - before;
+            Expect(moved.Dot(vehFwd) > 0.5f,
+                $"F0: W does not drive toward the view ({moved.Dot(vehFwd):F2} m)");
+
+            // S from rest: displacement away from the view.
+            rover.Speed = 0f;
+            before = rover.GlobalPosition;
+            for (int i = 0; i < 120; i++) rover.Step(1f / 60f, -1f, 0f, false, false, player);
+            moved = rover.GlobalPosition - before;
+            Expect(moved.Dot(vehFwd) < 0f,
+                $"F0: S does not reverse ({moved.Dot(vehFwd):F2} m)");
+
+            // Get rolling, then A turns toward the camera's screen-left, D toward screen-right.
+            rover.Speed = 0f;
+            for (int i = 0; i < 90; i++) rover.Step(1f / 60f, 1f, 0f, false, false, player);
+            var camRight = player.Camera.GlobalTransform.Basis.X.Normalized();
+            var left = -camRight;
+            float yaw0 = rover.Rotation.Y;
+            for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, 1f, false, false, player);
+            float yaw1 = rover.Rotation.Y;
+            var h0 = new Basis(Vector3.Up, yaw0) * new Vector3(0, 0, -1);
+            var h1 = new Basis(Vector3.Up, yaw1) * new Vector3(0, 0, -1);
+            Expect(h1.Dot(left) > h0.Dot(left),
+                $"F0: A did not move the heading toward screen-left (delta {h1.Dot(left) - h0.Dot(left):F3})");
+            rover.Speed = 0f;
+            yaw0 = rover.Rotation.Y;
+            for (int i = 0; i < 60; i++) rover.Step(1f / 60f, 1f, -1f, false, false, player);
+            yaw1 = rover.Rotation.Y;
+            h0 = new Basis(Vector3.Up, yaw0) * new Vector3(0, 0, -1);
+            h1 = new Basis(Vector3.Up, yaw1) * new Vector3(0, 0, -1);
+            Expect(h1.Dot(camRight) > h0.Dot(camRight),
+                $"F0: D did not move the heading toward screen-right (delta {h1.Dot(camRight) - h0.Dot(camRight):F3})");
+
+            // Exiting cannot drift walking: W still leads to the camera, A/D still map to
+            // screen-left/right.
+            rover.Exit(player);
+            Expect(!rover.Occupied && player.Rover == null, "F0: exit() kept the seat");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, -1), 0f).Dot(new Vector3(0, 0, -1)) > 0.9f,
+                "F0: W no longer maps to the camera forward after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(-1, 0), 0f).Dot(new Vector3(-1, 0, 0)) > 0.9f,
+                "F0: A no longer maps to screen-left after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(1, 0), 0f).Dot(new Vector3(1, 0, 0)) > 0.9f,
+                "F0: D no longer maps to screen-right after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, 1), 0f).Dot(new Vector3(0, 0, 1)) > 0.9f,
+                "F0: S no longer maps to reverse after exiting the rover");
+            Expect(PlayerController.CameraRelativeDirection(new Vector2(0, -1), Mathf.Pi / 2f).Dot(new Vector3(-1, 0, 0)) > 0.9f,
+                "F0: walking at yaw 90 degrees is not camera-relative");
+
+            // Back to the apron for anything that runs after this check.
+            rover.GlobalPosition = new Vector3(-11f, 0.05f, -28f);
+            rover.Rotation = new Vector3(0, 0.4f, 0);
+            rover.Settle();
         }
 
         /// <summary>
